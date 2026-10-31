@@ -58,11 +58,33 @@
 <!-- Format: NEVER [behavior] (affirmed [date]) -->
 <!-- Example: NEVER throw exceptions across service layer boundaries (affirmed 2026-05-17) -->
 
+- NEVER アプリから写真ライブラリ内の写真・アルバム・フォルダを変更する。 (affirmed 2026-10-29)
+
+- NEVER アプリから画像取得のための通信を要求する。 (affirmed 2026-10-29)
+
+- NEVER 今回のPhase 1へnote連携・記事生成・動画生成・SNS投稿・クラウド機能・毎週の自動実行と通知・写真本体の恒久複製・履歴管理を追加する。 (affirmed 2026-10-29)
+
+- NEVER 設計資料の技術選定や参考コードを、成立性を検証せず確定仕様として扱う。 (affirmed 2026-10-29)
+
 ## Mandated
 
 <!-- Populated by practices-discovery affirmation gate. -->
 <!-- Format: ALWAYS [behavior] (affirmed [date]) -->
 <!-- Example: ALWAYS use Result<T,E> for fallible operations in service layer (affirmed 2026-05-17) -->
+
+- ALWAYS アプリ表示名を「ひとつづり」、リポジトリ名を`hitotsuzuri`、Xcodeプロジェクト名を`Hitotsuzuri`、Swiftアプリ型名を`HitotsuzuriApp`とする。 (affirmed 2026-10-29)
+
+- ALWAYS Phase 1をSwiftUIによるmacOSネイティブアプリとして実装し、まず本人の現在のMacでのローカル実行を確認する。 (affirmed 2026-10-29)
+
+- ALWAYS システム写真ライブラリ1つの中にある複数の写真フォルダを対象とする。 (affirmed 2026-10-29)
+
+- ALWAYS 要件と実装計画の本人確認後にConstructionへ進む。 (affirmed 2026-10-29)
+
+- ALWAYS 要件・設計判断・進捗・検証結果を日本語Markdownへ残し、Swift・Xcodeの経験を前提にしない実行・検証手順を用意する。 (affirmed 2026-10-29)
+
+- ALWAYS 写真アクセス等、本人による実機確認が必要な項目を明示する。 (affirmed 2026-10-29)
+
+- ALWAYS AI-DLCの各フェーズ完了時に、そのフェーズの成果物と関連変更をGitにコミットする。 (affirmed 2026-10-29)
 
 ## Corrections
 

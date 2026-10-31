@@ -2,6 +2,8 @@
 > This file is kept up to date automatically while the stage runs. Add observations at the review step, not by editing here directly.
 
 ## Interpretations
+
+- 2026-10-29T03:47:22Z — 本人はTDD、短いブランチによるmainへの統合、一通り動く最小構成を先に確認、Xcode中心の日本語手順、Swift標準記法を選択した。カバレッジ・CI実行先などの具体化は後続計画へ残し、手順の選択と品質条件を混同しない。
 <!-- example: 2026-05-29T10:14:32Z — chose REST over GraphQL; the consuming team only needs CRUD, revisit if subscriptions land -->
 
 ## Deviations
