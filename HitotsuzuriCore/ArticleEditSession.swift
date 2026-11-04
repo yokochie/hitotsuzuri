@@ -13,6 +13,7 @@ import Observation
         let id:UUID
         let content:ArticleContent
         let base:SavedArticle?
+        var outcomeUnknown=false
     }
     private var pendingOperation:PendingSave?
 
@@ -62,7 +63,10 @@ import Observation
             return true
         } catch {
             failure = error as? ArticleFailure ?? .ioFailure
-            if failure != .uncertainResult {pendingOperation=nil}
+            if failure == .uncertainResult {pendingOperation?.outcomeUnknown=true}
+            // 元操作の結果不明は、照合が一時的に失敗しても解消していない。
+            // 照合成功後の新操作は別pendingなので、確定した失敗なら解放できる。
+            if pendingOperation?.outcomeUnknown != true {pendingOperation=nil}
             return false
         }
     }

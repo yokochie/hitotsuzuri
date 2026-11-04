@@ -2,6 +2,69 @@ import XCTest
 @testable import HitotsuzuriCore
 
 @MainActor final class ArticleSessionTests: XCTestCase {
+    func testDefiniteCapacityFailureAfterReconciliationAllowsReducedInput() async throws {
+        let disk=ArticlePersistence(directory:ArticleFixtures.root()), original=try await ArticleFixtures.create(disk)
+        let store=ArticleResponseLossStore(disk:disk,loseCreate:false), session=ArticleEditSession(article:original,store:store)
+        session.content.title="A"; let uncertain=await session.save(); XCTAssertFalse(uncertain)
+        session.content.title="容量超のB"; session.content.introduction=String(repeating:"x",count:64*1024*1024)
+        let failed=await session.save(); XCTAssertFalse(failed); XCTAssertEqual(session.failure,.capacity)
+        XCTAssertEqual(session.saved?.content.title,"A"); XCTAssertEqual(session.saved?.savedRevision,2)
+        session.content.title="縮小後C"; session.content.introduction="縮小済み"
+        let saved=await session.save(); XCTAssertTrue(saved); XCTAssertFalse(session.isDirty)
+        let reopened=try await disk.open(session.projectID)
+        XCTAssertEqual(reopened.content.title,"縮小後C"); XCTAssertEqual(reopened.savedRevision,3)
+        let ids=await store.operationIDs
+        XCTAssertEqual(ids.count,4)
+        if ids.count == 4 {XCTAssertEqual(ids[0],ids[1]); XCTAssertNotEqual(ids[2],ids[3])}
+    }
+    func testUncertainSaveSurvivesRepeatedReconciliationIOFailures() async throws {
+        try await verifyRepeatedReconciliationIOFailures(creating:false)
+    }
+    func testUncertainCreationSurvivesRepeatedReconciliationIOFailures() async throws {
+        try await verifyRepeatedReconciliationIOFailures(creating:true)
+    }
+    private func verifyRepeatedReconciliationIOFailures(creating:Bool) async throws {
+        let disk=ArticlePersistence(directory:ArticleFixtures.root()), store=ArticleResponseLossStore(disk:disk,loseCreate:creating)
+        let session:ArticleEditSession
+        if creating {session=ArticleEditSession(source:try ArticleFixtures.source(),store:store)}
+        else {session=ArticleEditSession(article:try await ArticleFixtures.create(disk),store:store)}
+        session.content.title="確定A"
+        let first=await session.save(); XCTAssertFalse(first); XCTAssertEqual(session.failure,.uncertainResult)
+        await store.failNextReconciliations(2)
+        for text in ["追加入力B","追加入力C"] {
+            session.content.title=text
+            let retry=await session.save(); XCTAssertFalse(retry); XCTAssertEqual(session.failure,.ioFailure)
+            XCTAssertEqual(session.content.title,text); XCTAssertTrue(session.isDirty)
+        }
+        session.content.title="最新入力D"
+        let recovered=await session.save(); XCTAssertTrue(recovered)
+        XCTAssertEqual(session.content.title,"最新入力D"); XCTAssertFalse(session.isDirty)
+        XCTAssertEqual(session.saved?.savedRevision,creating ? 2 : 3)
+        let reopened=try await disk.open(session.projectID); XCTAssertEqual(reopened.content.title,"最新入力D")
+        let ids=await store.operationIDs, inputs=await store.operationTitles, bases=await store.baseRevisions
+        XCTAssertEqual(ids.count,5); XCTAssertEqual(inputs,["確定A","確定A","確定A","確定A","最新入力D"])
+        if ids.count == 5, bases.count == 5 {
+            XCTAssertEqual(Set(ids.prefix(4)).count,1); XCTAssertNotEqual(ids[3],ids[4])
+            for index in 0..<4 {XCTAssertEqual(bases[index],creating ? nil : 1)}
+            XCTAssertEqual(bases[4],creating ? 1 : 2)
+        }
+    }
+    func testEditsDuringReconciliationAfterIOFailureRemainDirty() async throws {
+        let disk=ArticlePersistence(directory:ArticleFixtures.root()), original=try await ArticleFixtures.create(disk)
+        let store=ArticleResponseLossStore(disk:disk,loseCreate:false), session=ArticleEditSession(article:original,store:store)
+        session.content.title="A"; _ = await session.save()
+        await store.failNextReconciliations(1)
+        session.content.title="B"
+        let failed=await session.save(); XCTAssertFalse(failed); XCTAssertEqual(session.failure,.ioFailure)
+        await store.pauseNextRequest()
+        let retry=Task {await session.save()}
+        while !(await store.waiting) {await Task.yield()}
+        session.content.title="照合中の入力C"
+        await store.resume(); let success=await retry.value
+        XCTAssertTrue(success); XCTAssertEqual(session.saved?.content.title,"B")
+        XCTAssertEqual(session.content.title,"照合中の入力C"); XCTAssertTrue(session.isDirty)
+        let final=await session.save(); XCTAssertTrue(final); XCTAssertFalse(session.isDirty)
+    }
     func testEditsDuringUncertainReconciliationRemainDirty() async throws {
         let disk=ArticlePersistence(directory:ArticleFixtures.root()), original=try await ArticleFixtures.create(disk)
         let store=ArticleResponseLossStore(disk:disk,loseCreate:false), session=ArticleEditSession(article:original,store:store)
@@ -107,7 +170,21 @@ import XCTest
 }
 private actor ArticleResponseLossStore:ArticleStoring {
     let disk:ArticlePersistence, loseCreate:Bool
-    var lost=false, operationIDs:[UUID]=[]
+    private var lost=false
+    private struct Request {
+        let id:UUID
+        let title:String
+        let baseRevision:Int?
+    }
+    private var requests:[Request]=[]
+    var operationIDs:[UUID] {requests.map(\.id)}
+    var operationTitles:[String] {requests.map(\.title)}
+    var baseRevisions:[Int?] {requests.map(\.baseRevision)}
+    private var reconciliationFailures=0
+    func failNextReconciliations(_ count:Int) {reconciliationFailures=count}
+    private func failReconciliationIfNeeded() throws {
+        if lost && reconciliationFailures > 0 {reconciliationFailures -= 1; throw ArticleFailure.ioFailure}
+    }
     private var shouldPause=false
     private var continuation:CheckedContinuation<Void,Never>?
     var waiting=false
@@ -119,14 +196,16 @@ private actor ArticleResponseLossStore:ArticleStoring {
     }
     init(disk:ArticlePersistence,loseCreate:Bool) {self.disk=disk; self.loseCreate=loseCreate}
     func create(projectID:UUID,operationID:UUID,source:ArticleSource,content:ArticleContent) async throws ->SavedArticle {
-        operationIDs.append(operationID)
+        requests.append(Request(id:operationID,title:content.title,baseRevision:nil))
         await waitIfNeeded()
+        try failReconciliationIfNeeded()
         let result=try await disk.create(projectID:projectID,operationID:operationID,source:source,content:content)
         if loseCreate && !lost {lost=true; throw ArticleFailure.uncertainResult}; return result
     }
     func save(projectID:UUID,operationID:UUID,expected:SavedArticle,content:ArticleContent) async throws ->SavedArticle {
-        operationIDs.append(operationID)
+        requests.append(Request(id:operationID,title:content.title,baseRevision:expected.savedRevision))
         await waitIfNeeded()
+        try failReconciliationIfNeeded()
         let result=try await disk.save(projectID:projectID,operationID:operationID,expected:expected,content:content)
         if !loseCreate && !lost {lost=true; throw ArticleFailure.uncertainResult}; return result
     }
