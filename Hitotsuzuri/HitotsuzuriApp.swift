@@ -3,6 +3,7 @@ import HitotsuzuriCore
 
 @main
 struct HitotsuzuriApp: App {
+    @NSApplicationDelegateAdaptor(ArticleApplicationDelegate.self) private var applicationDelegate
     @State private var workflow: SelectionWorkflow
     @State private var articles: ArticleAppCoordinator
     init() {
@@ -21,7 +22,7 @@ struct HitotsuzuriApp: App {
         _workflow=State(initialValue:SelectionWorkflow(library:PhotoLibraryAccess(),images:LocalImageAccess(),store:store))
         _articles=State(initialValue:ArticleAppCoordinator(selections:store,directory:directory))
     }
-    var body: some Scene { Window("ひとつづり",id:"picker") { PickerView(workflow:workflow,articles:articles) }.defaultSize(width:1280,height:800).windowResizability(.contentMinSize).commands {
+    var body: some Scene { Window("ひとつづり",id:"picker") { PickerView(workflow:workflow,articles:articles).onAppear {applicationDelegate.coordinator=articles} }.defaultSize(width:1280,height:800).windowResizability(.contentMinSize).commands {
         CommandMenu("記事") {
             Button("選択した写真の記事を開く") {Task {await articles.openArticle()}}.keyboardShortcut("n")
             Button("保存した下書きを開く") {Task {await articles.openSavedArticle()}}

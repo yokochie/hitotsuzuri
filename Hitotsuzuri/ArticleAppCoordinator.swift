@@ -85,7 +85,7 @@ import HitotsuzuriCore
         if await session.canLeave(choice) { finishLeaving(); return true }
         return false
     }
-    func attach(_ window: NSWindow?) { window?.delegate = self; NSApp.delegate = self }
+    func attach(_ window: NSWindow?) { window?.delegate = self }
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard session != nil else { return true }
         Task { if await leave() { sender.close() } }; return false
@@ -158,6 +158,14 @@ import HitotsuzuriCore
         } catch {message=(error as? ArticleFailure ?? .ioFailure).message+" 保存先："+record.destinationPath}
     }
     func cancelProbe() { if let id = requestID { images.cancel(id) }; exportTask?.cancel() }
+}
+
+/// SwiftUI のアプリdelegateを直接差し替えず、標準Adaptorから終了調整を受ける。
+@MainActor final class ArticleApplicationDelegate:NSObject,NSApplicationDelegate {
+    weak var coordinator:ArticleAppCoordinator?
+    func applicationShouldTerminate(_ sender:NSApplication) ->NSApplication.TerminateReply {
+        coordinator?.applicationShouldTerminate(sender) ?? .terminateNow
+    }
 }
 
 @MainActor private final class ArticleDestinationGrant {

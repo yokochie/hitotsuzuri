@@ -150,7 +150,9 @@ public struct PickerContent:View {
         return VStack(alignment:.leading,spacing:8) {
             HStack {
                 Text("選んだ写真").font(.headline).accessibilityAddTraits(.isHeader); Text(snapshot.countText).monospacedDigit(); Spacer()
-                if let onArticle { Button("記事を開く", action:onArticle).accessibilityIdentifier("article-open") }
+                if let onArticle, workflow.lastCommitted != nil {
+                    Button("記事を開く", action:onArticle).focusable(false).disabled(workflow.isEditingFrozen).accessibilityIdentifier("article-open")
+                }
                 if workflow.isSaving || workflow.restoreState.isBusy {ProgressView().controlSize(.small)}
                 Button(snapshot.confirmTitle) {confirmFromUI()}.buttonStyle(.borderedProminent).disabled(!snapshot.canConfirm).focusable().focused($focus,equals:.confirm).accessibilityIdentifier("selection-confirm")
                     .onKeyPress(.space) {confirmFromUI(); return .handled}

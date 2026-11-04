@@ -1,42 +1,47 @@
 import XCTest
 
 final class ArticleFoundationUITests: XCTestCase {
-    private func launch() -> XCUIApplication {
+    override func setUpWithError() throws {continueAfterFailure=false}
+    @MainActor private func launch() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["--article-test-fixture", "--article-test-root", "ui-article-" + name.replacingOccurrences(of: "/", with: "-")]
-        app.launch(); return app
+        app.launch(); app.activate()
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout:10),app.debugDescription)
+        return app
     }
-    private func open(_ app: XCUIApplication) {
-        app.buttons["article-open"].click()
+    @MainActor private func open(_ app: XCUIApplication) {
+        let entry=app.buttons["article-open"]
+        XCTAssertTrue(entry.waitForExistence(timeout:10),app.debugDescription)
+        entry.click()
         XCTAssertTrue(app.textFields["article-title"].waitForExistence(timeout: 5))
     }
-    func testStartShowsFourBodyFields() { let app = launch(); open(app); for index in 1...4 { XCTAssertTrue(app.textViews["article-photo-\(index)"].exists) } }
-    func testJapaneseTitleAndManualSave() {
+    @MainActor func testStartShowsFourBodyFields() { let app = launch(); open(app); for index in 1...4 { XCTAssertTrue(app.textViews["article-photo-\(index)"].exists) } }
+    @MainActor func testJapaneseTitleAndManualSave() {
         let app = launch(); open(app)
         let title = app.textFields["article-title"]; title.click(); title.typeKey("a", modifierFlags: .command); title.typeText("日本語の記事")
         app.buttons["article-save"].click()
         XCTAssertTrue(app.staticTexts["下書きを保存しました。"].waitForExistence(timeout: 5))
     }
-    func testSavedTitleSurvivesRelaunch() {
+    @MainActor func testSavedTitleSurvivesRelaunch() {
         let app = launch(); open(app)
         let title = app.textFields["article-title"]; title.click(); title.typeKey("a", modifierFlags: .command); title.typeText("再開する文章")
         app.buttons["article-save"].click(); XCTAssertTrue(app.staticTexts["下書きを保存しました。"].waitForExistence(timeout: 5))
         app.terminate(); app.launch(); open(app)
         XCTAssertEqual(app.textFields["article-title"].stringValue, "再開する文章")
     }
-    func testTextOpensWithoutPhotoPreview() {
+    @MainActor func testTextOpensWithoutPhotoPreview() {
         let app=launch(); open(app)
         XCTAssertTrue(app.staticTexts["article-preview-state-2"].waitForExistence(timeout:5))
         XCTAssertTrue(app.textViews["article-introduction"].exists)
         app.textViews["article-introduction"].click(); app.textViews["article-introduction"].typeText("写真なしでも文章を保持")
         app.buttons["article-save"].click()
     }
-    func testUnsavedLeaveCanContinueEditing() {
+    @MainActor func testUnsavedLeaveCanContinueEditing() {
         let app = launch(); open(app); app.textFields["article-title"].click(); app.textFields["article-title"].typeText("変更")
         app.buttons["article-back"].click(); XCTAssertTrue(app.sheets.firstMatch.waitForExistence(timeout: 5) || app.dialogs.firstMatch.exists)
         app.buttons["編集を続ける"].click(); XCTAssertTrue(app.textFields["article-title"].exists)
     }
-    func testOneImageExportReportsSuccess() {
+    @MainActor func testOneImageExportReportsSuccess() {
         let app = launch(); open(app); app.typeKey("e",modifierFlags:[.command,.shift])
         XCTAssertTrue(app.staticTexts["画像1枚の検証出力が完了しました。"].waitForExistence(timeout: 10))
     }

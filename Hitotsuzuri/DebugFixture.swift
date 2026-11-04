@@ -20,8 +20,8 @@ import UniformTypeIdentifiers
         let name = index.flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } ?? UUID().uuidString
         let safe = name.filter { $0.isLetter || $0.isNumber || $0 == "-" }
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("ArticleFixture-" + safe, isDirectory:true)
-        let selection = try! JSONDecoder().decode(CommittedSelection.self,from:Data(#"{"schemaVersion":1,"selectionID":"11111111-1111-1111-1111-111111111111","albumID":"album-a","albumTitle":"合成写真の記事","orderedAssetIDs":["a","b","c","d"],"confirmedAt":1}"#.utf8))
-        let store = FixtureStore(selection:selection)
+        let selection = try! JSONDecoder().decode(CommittedSelection.self,from:Data(#"{"schemaVersion":1,"selectionID":"11111111-1111-1111-1111-111111111111","albumID":"album-a","albumTitle":"合成写真の記事","orderedAssetIDs":["album-a-photo-1","album-a-photo-2","album-a-photo-3","album-a-photo-4"],"confirmedAt":1}"#.utf8))
+        let store = FixtureStore(selection:selection,settings:TargetFolderSettings(folderIDs:["root-a"]))
         return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:LocalImageAccess(driver:FixtureImages()),store:store), ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root),fixtureDestination:root.appendingPathComponent("Output"),previewImages:LocalImageAccess(driver:ArticleFixturePreviews())))
     }
 }
@@ -56,7 +56,7 @@ import UniformTypeIdentifiers
 private actor FixtureStore:SelectionStoring {
     var settings:TargetFolderSettings?
     var selection:CommittedSelection?
-    init(selection:CommittedSelection?=nil) {self.selection=selection}
+    init(selection:CommittedSelection?=nil,settings:TargetFolderSettings?=nil) {self.selection=selection; self.settings=settings}
     func loadSettings()->StoredValue<TargetFolderSettings> {settings.map {.valid($0)} ?? .missing}
     func saveSettings(_ value:TargetFolderSettings) {settings=value}
     func loadSelection()->StoredValue<CommittedSelection> {selection.map {.valid($0)} ?? .missing}
@@ -84,7 +84,7 @@ private actor FixtureStore:SelectionStoring {
 @MainActor private final class ArticleFixturePreviews:ImageDriving {
     private let images=FixtureImages()
     func request(_ id:String,completion:@escaping @MainActor (ImageOutcome)->Void)->Int {
-        if id == "b" {completion(.unavailable); return -1}
+        if id == "album-a-photo-2" {completion(.unavailable); return -1}
         return images.request(id,completion:completion)
     }
     func cancel(_ request:Int) {images.cancel(request)}
