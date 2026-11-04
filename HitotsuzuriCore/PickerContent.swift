@@ -54,6 +54,16 @@ public struct PickerContent:View {
                 if let id {presentation.remember(id,in:.albums)}
             }
         }.frame(minWidth:640,minHeight:560)
+            .overlay(alignment:.topTrailing) {
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("--ui-test-fixture") {
+                    Text("試験：選択と焦点").font(.caption2).padding(4)
+                        .accessibilityIdentifier("picker-input-diagnostic")
+                        .accessibilityValue(fixtureFocusDiagnostic)
+                        .allowsHitTesting(false)
+                }
+                #endif
+            }
     }
     @ViewBuilder private func region(_ value:PickerRegion)->some View {
         switch value {case .folders:folderList; case .albums:albumList; case .photos:photoGrid}
@@ -245,6 +255,23 @@ public struct PickerContent:View {
         }
     }
     private func name(_ title:String)->String {title.isEmpty ? "名称なし" : title}
+    #if DEBUG
+    private var fixtureFocusDiagnostic:String {
+        let focused:String
+        switch focus {
+        case .folder:focused="folder"
+        case .albums:focused="albums"
+        case .photo(let id):focused="photo:\((workflow.assets.firstIndex(where:{$0.id==id}) ?? -1)+1)"
+        case .regionSwitch:focused="region-switch"
+        case .confirm:focused="confirm"
+        case nil:focused="none"
+        }
+        let album=workflow.activeAlbum.flatMap {active in workflow.albums.firstIndex(where:{$0.id==active.id})}.map {$0+1} ?? 0
+        let ready=workflow.assets.filter {workflow.images[$0.id] != nil}.count
+        let native=NSApp.keyWindow?.firstResponder.map {String(describing:type(of:$0))} ?? "none"
+        return "focus=\(focused); albumRow=\(album); selected=\(workflow.selection.orderedIDs.count); ready=\(ready); compact=\(compactLayout); nativeAtViewUpdate=\(native);"
+    }
+    #endif
     @ViewBuilder private func thumbnail(_ buffer:ImageBuffer?)->some View {
         if let image=buffer?.displayImage {Image(nsImage:image).resizable().scaledToFit()}
         else {Image(systemName:"photo").font(.title2).foregroundStyle(.secondary).frame(maxWidth:.infinity,maxHeight:.infinity)}

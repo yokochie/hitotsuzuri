@@ -3,15 +3,44 @@ import XCTest
 final class NativeInputTests:XCTestCase {
     @MainActor private func compactWithFourSelected()->XCUIApplication {
         let app=launch(); openAlbum(app)
-        app.typeKey(.tab,modifierFlags:[]); app.typeKey(.space,modifierFlags:[])
-        for _ in 0..<3 {app.typeKey(.rightArrow,modifierFlags:[]); app.typeKey(.space,modifierFlags:[])}
+        recordInputStage("album-open",app)
+        app.typeKey(.tab,modifierFlags:[]); expectInputFocus("photo:1",stage:"photo-tab-entry",app)
+        app.typeKey(.space,modifierFlags:[]); expectSelectionCount(1,stage:"space-1",app)
+        for number in 2...4 {
+            app.typeKey(.rightArrow,modifierFlags:[])
+            expectInputFocus("photo:\(number)",stage:"right-\(number)",app)
+            app.typeKey(.space,modifierFlags:[])
+            expectSelectionCount(number,stage:"space-\(number)",app)
+            XCTAssertTrue(app.otherElements["selection-slot-\(number)"].label.contains("写真 \(number)"))
+        }
         XCTAssertTrue(app.staticTexts["4 / 4枚"].waitForExistence(timeout:3))
         let window=app.windows.firstMatch
         let corner=window.coordinate(withNormalizedOffset:CGVector(dx:1,dy:1)).withOffset(CGVector(dx:-1,dy:-1))
         corner.click(forDuration:0.2,thenDragTo:window.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:760,dy:660)))
         XCTAssertTrue(app.radioGroups["region-picker"].waitForExistence(timeout:3))
+        expectInputFocus("photo:4",stage:"compact-photo-restoration",app)
         XCTAssertTrue(app.buttons["selection-confirm"].isEnabled)
         return app
+    }
+    @MainActor private func inputDiagnostic(_ app:XCUIApplication)->String {
+        app.descendants(matching:.any)["picker-input-diagnostic"].value as? String ?? "diagnostic-unavailable"
+    }
+    @MainActor private func recordInputStage(_ stage:String,_ app:XCUIApplication) {
+        print("Native input stage=\(stage) \(inputDiagnostic(app))")
+    }
+    @MainActor private func expectInputFocus(_ expected:String,stage:String,_ app:XCUIApplication) {
+        let diagnostic=app.descendants(matching:.any)["picker-input-diagnostic"]
+        if (diagnostic.value as? String)?.contains("focus=\(expected);") == true {
+            recordInputStage(stage,app); return
+        }
+        let predicate=NSPredicate(format:"value CONTAINS %@","focus=\(expected);")
+        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:predicate,object:diagnostic)],timeout:3),.completed,"\(stage): \(inputDiagnostic(app))")
+        recordInputStage(stage,app)
+    }
+    @MainActor private func expectSelectionCount(_ count:Int,stage:String,_ app:XCUIApplication) {
+        let selected=app.staticTexts["\(count) / 4枚"]
+        XCTAssertTrue(selected.exists || selected.waitForExistence(timeout:3),"\(stage): \(inputDiagnostic(app))")
+        recordInputStage(stage,app)
     }
     @MainActor private func expectSaved(_ app:XCUIApplication) {
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format:"identifier == %@ AND value CONTAINS %@","selection-status","保存しました")).firstMatch.waitForExistence(timeout:3))
@@ -80,12 +109,16 @@ final class NativeInputTests:XCTestCase {
     @MainActor func testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos() {
         let app=launch(); app.staticTexts["テスト親A"].click(); app.staticTexts["テストアルバムC"].click()
         expectPhotoCount(8,app)
+        recordInputStage("mouse-album-C",app)
         let window=app.windows.firstMatch
         let corner=window.coordinate(withNormalizedOffset:CGVector(dx:1,dy:1)).withOffset(CGVector(dx:-1,dy:-1))
         corner.click(forDuration:0.2,thenDragTo:window.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:760,dy:660)))
         XCTAssertTrue(app.radioGroups["region-picker"].waitForExistence(timeout:3))
-        app.typeKey(.downArrow,modifierFlags:[]); app.typeKey(.tab,modifierFlags:[]); expectPhotoCount(4,app)
-        app.typeKey(.tab,modifierFlags:.shift); app.typeKey(.upArrow,modifierFlags:[])
+        expectInputFocus("albums",stage:"compact-album-restoration",app)
+        app.typeKey(.downArrow,modifierFlags:[]); recordInputStage("compact-album-down",app)
+        app.typeKey(.tab,modifierFlags:[]); expectPhotoCount(4,app)
+        app.typeKey(.tab,modifierFlags:.shift); expectInputFocus("albums",stage:"compact-album-backtab",app)
+        app.typeKey(.upArrow,modifierFlags:[]); recordInputStage("compact-album-up",app)
         app.typeKey(.tab,modifierFlags:[]); expectPhotoCount(8,app)
         app.typeKey(.tab,modifierFlags:.shift); app.typeKey(.upArrow,modifierFlags:[])
         app.typeKey(.tab,modifierFlags:[]); expectPhotoCount(12,app)

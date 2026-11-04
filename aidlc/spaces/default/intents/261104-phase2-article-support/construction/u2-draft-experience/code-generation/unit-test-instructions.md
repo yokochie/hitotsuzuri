@@ -2,16 +2,19 @@
 
 ## 2026-11-05 改訂仕様
 
-本人承認dac2b934に基づき、テストコードと実行スクリプトを以下の構成へ改訂した。実行区分の隔離契約8件は1.395秒で成功し、bash入口2本の構文確認も成功。アプリのビルド・起動確認と各区分の実際の結果はtdd-evidence.mdを参照し、コード改訂と全体検証成功を区別する。
+本人承認dac2b934と、CI失敗後のRetry38d447b5に基づき、テストコードと実行スクリプトを以下の構成へ改訂した。初回の隔離契約8件成功に加え、Core先行停止等を追加した14件も2.558秒で成功。各区分の実際の結果はtdd-evidence.mdとci-evidence.mdを参照し、コード改訂と全体検証成功を区別する。
 
 | 実行区分 | 専用コマンドの引数 | 対象・終了条件 |
 |---|---|---|
+| Core先行 | --core | 専用はU2の10群、正式は全3Core target。UIなし。失敗/未実行なら非0。Coreだけで製品全体coverageを判定しない |
 | 起動確認 | --smoke | FixtureSmokeUITestsの2件。記事fixtureとPicker fixtureのWindowと操作入口が利用可能になること。両メソッドの成功を結果で検査。失敗時は後続UIへ進まない |
-| 通常回帰 | --functional | Core10群と通常Article UI23件。先にsmokeを実行。詳細性能UI3件は含めない |
-| 詳細性能 | --performance | 先にsmoke、loading30回・長文描画各30回・cold10起動。回数・閾値・timeout判定は維持 |
-| 全体 | 引数なし | smoke→機能/性能を含む全対象。省略なし。正式全体コマンドで製品加重カバレッジ80%以上を判定 |
+| 通常回帰 | --functional | Core先行→smoke→Core機能と通常UI。U2通常UIは24件。先行Coreで必須実行したU2 Core性能2件だけ重複させず、UI性能3件は別実行 |
+| 詳細性能 | --performance | U2 Core性能2件→smoke→loading各30回・長文描画各30回・cold10起動。回数・閾値・timeout判定は維持 |
+| 全体 | 引数なし | Core先行→smoke→機能/性能UIを含む全対象。Core性能2件は先行で実行済み。正式コマンドは製品全ソースの加重80%以上も判定 |
 
-正式verify-native.shも同じ区分を持つ。無引数はsmoke後に全4targetを単一の主結果bundleで実行し、その結果へ既存加重checkerを適用する。smokeは先行bundleで成功確認済みのため主実行からだけ除き、機能・性能の対象は省かない。クラス名指定も維持し、未知引数・混在区分・実行0件・指定クラス未実行は非0で終了する。部分区分では全体カバレッジ合格を判定しない。
+正式verify-native.shも同じ区分を持つ。無引数と--functionalは主bundleへ既存加重checkerを適用し、製品ソース全体の80%以上を判定する。性能ケースが主bundleに重複していなくても製品ソースを除外せず、別bundleの率を平均しない。--functionalの成功だけでは詳細性能の成功を意味しない。Core性能2件はArticleDraftIntegrationTests/testLongDraftPersistenceAndProjectionPerformanceとArticlePreviewRetryTests/testDisplayMemoryAndCancellationThirtyTrialsで、先行Coreで必須実行する。smokeも先行bundleで実行し、主実行でだけ重複させない。
+
+クラス名指定を維持し、未知引数・混在区分・実行0件・指定クラス未実行は非0で終了する。選択クラスだけの部分実行と--core/--smoke/--performanceでは全体coverageを判定しない。CIだけは同一commitのnative-core成功をneedsで確認し、HZS_CORE_PREFLIGHT_DONE=1により重複した先行Coreだけを省く。主bundleのCore機能は省かず、手元の無引数全体ではこの省略を使わない。
 
 ### 改訂するUIケース
 
@@ -30,7 +33,7 @@ UI fixtureはFixtureLaunchで生成したuitest-UUID rootを追跡し、同一�
 
 ### CI
 
-push/PRのnativeジョブは正式コマンドの--functional、native-performanceは--performanceを実行する。全体と加重80%の検証はworkflow_dispatchのverify_all=trueでnative-allを実行する。部分2ジョブが成功しても全体合格ではなく、統合前には現在の対象ソースで全体検証を確認する。U1ブランチの旧版比較baseline-nativeは保持する。新構成のCI実行はまだ成功確認していない。
+push/PRではnative-coreが全Core（計測2件含む）を実行し、その成功後にnative（--functional・全製品加重80%）とnative-performance（--performance・性能UI3件）が別jobで動く。3jobすべての成功が必要で、1つの成功やcoverageだけで全体合格にしない。性能を合算する目的で長い無引数全体をCIで重ねて回さない。旧native-all単一30分jobとverify_all入力は廃止し、[verify-all]表記で試験を省く挙動も持たない。U1ブランチの旧版比較baseline-nativeは保持する。新構成のCI実行はまだ成功確認していない。
 
 ## 設定と最初の実行
 
@@ -44,13 +47,13 @@ bash scripts/verify-article-foundation.sh ArticleSessionTests ArticleWorkspaceTe
 
 これらはU1依存境界の準備/回帰確認であり、新規U2試験の成功とは記録しない。次に計画Step 1で専用スクリプトを用意する。未存在クラスを選んで0件成功として準備済みにしない。
 
-## U2の主コマンド
+## 通常のU2確認
 
 ```bash
-bash scripts/verify-draft-experience.sh
+bash scripts/verify-draft-experience.sh --functional
 ```
 
-スクリプトはsmoke成功後、HitotsuzuriU2Tests内の以下10クラスとHitotsuzuriUITestsのArticleDraftUITests/ArticleDraftPerformanceUITestsを選び、各クラスの実行/結果をxcresultで確認する。既存Phase1の全U2 targetを無条件にまとめて再実行するものにはしない。結果bundleは.build内の固有名、コードカバレッジ有効、CODE_SIGN_IDENTITY=-。xcodebuild失敗と未実行を検出して非0とする。
+通常確認はCore先行とsmoke成功後、以下10Coreクラスの機能ケースとArticleDraftUITestsを選び、各クラスの実行/結果をxcresultで確認する。性能だけを確認するときは--performance、すべて再現するときだけ無引数を使う。既存Phase1の全U2 targetを無条件にまとめて再実行するものにはしない。結果bundleは.build内の固有名、コードカバレッジ有効、CODE_SIGN_IDENTITY=-。xcodebuild失敗と未実行を検出して非0とする。
 
 | クラス | 主な条件・目安 |
 |---|---|
@@ -64,7 +67,7 @@ bash scripts/verify-draft-experience.sh
 | ArticleOutputPreparationTests | 現在入力コピー/保存済み出力準備・保存取消/失敗・後続入力・能力/未接続、8件 |
 | ArticlePreviewRetryTests | 写真不能・通信禁止・期限/取消・番号別再試行・旧世代・資源解放、8件 |
 | ArticleDraftIntegrationTests | 実保存境界・候補/関連付け・固定投影/別記事・再起動・ログcanary、8件 |
-| ArticleDraftUITests | 全欄/候補/再開/離脱、長文/幅/キー、写真不能、日付/プレビュー、代表loading、23件 |
+| ArticleDraftUITests | 全欄/候補/再開/離脱、長文/幅/キー、写真不能、日付/プレビュー、代表loading、番号別再試行キー、24件 |
 | ArticleDraftPerformanceUITests | loading各30回・長文表示各30回・cold10プロセスの3件。通常回帰から分離 |
 | FixtureSmokeUITests | 記事/Picker方式の起動と入口の2件。後続UIの前提として先行 |
 
@@ -104,7 +107,7 @@ C1は保存ゲート・容量・権限・競合・未知版・部分読込・結
 
 ## カバレッジ・性能・完了の限界
 
-全製品80%以上の行カバレッジは、組み上がった製品の全回帰suiteを正式検証が実行して判定する。上記U2限定実行の部分カバレッジだけで全体を合否判定せず、閾値/製品ソース計測範囲を変更しない。全体検証の実行コマンドはコード計画とBuild and Testが所有する。
+全製品80%以上の行カバレッジは、正式検証の全Core機能+全機能UIの主bundleから判定する。Core性能とUI性能も別の必須段階として成功が必要。上記U2限定実行の部分カバレッジだけで全体を合否判定せず、閾値/製品ソース計測範囲を変更しない。通常確認と性能確認の率を平均せず、試験ケースを別段階へ移したことを製品ソースの計測除外へ転用しない。
 
 performance-requirementsの100記事/1000操作・各本文10000文字で、保存/再開30回p95≤2秒、純粋投影100回p95≤100ms、文字切替30回p95≤0.5秒、表示15秒/取消2秒、256MiB/512MiBを対象群の試験と本人Mac計測で確認する。cold10回とCI参考値を分離する。未計測/未達は明示し合格扱いにしない。
 

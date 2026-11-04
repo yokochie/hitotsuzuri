@@ -21,19 +21,10 @@ import XCTest
         if case .failed(.timedOut)=previews.states["a"] {} else {XCTFail("取消後の遅いOS応答を採用しない")}
     }
     func testDisplayMemoryAndCancellationThirtyTrials() async throws {
-        var baseline:[UInt64]=[]
-        for _ in 0..<100 {baseline.append(try DraftMemorySample.read().footprint); try await Task.sleep(for:.milliseconds(50))}
-        let median=baseline.sorted()[50], before=try DraftMemorySample.read()
-        let sampler=Task.detached(priority:.high) {() throws ->(UInt64,Double,Int) in
-            var peak=median, previous=ContinuousClock().now, longest=0.0, count=0
-            while !Task.isCancelled {
-                let now=ContinuousClock().now
-                longest=max(longest,draftSeconds(previous.duration(to:now))); previous=now
-                peak=max(peak,try DraftMemorySample.read().footprint); count += 1
-                try? await Task.sleep(for:.milliseconds(25))
-            }
-            return (peak,longest,count)
-        }
+        let sampler=DraftMemorySampler()
+        defer {sampler.stop()}
+        let baseline=try await sampler.prepareMeasurement()
+        let median=baseline.median, before=try DraftMemorySample.read()
         let driver=DraftDisplayDriver(), images=LocalImageAccess(driver:driver)
         var loads:[Double]=[], accepts:[Double]=[], terminals:[Double]=[], directPeak=0
         for _ in 0..<30 {
@@ -70,12 +61,15 @@ import XCTest
             XCTAssertEqual(images.resources?.active,0); XCTAssertEqual(images.resources?.queued,0)
             driver.callbacks.removeAll()
         }
-        sampler.cancel(); let (peak,interval,sampleCount)=try await sampler.value, after=try DraftMemorySample.read()
+        let report=try sampler.finish(), after=try DraftMemorySample.read()
+        let peak=report.peak, interval=report.longestInterval, sampleCount=report.count
         let delta=peak > median ? peak-median : 0
         print("Draft display memory trials=30 baselineSeconds=5 baselineMedian=\(median) samplePeak=\(peak) delta=\(delta) OSpeakBefore=\(before.lifetimePeak) OSpeakAfter=\(after.lifetimePeak) samplerCount=\(sampleCount) longestInterval=\(interval) directPeak=\(directPeak)")
+        print("Draft sampler dedicatedThread=true periodSeconds=0.01 baselineActualSeconds=\(baseline.seconds) baselineCount=\(baseline.count) baselineLongestInterval=\(baseline.longestInterval)")
         print("Draft display trials=30 loadMax=\(loads.max() ?? 0) cancelAcceptMax=\(accepts.max() ?? 0) logicalEndMax=\(terminals.max() ?? 0) seconds; synthetic512pxDriver; real Photos timing separate")
         print("Draft pending-display cancellation n=30 acceptMax=\(pendingAccepts.max() ?? 0) logicalEndMax=\(pendingTerminals.max() ?? 0) seconds")
         XCTAssertLessThanOrEqual(delta,512*1024*1024); XCTAssertLessThanOrEqual(interval,0.05)
+        XCTAssertGreaterThanOrEqual(baseline.seconds,5); XCTAssertLessThanOrEqual(baseline.longestInterval,0.05)
         XCTAssertGreaterThanOrEqual(sampleCount,30)
         XCTAssertLessThanOrEqual(pendingAccepts.max() ?? .infinity,0.5); XCTAssertLessThanOrEqual(pendingTerminals.max() ?? .infinity,2)
         if after.lifetimePeak > before.lifetimePeak {XCTAssertLessThanOrEqual(after.lifetimePeak > median ? after.lifetimePeak-median : 0,512*1024*1024)}

@@ -15,6 +15,10 @@ CORE = ["ArticleInitialContentTests", "ArticleMetadataInputTests", "ArticleProje
 SMOKE = "FixtureSmokeUITests"
 PERFORMANCE = "ArticleDraftPerformanceUITests"
 TARGETS = ["HitotsuzuriU1Tests", "HitotsuzuriU2Tests", "HitotsuzuriU3Tests", "HitotsuzuriUITests"]
+CORE_PERFORMANCE = [
+    "HitotsuzuriU2Tests/ArticleDraftIntegrationTests/testLongDraftPersistenceAndProjectionPerformance",
+    "HitotsuzuriU2Tests/ArticlePreviewRetryTests/testDisplayMemoryAndCancellationThirtyTrials",
+]
 
 def native_classes():
     values = {}
@@ -80,13 +84,31 @@ def main():
     mode = "all"
     selected = None
     if args:
-        if len(args) == 1 and args[0] in ["--smoke", "--functional", "--performance"]:
+        if len(args) == 1 and args[0] in ["--core", "--smoke", "--functional", "--performance"]:
             mode = args[0][2:]
         elif all(name in allowed for name in args):
             selected = list(dict.fromkeys(args))
             mode = "selected"
         else:
             raise ValueError("未知または混在する試験区分/クラス")
+    def core_group(performance_only=False):
+        if performance_only:
+            filters = ["-only-testing:"+case for case in CORE_PERFORMANCE]
+            expected = [case.split("/")[1] for case in CORE_PERFORMANCE]
+        else:
+            expected = [name for name,target in allowed.items() if target != "HitotsuzuriUITests"]
+            filters = (["-only-testing:"+target for target in TARGETS[:-1]] if scope == "native"
+                       else ["-only-testing:"+allowed[name]+"/"+name for name in expected])
+        return run_group(("Native" if scope == "native" else "Draft")+"-core", filters, expected)
+    if mode == "core":
+        core_group()
+        print("Core専用: UIと製品全体のカバレッジは判定していません。", flush=True)
+        return
+    # CIの同一commitのCore成功依存を使う。主bundleのCore機能試験は省かない。
+    upstream_core = (mode != "all" and os.environ.get("GITHUB_ACTIONS") == "true"
+                     and os.environ.get("HZS_CORE_PREFLIGHT_DONE") == "1")
+    if selected is None and mode in ["all", "functional", "performance"] and not upstream_core:
+        core_group(performance_only=mode == "performance")
     needs_smoke = selected is None or any(allowed[name] == "HitotsuzuriUITests" for name in selected)
     if needs_smoke:
         run_group("Smoke", ["-only-testing:HitotsuzuriUITests/"+SMOKE], [SMOKE])
@@ -113,10 +135,16 @@ def main():
             filters.append("-skip-testing:HitotsuzuriUITests/"+PERFORMANCE)
     else:
         filters = ["-only-testing:"+allowed[name]+"/"+name for name in selected]
+    if mode in ["all", "functional"]:
+        # 先行Coreで必須実行済みの計測だけは重複しない。製品sourceの除外ではない。
+        filters.extend("-skip-testing:"+case for case in CORE_PERFORMANCE)
     result = run_group(("Native" if scope == "native" else "Draft")+"-"+mode, filters, selected)
-    if scope == "native" and mode == "all":
-        # 単一の全対象bundleへ既存の製品加重checkerを適用。率の平均や対象除外はしない。
+    if scope == "native" and mode in ["all", "functional"]:
+        # 全Core機能+全機能UIの単一bundleで全製品sourceの加重floorを判定。
+        # 別に必須実行する性能計測のカバレッジ率を平均・合算しない。
         subprocess.run(["swift", "scripts/check-coverage.swift", str(result)], check=True)
+        if mode == "functional":
+            print("製品全体の行カバレッジを確認。詳細性能の成功は別に必要です。", flush=True)
     else:
         print("部分実行: 製品全体のカバレッジ/全体成功は判定していません。", flush=True)
 

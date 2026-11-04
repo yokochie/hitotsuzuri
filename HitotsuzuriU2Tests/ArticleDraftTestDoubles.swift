@@ -263,3 +263,82 @@ struct DraftMemorySample:Sendable {
         return Self(footprint:info.phys_footprint,lifetimePeak:UInt64(info.ledger_phys_footprint_peak))
     }
 }
+
+// Swift executorの再開待ちと独立した、当該試験プロセス内だけの観測thread。
+// 実間隔を記録し、OSが50ms以上止めた場合も有効な測定に見せない。
+final class DraftMemorySampler:@unchecked Sendable {
+    struct Baseline:Sendable {
+        let median:UInt64, seconds:Double, count:Int, longestInterval:Double
+    }
+    struct Report:Sendable {
+        let peak:UInt64, longestInterval:Double, count:Int
+    }
+    private struct Sample {
+        let instant:ContinuousClock.Instant, memory:DraftMemorySample
+    }
+    private let condition=NSCondition()
+    private var samples:[Sample]=[]
+    private var failure:Error?
+    private var stopping=false, finished=false
+    private var measurementStart:ContinuousClock.Instant?
+    private var worker:Thread?
+    init() {
+        let worker=Thread {[self] in observe()}
+        worker.name="Draft memory sampler"
+        worker.qualityOfService = .userInteractive
+        self.worker=worker; worker.start()
+    }
+    private func observe() {
+        while true {
+            do {
+                let memory=try DraftMemorySample.read(), instant=ContinuousClock().now
+                condition.lock(); samples.append(Sample(instant:instant,memory:memory))
+                if stopping {finished=true; condition.broadcast(); condition.unlock(); return}
+                condition.unlock()
+            } catch {
+                condition.lock(); failure=error; finished=true; condition.broadcast(); condition.unlock(); return
+            }
+            Thread.sleep(forTimeInterval:0.01)
+        }
+    }
+    private func snapshot() throws ->[Sample] {
+        condition.lock(); defer {condition.unlock()}
+        if let failure {throw failure}
+        return samples
+    }
+    private func longestInterval(_ values:[Sample])->Double {
+        zip(values,values.dropFirst()).map {draftSeconds($0.instant.duration(to:$1.instant))}.max() ?? 0
+    }
+    func prepareMeasurement() async throws ->Baseline {
+        let deadline=ContinuousClock().now + .seconds(10)
+        while ContinuousClock().now < deadline {
+            let values=try snapshot()
+            if let first=values.first,let last=values.last {
+                let seconds=draftSeconds(first.instant.duration(to:last.instant))
+                if seconds >= 5 {
+                    let footprints=values.map(\.memory.footprint).sorted()
+                    beginMeasurement()
+                    return Baseline(median:footprints[footprints.count/2],seconds:seconds,count:values.count,longestInterval:longestInterval(values))
+                }
+            }
+            try await Task.sleep(for:.milliseconds(10))
+        }
+        throw ArticleFailure.timedOut
+    }
+    private func beginMeasurement() {
+        condition.lock(); measurementStart=ContinuousClock().now; condition.unlock()
+    }
+    func finish() throws ->Report {
+        condition.lock(); stopping=true
+        let deadline=Date().addingTimeInterval(3)
+        while !finished {
+            if !condition.wait(until:deadline) {condition.unlock(); throw ArticleFailure.timedOut}
+        }
+        let values=samples, start=measurementStart, error=failure
+        condition.unlock()
+        if let error {throw error}
+        let relevant=start.map {boundary in values.filter {$0.instant >= boundary}} ?? values
+        return Report(peak:relevant.map(\.memory.footprint).max() ?? 0,longestInterval:longestInterval(values),count:relevant.count)
+    }
+    func stop() {_=try? finish()}
+}

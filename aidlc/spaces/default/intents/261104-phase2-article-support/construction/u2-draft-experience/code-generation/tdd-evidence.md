@@ -277,3 +277,42 @@ xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'plat
 - 確定summary: 2実行/2成功/0失敗/0skip、exit0、UI46.379秒/testing57.050秒。新規回帰26.701秒、既存の本文・日付・自由情報からプレビューへのTab/ShiftTab代表19.677秒。各teardownの所有root回収も成功。QoS priority inversionのruntime warningは2件。
 - 整理確認ではクリック/キーの実処理重複をretryPhotoへ集約済み、既存入力順・本文所有・画像処理期限/予算を変えていないことを確認。Green後に追加の製品変更は不要で、無変更の同一2件を重複実行しない。
 - 変更はArticleView/ArticleAppCoordinator/DebugFixture/ArticleDraftUITestsと本TDD記録のみ。既存manifest43パス内で新規pathなし。4ソースのdiff-checkはexit0。通常Article UIは追加回帰を含む24件になった。全体/性能/coverage/CIは今回実施しておらず、部分2件の成功から推定しない。source/記録を凍結してrootへ返却した。
+## CI失敗後の計測/キー前提の限定調査（2026-11-05）
+
+### 観測間隔の修正
+
+- 本人38d447b5のRetryと最新正式briefに基づく限定対応。先行失敗はCI41928800409/commit771d101fbb6be38a76b84d1a422bf5a1b29598b2のtestDisplayMemoryAndCancellationThirtyTrials。longestInterval=0.107867292sが0.05sを超過し、メモリ量自体は予算内だった。この失敗を保持し、同じ全体Redは繰り返さない。
+- 旧samplerはTask.detached(.high)の25ms sleep後にSwift共有executorへ再開する方式だった。新しいDraftMemorySamplerは試験プロセス内だけの専用Thread/userInteractive QoSで10ms間隔を要求し、実時間を記録する。SwiftUI/MainActor/Swift taskの再開待ちとは独立させるが、OSによる停止を保証で隠さず、実間隔が50msを超えれば引き続き失敗する。
+- 同じsamplerで実5秒以上のbaseline中央値を取り、baselineと本処理を含む実最大観測間隔も判定。OS lifetime peakの前後値、直接保持256MiB/プロセス増分512MiB、30回表示/取消の元基準は維持。samplerの終了と最終観測を待ち、throw時もdeferで停止する。
+
+```bash
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriU2Tests/ArticlePreviewRetryTests/testDisplayMemoryAndCancellationThirtyTrials -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/U2-Memory-Sampler-20261105-142300.xcresult CODE_SIGN_IDENTITY=- test
+```
+
+- require_escalated実行、確定1成功/0失敗/0skip、exit0。test6.678秒/testing7.353秒。実行ログ時刻08:35JST（bundleの任意名を時刻証拠とはしない）。baseline実5.005715375秒/418sample、measurement138sample、全phaseの最大間隔0.014917958s。baselineMedian9,192,192B、samplePeak15,647,488B、delta6,455,296B、OSpeak9,569,024→15,647,488B、directPeak4,194,304B。
+- 表示30回loadMax0.00208325s、取消受理max0.000173125s/論理終端max0.000431292s。未応答取消30回は受理max0.000077208s/論理終端max0.000350583s。合成512px/本人MacのCoreプロセスでの限定値で、実Photos・製品UI全体・CIの観測成立とは別。CI修正後の実測は未確認。
+
+### Native共通前提の段階診断
+
+- CIで失敗した5件はWindow不在ではなく、4件が共通helperの4枚選択前提、1件がcompactアルバム矢印の写真追随。既知旧CI失敗と同原因とは断定しない。
+- compactWithFourSelectedにTab/Right後の論理FocusState、各Space後の実選択数と写真slot、compact復帰後のphoto4焦点を検査する段階観測を追加。元のキー順・4枚条件・保存/逆Tabのアサーションは保持。compactアルバム矢印にも切替前後の焦点/段階出力を追加した。
+- DEBUGの--ui-test-fixture限定で、SwiftUI TextのAX値へ固定分類（focus、アルバム行番号、選択数、画像ready数、compact）だけを表示する。本文/写真ID/パスは出さない。nativeAtViewUpdateはそのview更新時のfirstResponder class参考値であり、原子的な現在focus判定には使わない。診断のためにfocusを変更しない。
+- 初めに追加したNSTextField診断overrideはSDKの基底宣言に一致せず、`.build/U2-Native-Selection-Diagnostic-20261105-083900.xcresult` と `...-084000.xcresult` はコンパイルでexit65/機能未実行。これらを機能Redとはしない。推測したnative overrideを撤去して既存SwiftUI Textへ縮小後、代表1件のみを実行した。
+
+```bash
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriUITests/NativeInputTests/testCompactPhotoTabCanActivateEnabledConfirm -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/U2-Native-Selection-Diagnostic-20261105-084200.xcresult CODE_SIGN_IDENTITY=- test
+```
+
+- 確定1成功/0失敗/0skip、exit0、test26.912秒/testing52.374秒。album-open=albums/selected0/ready12、Tab=photo1、Space=selected1、各Right=photo2/3/4、各Space=selected2/3/4、slot2〜4の番号一致、compact後photo4/selected4を実観測。元のTab→Spaceによる保存と最後の所有root回収も成功。
+- 本番のPicker focus動作は変更していない。条件待ちを含む診断強化後のローカル1回では非再現であり、元CIの原因や5件の解消を証明しない。rootの「非再現なら診断改善と未確認を返す」指示により、残4件は追加実行せずCIで確認する。全体/詳細性能UI3件/他UIは未実行。
+- 変更はArticlePreviewRetryTests/ArticleDraftTestDoubles/NativeInputTests/PickerContentおよび本TDD。すべて既存manifest43パス内で新規pathなし、4ソースdiff-checkはexit0。root所有のrunner/CI/計画/最終記録は編集していない。検証後に全writeを凍結し、CI再確認へ返却する。
+
+- 最終静的確認でDEBUG診断TextがVStackの高さを占有していたため、同じAX値を既存領域のoverlayへ移しallowsHitTesting(false)を付けた。レイアウト必要寸法/クリック領域/Tab停止点を増やさない構造とする。上記のローカル代表1件成功はこの表示位置移動前の候補であり、overlay後の候補でUIを再実行したとは扱わない。rootの指示に従い追加試験なしで最終候補のCI確認へ渡す。
+- 段階確認helperも現在値のfast pathを追加。焦点のAX値が既に一致すれば即return、選択数が既に存在すればwaitForExistenceを呼ばず通す。不成立時のみ従来の同じ3秒条件待ちを使い、固定sleep/無条件poll遅延を増やさない。この検査方式の整理後も追加UIは起動せず、最終候補の確認はCIへ渡す。
+# CI早期停止と区分の改訂（root、Retry38d447b5）
+
+- 追加した短いrunner契約4件を旧実装へ実行し、4失敗/0成功（0.978秒）を確認。Core失敗後もUIが動く、--coreがない、通常区分で全製品coverageを判定しない、CI依存時のcoverage不足を示した。
+- native-test-runnerへ--coreとCore先行停止を追加。無引数/通常はCoreに失敗するとsmoke/UIへ進まない。性能専用はU2 Core性能2件を先に実行する。CIだけは同一commitのnative-core成功依存を明示し重複した先行だけを省き、通常主bundleからCore機能を除かない。
+- 全体/通常の主bundleでは先行済みCore性能2件を重複しない。性能ケースを除いたことを製品ソースの除外へ転用せず、既存checkerで全製品加重80%を判定。UI性能3件は別の必須jobで成功が必要。
+- 14件の隔離契約が成功（2.558秒/exit0）。Core失敗・Core0件でUI未起動、Core専用でUIなし、未知引数拒否、smoke停止、通常全source coverage、性能分離、非CI環境で依存フラグだけ設定しても先行を省けないことを確認。実Xcodeや本人データへは接続していない。
+- 新workflowはnative-core成功後にnative/native-performanceを実行するneedsを持つ。単一native-allの30分実行は廃止し、旧U1専用baselineは保持。Ruby標準YAMLで構文/依存関係を読取確認した。新CI成功の証拠はまだない。
