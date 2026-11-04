@@ -41,8 +41,14 @@ final class ArticleFoundationUITests: XCTestCase {
     }
     @MainActor func testUnsavedLeaveCanContinueEditing() {
         let app = launch(); open(app); app.textFields["article-title"].click(); app.textFields["article-title"].typeText("変更")
-        app.buttons["article-back"].click(); XCTAssertTrue(app.sheets.firstMatch.waitForExistence(timeout: 5) || app.dialogs.firstMatch.exists)
-        app.buttons["編集を続ける"].click(); XCTAssertTrue(app.textFields["article-title"].exists)
+        app.buttons["article-back"].click()
+        let sheet=app.sheets.firstMatch, dialog=app.dialogs.firstMatch
+        let confirmation:XCUIElement
+        if sheet.waitForExistence(timeout:5) {confirmation=sheet}
+        else {XCTAssertTrue(dialog.waitForExistence(timeout:5)); confirmation=dialog}
+        confirmation.buttons["編集を続ける"].click()
+        XCTAssertTrue(confirmation.waitForNonExistence(timeout:5))
+        XCTAssertTrue(app.textFields["article-title"].exists); XCTAssertTrue(app.textFields["article-title"].isEnabled)
     }
     @MainActor func testOneImageExportReportsSuccess() {
         let app = launch(); open(app); app.typeKey("e",modifierFlags:[.command,.shift])
