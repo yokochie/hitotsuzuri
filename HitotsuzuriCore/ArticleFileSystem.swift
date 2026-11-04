@@ -3,6 +3,7 @@ import Darwin
 
 /// 開いた親ディレクトリを基準に操作し、検査後のパス差替えを避ける。
 final class ArticleDirectory {
+    static let maximumFileBytes=64*1024*1024
     let descriptor: Int32
     init(descriptor: Int32) { self.descriptor = descriptor }
     deinit { Darwin.close(descriptor) }
@@ -37,13 +38,13 @@ final class ArticleDirectory {
         defer { Darwin.close(fd) }
         var info = stat()
         guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG else { throw ArticleFailure.invalidReference }
-        guard info.st_size >= 0, info.st_size <= 64 * 1024 * 1024 else { throw ArticleFailure.capacity }
+        guard info.st_size >= 0, info.st_size <= Self.maximumFileBytes else { throw ArticleFailure.capacity }
         var result = Data(), buffer = [UInt8](repeating: 0, count: 16384)
         while true {
             let count = Darwin.read(fd, &buffer, buffer.count)
             if count == 0 { break }
             if count < 0 { if errno == EINTR { continue }; throw failure() }
-            guard result.count <= 64 * 1024 * 1024 - count else { throw ArticleFailure.capacity }
+            guard result.count <= Self.maximumFileBytes - count else { throw ArticleFailure.capacity }
             result.append(contentsOf: buffer.prefix(count))
         }
         return result
@@ -51,6 +52,7 @@ final class ArticleDirectory {
 
     func writeNew(_ name: String, data: Data) throws {
         try validate(name)
+        guard data.count <= Self.maximumFileBytes else {throw ArticleFailure.capacity}
         let fd = openat(descriptor, name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
         guard fd >= 0 else { throw failure() }
         defer { Darwin.close(fd) }
