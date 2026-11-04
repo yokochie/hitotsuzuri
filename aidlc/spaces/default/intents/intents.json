@@ -6,5 +6,13 @@
     "scope": "mvp",
     "status": "complete",
     "request": "7be11570"
+  },
+  {
+    "uuid": "01a1a419-f24a-77b0-b3db-6966851d4990",
+    "slug": "phase2-article-support",
+    "dirName": "261104-phase2-article-support",
+    "scope": "mvp",
+    "status": "in-flight",
+    "request": "82f0d304"
   }
 ]
