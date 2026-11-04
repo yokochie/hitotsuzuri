@@ -1,5 +1,8 @@
 # ひとつづり — 実装単位
 
+> 2026-10-31 本人承認による変更: 今回のPhase 1ではCIを省き、統合前のローカルビルド・自動テスト・行カバレッジ80%以上を必須とする。本文のCI実行・専用Mac・ランナー準備に関する旧条件は適用しない。TDD・本人の実機確認は維持する。[変更記録](../../change-decisions/2026-10-31-local-verification.md)。
+
+
 ## 入力と位置づけ
 
 [構成要素](../domain-design/components.md)、[設計判断](../domain-design/decisions.md)、[要件](../requirements-analysis/requirements.md)、[ストーリー](../user-stories/stories.md)、[確認済み計画](units-generation-questions.md)に基づく。3単位は同じmacOSアプリの段階的な増分であり、配布可能な独立アプリを3つ作る計画ではない。技術選定・公開契約・実装順序の正式な計画は後続段階で具体化する。

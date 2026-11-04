@@ -1,5 +1,8 @@
 # ひとつづり — 利用者ストーリー
 
+> 2026-10-31 本人承認による変更: 今回のPhase 1ではCIを省き、統合前のローカルビルド・自動テスト・行カバレッジ80%以上を必須とする。本文のCI実行・専用Mac・ランナー準備に関する旧条件は適用しない。TDD・本人の実機確認は維持する。[変更記録](../../change-decisions/2026-10-31-local-verification.md)。
+
+
 ## 根拠と共通方針
 
 [要件書](../requirements-analysis/requirements.md)、[開発・検証方針](../practices-discovery/team-practices.md)、[確認済み計画](user-stories-questions.md)に基づく。利用者は[本人P1](personas.md)。全件Must Have。依存は製品での利用順序を示し、テストではFakeや保存済みデータを用いて各ストーリーを独立に検証する。実装単位と日程は後で決定する。

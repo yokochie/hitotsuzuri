@@ -1,5 +1,8 @@
 # 外部依存と未実施事項
 
+> 2026-10-31 本人承認による変更: 今回のPhase 1ではCIを省き、統合前のローカルビルド・自動テスト・行カバレッジ80%以上を必須とする。本文のCI実行・専用Mac・ランナー準備に関する旧条件は適用しない。TDD・本人の実機確認は維持する。[変更記録](../../change-decisions/2026-10-31-local-verification.md)。
+
+
 入力: [要件](../requirements-analysis/requirements.md)、[ストーリー](../user-stories/stories.md)、[詳細画面](../refined-mockups/mockups.md)、[構成要素](../domain-design/components.md)、[単位定義](../units-generation/unit-of-work.md)・[依存](../units-generation/unit-of-work-dependency.md)・[対応表](../units-generation/unit-of-work-story-map.md)、[内部契約](../contract-design/contract-summary.md)、[開発規約](../practices-discovery/team-practices.md)、[確認回答](delivery-planning-questions.md)。
 
 1回の実装・検証を動く増分にする区切りをBoltと呼ぶ。本人のMacとPhotos、CI登録の権限が主要な外部依存。クラウドアプリ基盤・外部投稿APIは使わない。

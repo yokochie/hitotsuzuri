@@ -1,0 +1,320 @@
+{
+  "stage": "code-generation",
+  "unit": "u3-native-experience",
+  "upstream_ids": [
+    "AC1.1.1",
+    "AC1.1.2",
+    "AC1.1.3",
+    "AC1.2.1",
+    "AC1.2.2",
+    "AC1.2.3",
+    "AC1.2.4",
+    "AC1.3.1",
+    "AC1.3.2",
+    "AC1.3.3",
+    "AC1.3.4",
+    "AC1.3.5",
+    "AC1.4.1",
+    "AC1.4.2",
+    "AC1.4.3",
+    "AC1.4.4",
+    "AC1.4.5",
+    "AC1.5.1",
+    "AC1.5.2",
+    "AC1.5.3",
+    "AC1.5.4",
+    "AC1.6.1",
+    "AC1.6.2",
+    "AC1.6.3",
+    "AC1.6.4",
+    "AC1.6.5",
+    "AC1.7.1",
+    "AC1.7.2",
+    "AC1.7.3",
+    "AC1.7.4",
+    "AC1.8.1",
+    "AC1.8.2",
+    "AC1.8.3",
+    "AC1.8.4",
+    "NFR2.31",
+    "NFR2.32",
+    "NFR2.33",
+    "NFR2.34",
+    "NFR4.31",
+    "NFR4.32",
+    "NFR4.33",
+    "NFR4.34",
+    "NFR3.31",
+    "NFR3.32",
+    "NFR3.33",
+    "NFR5.31",
+    "BR3.1",
+    "BR3.2",
+    "BR3.3",
+    "BR3.4",
+    "BR3.5",
+    "BR3.6"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.1.1",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.1.2",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.1.3",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.2.1",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "AC1.2.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3LayoutTests.swift"
+    },
+    {
+      "id": "AC1.2.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3LayoutTests.swift"
+    },
+    {
+      "id": "AC1.2.4",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "AC1.3.1",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.3.2",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.3.3",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.3.4",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.3.5",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "AC1.4.1",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "AC1.4.2",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "AC1.4.3",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "AC1.4.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3AccessibilityTests.swift"
+    },
+    {
+      "id": "AC1.4.5",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3AccessibilityTests.swift"
+    },
+    {
+      "id": "AC1.5.1",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.5.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.5.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.5.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.6.1",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3SaveCompletionTests.swift"
+    },
+    {
+      "id": "AC1.6.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3SaveCompletionTests.swift"
+    },
+    {
+      "id": "AC1.6.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3SaveCompletionTests.swift"
+    },
+    {
+      "id": "AC1.6.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3SaveCompletionTests.swift"
+    },
+    {
+      "id": "AC1.6.5",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3SaveCompletionTests.swift"
+    },
+    {
+      "id": "AC1.7.1",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.7.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.7.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.7.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.8.1",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.8.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.8.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.8.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "NFR2.31",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    },
+    {
+      "id": "NFR2.32",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3ResourceTests.swift"
+    },
+    {
+      "id": "NFR2.33",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3ResourceTests.swift"
+    },
+    {
+      "id": "NFR2.34",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3ResourceTests.swift"
+    },
+    {
+      "id": "NFR4.31",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "NFR4.32",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3AccessibilityTests.swift"
+    },
+    {
+      "id": "NFR4.33",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "NFR4.34",
+      "status": "OK",
+      "target": "aidlc/spaces/default/intents/261028-phase1-photo-selection/construction/u3-native-experience/code-generation/manual-verification.md"
+    },
+    {
+      "id": "NFR3.31",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "NFR3.32",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3SaveCompletionTests.swift"
+    },
+    {
+      "id": "NFR3.33",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "id": "NFR5.31",
+      "status": "OK",
+      "target": "HitotsuzuriCore/NativeMeasurement.swift"
+    },
+    {
+      "id": "BR3.1",
+      "status": "OK",
+      "target": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "id": "BR3.2",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "id": "BR3.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3AccessibilityTests.swift"
+    },
+    {
+      "id": "BR3.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3SaveCompletionTests.swift"
+    },
+    {
+      "id": "BR3.5",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3ResourceTests.swift"
+    },
+    {
+      "id": "BR3.6",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/U3IntegrationTests.swift"
+    }
+  ]
+}

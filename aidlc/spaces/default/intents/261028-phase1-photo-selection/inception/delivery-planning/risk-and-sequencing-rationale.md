@@ -1,5 +1,8 @@
 # 実装順序の根拠と停止条件
 
+> 2026-10-31 本人承認による変更: 今回のPhase 1ではCIを省き、統合前のローカルビルド・自動テスト・行カバレッジ80%以上を必須とする。本文のCI実行・専用Mac・ランナー準備に関する旧条件は適用しない。TDD・本人の実機確認は維持する。[変更記録](../../change-decisions/2026-10-31-local-verification.md)。
+
+
 入力: [要件](../requirements-analysis/requirements.md)、[ストーリー](../user-stories/stories.md)、[詳細画面](../refined-mockups/mockups.md)、[構成要素](../domain-design/components.md)、[単位定義](../units-generation/unit-of-work.md)・[依存](../units-generation/unit-of-work-dependency.md)・[対応表](../units-generation/unit-of-work-story-map.md)、[内部契約](../contract-design/contract-summary.md)、[開発規約](../practices-discovery/team-practices.md)、[確認回答](delivery-planning-questions.md)。
 
 1回の実装・検証で動く増分を完成させる区切りをBoltとする。最初に一通り動く最小構成を実証するwalking-skeleton-firstと、未検証の連携を早期確認するrisk-firstを採用する。本人が実ライブラリ参照の早期確認と最小統合を選択済みであり、新たな数値の優先度モデルは使わない。

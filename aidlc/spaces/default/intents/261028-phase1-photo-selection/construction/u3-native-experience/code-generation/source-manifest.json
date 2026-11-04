@@ -1,0 +1,16 @@
+{
+  "stage": "code-generation",
+  "unit": "u3-native-experience",
+  "version": 1,
+  "writes": [
+    {
+      "path": "Hitotsuzuri/DebugFixture.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/NativeInputTests.swift"
+    }
+  ]
+}

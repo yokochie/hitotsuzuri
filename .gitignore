@@ -24,3 +24,9 @@ aidlc/spaces/*/intents/*/runtime-graph.json
 aidlc/spaces/*/intents/*/.aidlc-*
 aidlc/diagnostics/
 # END AI-DLC:gitignore
+
+# Xcodeの生成物と個人設定
+.build/
+xcuserdata/
+*.xcuserstate
+.DS_Store

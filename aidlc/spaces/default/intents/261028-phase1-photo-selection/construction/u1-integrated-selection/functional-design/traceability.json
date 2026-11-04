@@ -1,0 +1,189 @@
+{
+  "stage": "functional-design",
+  "unit": "u1-integrated-selection",
+  "upstream_ids": [
+    "AC1.1.1",
+    "AC1.1.2",
+    "AC1.1.3",
+    "AC1.2.1",
+    "AC1.2.2",
+    "AC1.2.3",
+    "AC1.2.4",
+    "AC1.3.1",
+    "AC1.3.2",
+    "AC1.3.3",
+    "AC1.3.4",
+    "AC1.3.5",
+    "AC1.4.1",
+    "AC1.4.2",
+    "AC1.4.3",
+    "AC1.4.4",
+    "AC1.4.5",
+    "AC1.5.1",
+    "AC1.5.2",
+    "AC1.5.3",
+    "AC1.5.4",
+    "AC1.6.1",
+    "AC1.6.2",
+    "AC1.6.3",
+    "AC1.6.4",
+    "AC1.6.5",
+    "AC1.8.1",
+    "AC1.8.2",
+    "AC1.8.3",
+    "AC1.8.4"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.1.1",
+      "status": "OK",
+      "target": "BR1.1"
+    },
+    {
+      "id": "AC1.1.2",
+      "status": "Deferred",
+      "target": "BR1.1 基本案内。権限喪失の完全化はu2-session-reliability"
+    },
+    {
+      "id": "AC1.1.3",
+      "status": "Deferred",
+      "target": "BR1.1 BR1.14 認可と実機確認。操作支援の完成はu3-native-experience"
+    },
+    {
+      "id": "AC1.2.1",
+      "status": "OK",
+      "target": "BR1.2"
+    },
+    {
+      "id": "AC1.2.2",
+      "status": "OK",
+      "target": "BR1.2"
+    },
+    {
+      "id": "AC1.2.3",
+      "status": "OK",
+      "target": "BR1.2"
+    },
+    {
+      "id": "AC1.2.4",
+      "status": "Deferred",
+      "target": "BR1.2 循環防止。長い名称・フォーカスはu3-native-experience"
+    },
+    {
+      "id": "AC1.3.1",
+      "status": "OK",
+      "target": "BR1.3"
+    },
+    {
+      "id": "AC1.3.2",
+      "status": "OK",
+      "target": "BR1.3 BR1.14"
+    },
+    {
+      "id": "AC1.3.3",
+      "status": "OK",
+      "target": "BR1.4"
+    },
+    {
+      "id": "AC1.3.4",
+      "status": "OK",
+      "target": "BR1.3 BR1.4"
+    },
+    {
+      "id": "AC1.3.5",
+      "status": "Deferred",
+      "target": "BR1.4 取消基礎。資源測定はu3-native-experience"
+    },
+    {
+      "id": "AC1.4.1",
+      "status": "OK",
+      "target": "BR1.5"
+    },
+    {
+      "id": "AC1.4.2",
+      "status": "OK",
+      "target": "BR1.5"
+    },
+    {
+      "id": "AC1.4.3",
+      "status": "OK",
+      "target": "BR1.5"
+    },
+    {
+      "id": "AC1.4.4",
+      "status": "OK",
+      "target": "BR1.6"
+    },
+    {
+      "id": "AC1.4.5",
+      "status": "Deferred",
+      "target": "u3-native-experienceでVoiceOverと画面反映性能を検証"
+    },
+    {
+      "id": "AC1.5.1",
+      "status": "OK",
+      "target": "BR1.7"
+    },
+    {
+      "id": "AC1.5.2",
+      "status": "OK",
+      "target": "BR1.7"
+    },
+    {
+      "id": "AC1.5.3",
+      "status": "OK",
+      "target": "BR1.10 BR1.13"
+    },
+    {
+      "id": "AC1.5.4",
+      "status": "Deferred",
+      "target": "BR1.13 編集非永続化。確定内容復元はu2-session-reliability"
+    },
+    {
+      "id": "AC1.6.1",
+      "status": "OK",
+      "target": "BR1.8 BR1.9 BR1.10"
+    },
+    {
+      "id": "AC1.6.2",
+      "status": "OK",
+      "target": "BR1.9"
+    },
+    {
+      "id": "AC1.6.3",
+      "status": "OK",
+      "target": "BR1.11"
+    },
+    {
+      "id": "AC1.6.4",
+      "status": "OK",
+      "target": "BR1.8"
+    },
+    {
+      "id": "AC1.6.5",
+      "status": "OK",
+      "target": "BR1.10 BR1.14"
+    },
+    {
+      "id": "AC1.8.1",
+      "status": "OK",
+      "target": "BR1.9 BR1.12"
+    },
+    {
+      "id": "AC1.8.2",
+      "status": "OK",
+      "target": "BR1.12"
+    },
+    {
+      "id": "AC1.8.3",
+      "status": "Deferred",
+      "target": "u3-native-experienceで失敗案内の操作支援を完成"
+    },
+    {
+      "id": "AC1.8.4",
+      "status": "OK",
+      "target": "BR1.14"
+    }
+  ],
+  "reverse": []
+}

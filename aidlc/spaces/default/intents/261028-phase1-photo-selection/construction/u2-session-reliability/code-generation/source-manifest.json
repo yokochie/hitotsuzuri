@@ -1,0 +1,55 @@
+{
+  "stage": "code-generation",
+  "unit": "u2-session-reliability",
+  "version": 1,
+  "writes": [
+    {
+      "path": "Hitotsuzuri.xcodeproj/project.pbxproj"
+    },
+    {
+      "path": "Hitotsuzuri.xcodeproj/xcshareddata/xcschemes/Hitotsuzuri.xcscheme"
+    },
+    {
+      "path": "HitotsuzuriCore/Models.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/Ports.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/SelectionPersistence.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/SelectionWorkflow.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PresentationSnapshot.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/TestDoubles.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/U2ModelTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/U2PresentationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/U2IntegrationTests.swift"
+    },
+    {
+      "path": "scripts/verify-phase1.sh"
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "stage": "infrastructure-design",
+  "unit": "u1-integrated-selection",
+  "upstream_ids": [
+    "NFR2.2",
+    "NFR2.3",
+    "NFR2.6",
+    "NFR2.4",
+    "NFR2.5",
+    "NFR2.9",
+    "NFR2.1",
+    "NFR3.1",
+    "NFR3.2",
+    "NFR3.3",
+    "NFR3.4",
+    "NFR3.5",
+    "NFR5.1",
+    "NFR5.7",
+    "NFR2.7",
+    "NFR2.8",
+    "NFR1.4",
+    "NFR3.6",
+    "NFR3.7",
+    "NFR3.8",
+    "NFR3.9",
+    "NFR4.1",
+    "NFR1.1",
+    "NFR1.2",
+    "NFR1.3",
+    "NFR5.2",
+    "NFR5.3",
+    "NFR5.4",
+    "NFR5.5",
+    "NFR5.6"
+  ],
+  "coverage": [
+    {
+      "id": "NFR2.2",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR2.3",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR2.6",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR2.4",
+      "status": "OK",
+      "target": "monitoring-design.md Metrics & KPIs; infrastructure-specification.md Infrastructure Services"
+    },
+    {
+      "id": "NFR2.5",
+      "status": "OK",
+      "target": "monitoring-design.md Metrics & KPIs; infrastructure-specification.md Infrastructure Services"
+    },
+    {
+      "id": "NFR2.9",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR2.1",
+      "status": "OK",
+      "target": "monitoring-design.md Metrics & KPIs; infrastructure-specification.md Infrastructure Services"
+    },
+    {
+      "id": "NFR3.1",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR3.2",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR3.3",
+      "status": "OK",
+      "target": "monitoring-design.md Metrics & KPIs; infrastructure-specification.md Infrastructure Services"
+    },
+    {
+      "id": "NFR3.4",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR3.5",
+      "status": "OK",
+      "target": "monitoring-design.md Metrics & KPIs; infrastructure-specification.md Infrastructure Services"
+    },
+    {
+      "id": "NFR5.1",
+      "status": "OK",
+      "target": "cicd-pipeline.md 段階と確認条件; monitoring-design.md Logs & Tracing"
+    },
+    {
+      "id": "NFR5.7",
+      "status": "OK",
+      "target": "cicd-pipeline.md CIを省く決定：本人承認により統合前ローカル検証へ変更"
+    },
+    {
+      "id": "NFR2.7",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR2.8",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR1.4",
+      "status": "OK",
+      "target": "infrastructure-specification.md Deployment"
+    },
+    {
+      "id": "NFR3.6",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR3.7",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR3.8",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR3.9",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR4.1",
+      "status": "N/A",
+      "target": "アプリ内部の処理・境界で実装。infrastructure-specification.mdのローカルアプリと専用領域を使用し、追加インフラなし。動作検証はcicd-pipeline.mdのローカル必須条件に従う。"
+    },
+    {
+      "id": "NFR1.1",
+      "status": "OK",
+      "target": "infrastructure-specification.md Deployment"
+    },
+    {
+      "id": "NFR1.2",
+      "status": "OK",
+      "target": "infrastructure-specification.md Deployment"
+    },
+    {
+      "id": "NFR1.3",
+      "status": "OK",
+      "target": "infrastructure-specification.md Deployment"
+    },
+    {
+      "id": "NFR5.2",
+      "status": "OK",
+      "target": "cicd-pipeline.md 段階と確認条件; monitoring-design.md Logs & Tracing"
+    },
+    {
+      "id": "NFR5.3",
+      "status": "OK",
+      "target": "cicd-pipeline.md 段階と確認条件; monitoring-design.md Logs & Tracing"
+    },
+    {
+      "id": "NFR5.4",
+      "status": "OK",
+      "target": "cicd-pipeline.md 段階と確認条件; monitoring-design.md Logs & Tracing"
+    },
+    {
+      "id": "NFR5.5",
+      "status": "OK",
+      "target": "cicd-pipeline.md 段階と確認条件; monitoring-design.md Logs & Tracing"
+    },
+    {
+      "id": "NFR5.6",
+      "status": "OK",
+      "target": "cicd-pipeline.md 段階と確認条件; monitoring-design.md Logs & Tracing"
+    }
+  ],
+  "reverse": []
+}

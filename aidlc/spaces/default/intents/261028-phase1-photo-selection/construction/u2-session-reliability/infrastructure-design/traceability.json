@@ -1,0 +1,99 @@
+{
+  "stage": "infrastructure-design",
+  "unit": "u2-session-reliability",
+  "upstream_ids": [
+    "NFR2.21",
+    "NFR2.23",
+    "NFR3.21",
+    "NFR3.22",
+    "NFR3.23",
+    "NFR3.24",
+    "NFR2.24",
+    "NFR3.25",
+    "NFR4.21",
+    "NFR3.26",
+    "NFR3.27",
+    "NFR1.21",
+    "NFR2.22",
+    "NFR5.21",
+    "NFR5.22"
+  ],
+  "coverage": [
+    {
+      "id": "NFR2.21",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR2.23",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR3.21",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR3.22",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR3.23",
+      "status": "OK",
+      "target": "infrastructure-specification.md 専用領域quarantine"
+    },
+    {
+      "id": "NFR3.24",
+      "status": "OK",
+      "target": "infrastructure-specification.md 専用領域quarantine"
+    },
+    {
+      "id": "NFR2.24",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR3.25",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR4.21",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR3.26",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR3.27",
+      "status": "N/A",
+      "target": "アプリ内部の復元・画像・保存処理として実装し、追加インフラを必要としない。既存ローカル環境で検証する。"
+    },
+    {
+      "id": "NFR1.21",
+      "status": "OK",
+      "target": "infrastructure-specification.md Deployment"
+    },
+    {
+      "id": "NFR2.22",
+      "status": "OK",
+      "target": "infrastructure-specification.md 共有メモリ予算"
+    },
+    {
+      "id": "NFR5.21",
+      "status": "OK",
+      "target": "cicd-pipeline.md 統合前ローカル検証; monitoring-design.md 診断"
+    },
+    {
+      "id": "NFR5.22",
+      "status": "OK",
+      "target": "cicd-pipeline.md 統合前ローカル検証; monitoring-design.md 診断"
+    }
+  ],
+  "reverse": []
+}

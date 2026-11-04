@@ -1,0 +1,290 @@
+{
+  "stage": "code-generation",
+  "unit": "u2-session-reliability",
+  "upstream_ids": [
+    "AC1.1.1",
+    "AC1.1.2",
+    "AC1.1.3",
+    "AC1.3.1",
+    "AC1.3.2",
+    "AC1.3.3",
+    "AC1.3.4",
+    "AC1.3.5",
+    "AC1.5.1",
+    "AC1.5.2",
+    "AC1.5.3",
+    "AC1.5.4",
+    "AC1.6.1",
+    "AC1.6.2",
+    "AC1.6.3",
+    "AC1.6.4",
+    "AC1.6.5",
+    "AC1.7.1",
+    "AC1.7.2",
+    "AC1.7.3",
+    "AC1.7.4",
+    "AC1.8.1",
+    "AC1.8.2",
+    "AC1.8.3",
+    "AC1.8.4",
+    "NFR2.21",
+    "NFR2.22",
+    "NFR2.23",
+    "NFR3.21",
+    "NFR3.22",
+    "NFR3.23",
+    "NFR2.24",
+    "NFR3.24",
+    "NFR3.25",
+    "NFR3.26",
+    "NFR3.27",
+    "NFR4.21",
+    "BR2.1",
+    "BR2.2",
+    "BR2.3",
+    "BR2.4",
+    "BR2.5",
+    "BR2.6",
+    "BR2.7",
+    "BR2.8",
+    "BR2.9",
+    "BR2.10"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.1.1",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "AC1.1.2",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "AC1.1.3",
+      "status": "Deferred",
+      "target": "操作支援の完成はU3、U2ではBR2.1の権限案内を利用"
+    },
+    {
+      "id": "AC1.3.1",
+      "status": "N/A",
+      "target": "写真抽出と相対順序の基本はU1で実装、既存契約を変更しない"
+    },
+    {
+      "id": "AC1.3.2",
+      "status": "N/A",
+      "target": "写真の基本順序はU1の担当。U2では変更せず、実機検証記録はU1を参照。"
+    },
+    {
+      "id": "AC1.3.3",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PresentationTests.swift"
+    },
+    {
+      "id": "AC1.3.4",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PresentationTests.swift"
+    },
+    {
+      "id": "AC1.3.5",
+      "status": "Deferred",
+      "target": "実機資源性能の受け入れはU3"
+    },
+    {
+      "id": "AC1.5.1",
+      "status": "OK",
+      "target": "HitotsuzuriCore/SelectionWorkflow.swift"
+    },
+    {
+      "id": "AC1.5.2",
+      "status": "OK",
+      "target": "HitotsuzuriCore/SelectionWorkflow.swift"
+    },
+    {
+      "id": "AC1.5.3",
+      "status": "OK",
+      "target": "HitotsuzuriCore/SelectionWorkflow.swift"
+    },
+    {
+      "id": "AC1.5.4",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2IntegrationTests.swift"
+    },
+    {
+      "id": "AC1.6.1",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "AC1.6.2",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "AC1.6.3",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "AC1.6.4",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "AC1.6.5",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "AC1.7.1",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "AC1.7.2",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "AC1.7.3",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "AC1.7.4",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "AC1.8.1",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "AC1.8.2",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PresentationTests.swift"
+    },
+    {
+      "id": "AC1.8.3",
+      "status": "Deferred",
+      "target": "キーボード・VoiceOver全経路はU3。BR2.10で基本案内"
+    },
+    {
+      "id": "AC1.8.4",
+      "status": "OK",
+      "target": "scripts/verify-phase1.sh"
+    },
+    {
+      "id": "NFR2.21",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "NFR2.22",
+      "status": "OK",
+      "target": "HitotsuzuriCore/LocalImageAccess.swift"
+    },
+    {
+      "id": "NFR2.23",
+      "status": "OK",
+      "target": "HitotsuzuriCore/SelectionWorkflow.swift"
+    },
+    {
+      "id": "NFR3.21",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "NFR3.22",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "id": "NFR3.23",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "id": "NFR2.24",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "NFR3.24",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "id": "NFR3.25",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "NFR3.26",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "id": "NFR3.27",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "NFR4.21",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PresentationTests.swift"
+    },
+    {
+      "id": "BR2.1",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "BR2.2",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "id": "BR2.3",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "BR2.4",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "BR2.5",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RestoreTests.swift"
+    },
+    {
+      "id": "BR2.6",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "BR2.7",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2RecoveryTests.swift"
+    },
+    {
+      "id": "BR2.8",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PersistenceTests.swift"
+    },
+    {
+      "id": "BR2.9",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/U2PresentationTests.swift"
+    },
+    {
+      "id": "BR2.10",
+      "status": "OK",
+      "target": "scripts/verify-phase1.sh"
+    }
+  ]
+}

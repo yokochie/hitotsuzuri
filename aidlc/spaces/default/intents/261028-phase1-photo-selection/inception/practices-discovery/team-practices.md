@@ -1,5 +1,8 @@
 # ひとつづり — 開発・検証方針
 
+> 2026-10-31 本人承認による変更: 今回のPhase 1ではCIを省き、統合前のローカルビルド・自動テスト・行カバレッジ80%以上を必須とする。本文のCI実行・専用Mac・ランナー準備に関する旧条件は適用しない。TDD・本人の実機確認は維持する。[変更記録](../../change-decisions/2026-10-31-local-verification.md)。
+
+
 本人の5領域の回答と要約確認を反映した最終統合版。段階の承認と規約への反映は別途行う。根拠は[evidence.md](evidence.md)と[確認回答](practices-discovery-questions.md)に記録する。
 
 ## Way of Working

@@ -1,0 +1,681 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 71;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000000000000000000000017 /* HitotsuzuriCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000021 /* HitotsuzuriCore.framework */; };
+		000000000000000000000037 /* HitotsuzuriCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000021 /* HitotsuzuriCore.framework */; };
+		000000000000000000000051 /* HitotsuzuriCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000021 /* HitotsuzuriCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		000000000000000000000067 /* HitotsuzuriCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000021 /* HitotsuzuriCore.framework */; };
+		000000000000000000000087 /* HitotsuzuriCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000021 /* HitotsuzuriCore.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FAE4728F309791E80098BD71 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000010;
+			remoteInfo = Hitotsuzuri;
+		};
+		FAEAFCB03096D5F000CD3F5E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000020;
+			remoteInfo = HitotsuzuriCore;
+		};
+		FAEAFCB13096D5F000CD3F5E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000020;
+			remoteInfo = HitotsuzuriCore;
+		};
+		FAEAFCB23096D5F000CD3F5E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000020;
+			remoteInfo = HitotsuzuriCore;
+		};
+		FAEAFD2F3096E33500CD3F5E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000020;
+			remoteInfo = HitotsuzuriCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		000000000000000000000050 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				000000000000000000000051 /* HitotsuzuriCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		000000000000000000000011 /* Hitotsuzuri.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Hitotsuzuri.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000021 /* HitotsuzuriCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HitotsuzuriCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000031 /* HitotsuzuriU1Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = HitotsuzuriU1Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000061 /* HitotsuzuriU2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = HitotsuzuriU2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000081 /* HitotsuzuriU3Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = HitotsuzuriU3Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000101 /* HitotsuzuriUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = HitotsuzuriUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		000000000000000000000007 /* Hitotsuzuri */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Hitotsuzuri; sourceTree = "<group>"; };
+		000000000000000000000008 /* HitotsuzuriCore */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = HitotsuzuriCore; sourceTree = "<group>"; };
+		000000000000000000000009 /* HitotsuzuriU1Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = HitotsuzuriU1Tests; sourceTree = "<group>"; };
+		000000000000000000000059 /* HitotsuzuriU2Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = HitotsuzuriU2Tests; sourceTree = "<group>"; };
+		000000000000000000000079 /* HitotsuzuriU3Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = HitotsuzuriU3Tests; sourceTree = "<group>"; };
+		000000000000000000000099 /* HitotsuzuriUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = HitotsuzuriUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		000000000000000000000016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000017 /* HitotsuzuriCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000026 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000036 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000037 /* HitotsuzuriCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000066 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000067 /* HitotsuzuriCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000086 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000087 /* HitotsuzuriCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000106 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000003 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000007 /* Hitotsuzuri */,
+				000000000000000000000008 /* HitotsuzuriCore */,
+				000000000000000000000009 /* HitotsuzuriU1Tests */,
+				000000000000000000000059 /* HitotsuzuriU2Tests */,
+				000000000000000000000079 /* HitotsuzuriU3Tests */,
+				000000000000000000000099 /* HitotsuzuriUITests */,
+				000000000000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000011 /* Hitotsuzuri.app */,
+				000000000000000000000021 /* HitotsuzuriCore.framework */,
+				000000000000000000000031 /* HitotsuzuriU1Tests.xctest */,
+				000000000000000000000061 /* HitotsuzuriU2Tests.xctest */,
+				000000000000000000000081 /* HitotsuzuriU3Tests.xctest */,
+				000000000000000000000101 /* HitotsuzuriUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000010 /* Hitotsuzuri */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000012 /* Build configuration list for PBXNativeTarget "Hitotsuzuri" */;
+			buildPhases = (
+				000000000000000000000015 /* Sources */,
+				000000000000000000000016 /* Frameworks */,
+				000000000000000000000050 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000018 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000007 /* Hitotsuzuri */,
+			);
+			name = Hitotsuzuri;
+			productName = Hitotsuzuri;
+			productReference = 000000000000000000000011 /* Hitotsuzuri.app */;
+			productType = "com.apple.product-type.application";
+		};
+		000000000000000000000020 /* HitotsuzuriCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000022 /* Build configuration list for PBXNativeTarget "HitotsuzuriCore" */;
+			buildPhases = (
+				000000000000000000000025 /* Sources */,
+				000000000000000000000026 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000008 /* HitotsuzuriCore */,
+			);
+			name = HitotsuzuriCore;
+			productName = HitotsuzuriCore;
+			productReference = 000000000000000000000021 /* HitotsuzuriCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		000000000000000000000030 /* HitotsuzuriU1Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000032 /* Build configuration list for PBXNativeTarget "HitotsuzuriU1Tests" */;
+			buildPhases = (
+				000000000000000000000035 /* Sources */,
+				000000000000000000000036 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000038 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000009 /* HitotsuzuriU1Tests */,
+			);
+			name = HitotsuzuriU1Tests;
+			productName = HitotsuzuriU1Tests;
+			productReference = 000000000000000000000031 /* HitotsuzuriU1Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		000000000000000000000060 /* HitotsuzuriU2Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000062 /* Build configuration list for PBXNativeTarget "HitotsuzuriU2Tests" */;
+			buildPhases = (
+				000000000000000000000065 /* Sources */,
+				000000000000000000000066 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000068 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000059 /* HitotsuzuriU2Tests */,
+			);
+			name = HitotsuzuriU2Tests;
+			productName = HitotsuzuriU2Tests;
+			productReference = 000000000000000000000061 /* HitotsuzuriU2Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		000000000000000000000080 /* HitotsuzuriU3Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000082 /* Build configuration list for PBXNativeTarget "HitotsuzuriU3Tests" */;
+			buildPhases = (
+				000000000000000000000085 /* Sources */,
+				000000000000000000000086 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000088 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000079 /* HitotsuzuriU3Tests */,
+			);
+			name = HitotsuzuriU3Tests;
+			productName = HitotsuzuriU3Tests;
+			productReference = 000000000000000000000081 /* HitotsuzuriU3Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		000000000000000000000100 /* HitotsuzuriUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000102 /* Build configuration list for PBXNativeTarget "HitotsuzuriUITests" */;
+			buildPhases = (
+				000000000000000000000105 /* Sources */,
+				000000000000000000000106 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000108 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000099 /* HitotsuzuriUITests */,
+			);
+			name = HitotsuzuriUITests;
+			productName = HitotsuzuriUITests;
+			productReference = 000000000000000000000101 /* HitotsuzuriUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2720;
+			};
+			buildConfigurationList = 000000000000000000000002 /* Build configuration list for PBXProject "Hitotsuzuri" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ja,
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000003;
+			productRefGroup = 000000000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000010 /* Hitotsuzuri */,
+				000000000000000000000020 /* HitotsuzuriCore */,
+				000000000000000000000030 /* HitotsuzuriU1Tests */,
+				000000000000000000000060 /* HitotsuzuriU2Tests */,
+				000000000000000000000080 /* HitotsuzuriU3Tests */,
+				000000000000000000000100 /* HitotsuzuriUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		000000000000000000000015 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000025 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000035 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000065 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000085 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000105 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		000000000000000000000018 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000020 /* HitotsuzuriCore */;
+			targetProxy = FAEAFCB03096D5F000CD3F5E /* PBXContainerItemProxy */;
+		};
+		000000000000000000000038 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000020 /* HitotsuzuriCore */;
+			targetProxy = FAEAFCB23096D5F000CD3F5E /* PBXContainerItemProxy */;
+		};
+		000000000000000000000068 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000020 /* HitotsuzuriCore */;
+			targetProxy = FAEAFCB13096D5F000CD3F5E /* PBXContainerItemProxy */;
+		};
+		000000000000000000000088 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000020 /* HitotsuzuriCore */;
+			targetProxy = FAEAFD2F3096E33500CD3F5E /* PBXContainerItemProxy */;
+		};
+		000000000000000000000108 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000010 /* Hitotsuzuri */;
+			targetProxy = FAE4728F309791E80098BD71 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_TESTABILITY = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		000000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_TESTABILITY = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		000000000000000000000013 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Hitotsuzuri/Hitotsuzuri.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				ENABLE_APP_SANDBOX = YES;
+				INFOPLIST_FILE = Hitotsuzuri/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.Hitotsuzuri;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		000000000000000000000014 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Hitotsuzuri/Hitotsuzuri.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				ENABLE_APP_SANDBOX = YES;
+				INFOPLIST_FILE = Hitotsuzuri/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.Hitotsuzuri;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		000000000000000000000023 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEFINES_MODULE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriCore;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		000000000000000000000024 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEFINES_MODULE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriCore;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		000000000000000000000033 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriU1Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		000000000000000000000034 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriU1Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		000000000000000000000063 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriU2Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		000000000000000000000064 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriU2Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		000000000000000000000083 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriU3Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		000000000000000000000084 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriU3Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		000000000000000000000103 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Hitotsuzuri;
+			};
+			name = Debug;
+		};
+		000000000000000000000104 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yokochie.HitotsuzuriUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Hitotsuzuri;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000002 /* Build configuration list for PBXProject "Hitotsuzuri" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000005 /* Debug */,
+				000000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000012 /* Build configuration list for PBXNativeTarget "Hitotsuzuri" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000013 /* Debug */,
+				000000000000000000000014 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000022 /* Build configuration list for PBXNativeTarget "HitotsuzuriCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000023 /* Debug */,
+				000000000000000000000024 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000032 /* Build configuration list for PBXNativeTarget "HitotsuzuriU1Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000033 /* Debug */,
+				000000000000000000000034 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000062 /* Build configuration list for PBXNativeTarget "HitotsuzuriU2Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000063 /* Debug */,
+				000000000000000000000064 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000082 /* Build configuration list for PBXNativeTarget "HitotsuzuriU3Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000083 /* Debug */,
+				000000000000000000000084 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000102 /* Build configuration list for PBXNativeTarget "HitotsuzuriUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000103 /* Debug */,
+				000000000000000000000104 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}
