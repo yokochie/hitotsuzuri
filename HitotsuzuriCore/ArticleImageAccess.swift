@@ -20,22 +20,30 @@ public enum ArticlePhotoPreviewState:Sendable {
     public private(set) var isLoading=false
     private let assetIDs:[String]
     private let images:any ImageAccessing
+    private let clock:any ImageClock
     private var generation=UUID()
-    public init(assetIDs:[String],images:any ImageAccessing) {
-        self.assetIDs=assetIDs; self.images=images
+    public init(assetIDs:[String],images:any ImageAccessing,clock:any ImageClock = ContinuousImageClock()) {
+        self.assetIDs=assetIDs; self.images=images; self.clock=clock
         states=Dictionary(uniqueKeysWithValues:assetIDs.map {($0,.waiting)})
     }
     public func load() async {
         guard !isLoading else {return}
-        isLoading=true; let current=generation
+        isLoading=true; let current=generation, deadline=clock.now() + .seconds(15)
         defer {if generation == current {isLoading=false}}
         images.release(except:Set(assetIDs))
         for id in assetIDs {
             guard generation == current, !Task.isCancelled else {return}
+            await request(id,generation:current,deadline:deadline)
+        }
+    }
+    private func request(_ id:String,generation current:UUID,deadline:ContinuousClock.Instant) async {
+            guard clock.now() < deadline else {states[id] = .failed(.timedOut); return}
             states[id] = .loading
             do {
-                let image=try await images.image(id,validation:false)
+                let image=try await images.image(id,validation:false,deadline:deadline)
                 guard generation == current, !Task.isCancelled else {return}
+                guard clock.now() < deadline else { states[id] = .failed(.timedOut); return }
+                guard image.byteCount <= 256*1024*1024 else { states[id] = .failed(.capacity); return }
                 states[id] = .ready(image)
             } catch {
                 guard generation == current, !Task.isCancelled else {return}
@@ -50,9 +58,14 @@ public enum ArticlePhotoPreviewState:Sendable {
                 }
                 states[id] = .failed(failure)
             }
-        }
     }
     public func cancel() {generation=UUID(); isLoading=false; images.cancelDisplayRequests(); images.release(except:[]); states=[:]}
+    public func retry(_ assetID: String) async {
+        guard assetIDs.contains(assetID), !isLoading, !states.isEmpty else { return }
+        isLoading=true; let current=generation
+        defer { if current == generation { isLoading=false } }
+        await request(assetID,generation:current,deadline:clock.now() + .seconds(15))
+    }
 }
 
 @MainActor public protocol ArticleImageReading {

@@ -67,12 +67,8 @@ public actor ArticlePersistence: ArticleStoring {
     private func saveRecord(projectID:UUID,operationID:UUID,expected:SavedArticle,content:ArticleContent) throws ->SavedArticle {
         try expected.validate(); try content.validate(source: expected.source)
         guard projectID == expected.projectID else { throw ArticleFailure.invalidInput }
-        let project = try projectDirectory(projectID, create: false)
-        return try project.withLock {
-            let loaded = try loadCurrent(project, projectID: projectID)
-            let input = ArticleFingerprint.operation(kind: "save", projectID: projectID, revision: expected.savedRevision, source: expected.source, content: content)
-            if let old = try reconcile(project, current: loaded.operation, operationID: operationID, input: input) { return old }
-            guard loaded.operation.article == expected else { throw ArticleFailure.conflict }
+        let input = ArticleFingerprint.operation(kind: "save", projectID: projectID, revision: expected.savedRevision, source: expected.source, content: content)
+        return try update(projectID: projectID, operationID: operationID, expected: expected, input: input) {
             var article = expected
             let fingerprint = ArticleFingerprint.content(source: expected.source, content: content)
             if fingerprint != expected.fingerprint {
@@ -80,13 +76,46 @@ public actor ArticlePersistence: ArticleStoring {
                 article.savedRevision += 1; article.content = content; article.fingerprint = fingerprint
                 article.updatedAt = Date(timeIntervalSince1970: (Date().timeIntervalSince1970 * 1000).rounded() / 1000)
             }
-            return try commit(project, operationID: operationID, previous: loaded.operation.operationID, input: input, article: article, expected: loaded.bytes)
+            return article
         }
     }
     private func observeSave(_ operation:() throws ->SavedArticle) throws ->SavedArticle {
         diagnostics.record(.saveStarted)
         do {let result=try operation(); diagnostics.record(.saveSucceeded); return result}
         catch {diagnostics.record(.failed,failure:error as? ArticleFailure ?? .ioFailure); throw error}
+    }
+
+    public func resumeWithSelection(projectID: UUID, operationID: UUID, expected: SavedArticle, source: ArticleSource) async throws -> SavedArticle {
+        try expected.validate()
+        guard projectID == expected.projectID, source.isValid,
+              expected.source.albumID == source.albumID,
+              expected.source.orderedAssetIDs == source.orderedAssetIDs else { throw ArticleFailure.invalidInput }
+        return try observeSave {
+            let input = ArticleFingerprint.association(projectID: projectID, expected: expected, source: source)
+            return try update(projectID: projectID, operationID: operationID, expected: expected, input: input) {
+                var article = expected
+                if !article.sourceSelectionIDs.contains(source.selectionID) {
+                    guard article.savedRevision < Int.max else { throw ArticleFailure.capacity }
+                    article.sourceSelectionIDs.append(source.selectionID)
+                    article.savedRevision += 1
+                    article.updatedAt = Date(timeIntervalSince1970: (Date().timeIntervalSince1970 * 1000).rounded() / 1000)
+                }
+                return article
+            }
+        }
+    }
+
+    /// 保存と関連付けは同じ照合順序・排他・確定点を共有する。
+    private func update(projectID: UUID, operationID: UUID, expected: SavedArticle, input: String, transform: () throws -> SavedArticle) throws -> SavedArticle {
+        let project = try projectDirectory(projectID, create: false)
+        return try project.withLock {
+            let loaded = try loadCurrent(project, projectID: projectID)
+            if let old = try reconcile(project, current: loaded.operation, operationID: operationID, input: input) { return old }
+            guard loaded.operation.article == expected else { throw ArticleFailure.conflict }
+            guard !Task.isCancelled else { throw ArticleFailure.cancelled }
+            let article = try transform()
+            return try commit(project, operationID: operationID, previous: loaded.operation.operationID, input: input, article: article, expected: loaded.bytes)
+        }
     }
 
     private func commit(_ project: ArticleDirectory, operationID: UUID, previous: UUID?, input: String, article: SavedArticle, expected: Data?) throws -> SavedArticle {
@@ -106,6 +135,7 @@ public actor ArticlePersistence: ArticleStoring {
         }
         let head = ArticleCurrent(projectID: article.projectID, operationID: operationID, operationDigest: ArticleFingerprint.digest(bytes))
         try checkpoint(.beforeCurrent)
+        guard !Task.isCancelled else { throw ArticleFailure.cancelled }
         let checkpoint=checkpoint
         do {
             try project.replace("current", data: encode(head), expected: expected,afterRename:{try checkpoint(.currentRenamed)})

@@ -3,10 +3,7 @@ import XCTest
 final class ArticleFoundationUITests: XCTestCase {
     override func setUpWithError() throws {continueAfterFailure=false}
     @MainActor private func launch() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["--article-test-fixture"]
-        app.launchEnvironment["HZS_ARTICLE_TEST_ROOT"]="ui-article-"+name.replacingOccurrences(of:"/",with:"-")
-        app.launch(); app.activate()
+        let app=FixtureLaunch.article(test:self)
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout:10),app.debugDescription)
         return app
     }

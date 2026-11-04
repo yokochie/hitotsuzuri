@@ -227,10 +227,7 @@ final class NativeInputTests:XCTestCase {
     }
     @MainActor func launch()->XCUIApplication {
         continueAfterFailure=false
-        let app=XCUIApplication()
-        app.launchArguments=["--ui-test-fixture"]
-        app.launch()
-        app.activate()
+        let app=FixtureLaunch.picker(test:self)
         let window=app.windows.firstMatch
         XCTAssertTrue(window.waitForExistence(timeout:10))
         // 前の狭幅試験が保存したフレームからも開始できるよう、試験ごとに

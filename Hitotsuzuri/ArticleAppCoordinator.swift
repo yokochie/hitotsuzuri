@@ -3,7 +3,9 @@ import AppKit
 import HitotsuzuriCore
 
 @MainActor @Observable final class ArticleAppCoordinator: NSObject, NSWindowDelegate, NSApplicationDelegate {
-    var session: ArticleEditSession?
+    let presentation:ArticlePresentation
+    var session: ArticleEditSession? {presentation.session}
+    private(set) var canOpenCurrentSelection=false
     private(set) var previews:ArticlePhotoPreviews?
     var message = ""
     var working = false
@@ -19,25 +21,133 @@ import HitotsuzuriCore
     private var exportTask: Task<Void, Never>?
     private var requestID: UUID?
     private var leaving=false
+    private let departure=ArticleDepartureBridge()
+    private var previewSessionID:UUID?
+    var suspendsCandidates=false
+    var candidateSheetVisible=false
+    private var candidateDismissal:CheckedContinuation<Void,Never>?
     private weak var attachedWindow:NSWindow?
     private var previousWindowDelegate:(any NSWindowDelegate)?
     private let fixtureDestination: URL?
-    init(selections: any SelectionStoring, directory: URL, reader: any ArticleImageReading = PhotoKitArticleImageReader(), fixtureDestination: URL? = nil,previewImages:any ImageAccessing = LocalImageAccess()) {
-        let store = ArticlePersistence(directory: directory.appendingPathComponent("Articles", isDirectory: true))
+    #if DEBUG
+    var fixturePreparation:Task<Void,Never>?
+    var fixtureDraftPreparation:((ArticleEditSession)->Void)?
+    var fixtureReleaseSave:(() async ->Void)?
+    var fixturePreviewRequestCounts:(()->[Int])?
+    private struct FixtureMetric {
+        let id=UUID()
+        let started:ContinuousClock.Instant
+        let sessionID:UUID?
+        let title:String?
+        let ordinal:Int
+    }
+    private var fixturePendingMetrics:[String:FixtureMetric]=[:]
+    private var fixtureMeasurements:[String:[Double]]=[:]
+    private var fixtureAccepted:[String:Int]=[:]
+    private var fixtureCompleted:[String:Int]=[:]
+    private var fixtureTimeouts:[String:Int]=[:]
+    var fixturePrepareRead:(() async ->Void)?
+    var fixtureReleaseRead:(() async ->Void)?
+    private(set) var fixtureReadArmed=false
+    private(set) var fixtureMetricsText="{}"
+    var fixtureMeasuresPerformance:Bool {ProcessInfo.processInfo.arguments.contains("--article-test-fixture") && ProcessInfo.processInfo.environment["HZS_DRAFT_CASE"] == "performance"}
+    func beginFixtureMetric(_ kind:String,title:String?=nil,started:ContinuousClock.Instant?=nil) {
+        guard fixtureMeasuresPerformance else {return}
+        fixtureAccepted[kind,default:0] += 1
+        fixturePendingMetrics[kind]=FixtureMetric(started:started ?? ContinuousClock().now,sessionID:session?.sessionID,title:title,ordinal:fixtureAccepted[kind]!)
+        publishFixtureMetrics()
+    }
+    private func publishFixtureMetrics() {
+        var values=fixtureMeasurements
+        values["fixture-process"]=[Double(ProcessInfo.processInfo.processIdentifier)]
+        for (kind,ordinal) in fixtureAccepted {values[kind+"-accepted"]=[Double(ordinal)]}
+        for (kind,ordinal) in fixtureCompleted {values[kind+"-completed"]=[Double(ordinal)]}
+        for (kind,count) in fixtureTimeouts {values[kind+"-timeouts"]=[Double(count)]}
+        if let data=try? JSONEncoder().encode(values),let text=String(data:data,encoding:.utf8) {fixtureMetricsText=text}
+    }
+    func reopenFixtureDraft() async {
+        guard fixtureMeasuresPerformance else {return}
+        beginFixtureMetric("reopen-input-ready")
+        _=await presentation.requestNavigation(.reload); synchronizeSession()
+    }
+    func armFixtureRead() async {await fixturePrepareRead?(); fixtureReadArmed=true}
+    func releaseFixtureRead() async {await fixtureReleaseRead?(); fixtureReadArmed=false}
+    func restartFixturePreviews() {
+        guard fixtureMeasuresPerformance else {return}
+        previewSessionID=nil; synchronizeSession()
+    }
+    /// 呼出元はnative windowのdisplayIfNeeded完了後。再開は実field editorの入力可も確認する。
+    func completeFixtureDisplayMetrics(in window:NSWindow,observedSessionID:UUID?)->Bool {
+        guard fixtureMeasuresPerformance else {return true}
+        func titleIsEditable(_ expected:String)->Bool {
+            func find(_ view:NSView)->Bool {
+                if let field=view as? NSTextField,field.isEditable,field.isEnabled,field.window === window,
+                   let editor=field.currentEditor(),editor === window.firstResponder,editor.isEditable,
+                   editor.string.utf8.elementsEqual(expected.utf8) {return true}
+                return view.subviews.contains(where:find)
+            }
+            return window.contentView.map(find) ?? false
+        }
+        for (kind,metric) in fixturePendingMetrics {
+            let ready:Bool
+            switch kind {
+            case "preview-draw":ready=presentation.mode == .preview && presentation.rendered != nil
+            case "editor-input-ready":ready=observedSessionID == session?.sessionID && presentation.mode == .editing && session.map {titleIsEditable($0.content.title)} == true
+            case "reopen-input-ready":ready=observedSessionID == session?.sessionID && session?.sessionID != metric.sessionID && !presentation.isLoading && session.map {titleIsEditable($0.content.title)} == true
+            case "cold-input-ready":ready = observedSessionID == session?.sessionID && !presentation.isLoading && session.map {titleIsEditable($0.content.title)} == true
+            case "entry-loading-draw","list-loading-draw":ready=presentation.isLoading
+            case "saving-draw":ready=session?.isSaving == true
+            case "input-draw":ready=metric.title.map(titleIsEditable) == true
+            default:ready=false
+            }
+            let parts=metric.started.duration(to:ContinuousClock().now).components
+            let elapsed=Double(parts.seconds)+Double(parts.attoseconds)/1e18
+            if ready || elapsed >= 3 {
+                if !ready {fixtureTimeouts[kind,default:0] += 1}
+                fixtureMeasurements[kind,default:[]].append(elapsed)
+                fixtureCompleted[kind]=metric.ordinal
+                fixturePendingMetrics[kind]=nil
+                publishFixtureMetrics()
+            }
+        }
+        return fixturePendingMetrics.isEmpty
+    }
+    func resizeFixtureWindow(width:Int) {
+        guard ProcessInfo.processInfo.arguments.contains("--article-test-fixture"),
+              [640,959,960,961,1200].contains(width),let window=attachedWindow else {return}
+        // 実ウィンドウの内容サイズを変えるだけで、最小幅や描画値は上書きしない。
+        let height=window.contentRect(forFrameRect:window.frame).height
+        window.setContentSize(NSSize(width:CGFloat(width),height:height))
+    }
+    #endif
+    init(selections: any SelectionStoring, directory: URL, reader: any ArticleImageReading = PhotoKitArticleImageReader(), fixtureDestination: URL? = nil,previewImages:any ImageAccessing = LocalImageAccess(),articleStore:(any ArticleStoring)? = nil) {
+        let store:any ArticleStoring = articleStore ?? ArticlePersistence(directory: directory.appendingPathComponent("Articles", isDirectory: true))
         self.store = store; workspace = ArticleWorkspace(selections: selections, articles: store)
+        presentation=ArticlePresentation(workspace:workspace,store:store)
         journal=ArticleProbeJournal(directory:directory.appendingPathComponent("ProbeRecovery",isDirectory:true))
         images = ArticleImageAccess(reader: reader); self.fixtureDestination = fixtureDestination
         self.previewImages=previewImages
     }
-    private func activate(_ draft:ArticleEditSession) {
+    private func synchronizeSession() {
+        guard let draft=session else { finishLeaving(); return }
+        guard previewSessionID != draft.sessionID else {return}
+        #if DEBUG
+        let preparation=fixtureDraftPreparation; fixtureDraftPreparation=nil; preparation?(draft)
+        #endif
         previewTask?.cancel(); previews?.cancel()
-        session=draft
+        previewSessionID=draft.sessionID
         attach(NSApp.keyWindow ?? NSApp.mainWindow)
         let previews=ArticlePhotoPreviews(assetIDs:draft.source.orderedAssetIDs,images:previewImages)
         self.previews=previews
         previewTask=Task {await previews.load()}
     }
-    private func finishLeaving() {restoreWindowDelegate(); previewTask?.cancel(); previewTask=nil; previews?.cancel(); previews=nil; session=nil}
+    private func finishLeaving() {restoreWindowDelegate(); previewTask?.cancel(); previewTask=nil; previews?.cancel(); previews=nil; previewSessionID=nil}
+    private func awaitFixture() async {
+        #if DEBUG
+        await fixturePreparation?.value
+        #endif
+    }
+    func refreshEntryAvailability() async {await awaitFixture(); canOpenCurrentSelection = (try? await workspace.readCommittedSelection()) != nil}
     func loadRecovery() async {
         do {
             recovery=try await journal.pending()
@@ -45,48 +155,55 @@ import HitotsuzuriCore
         } catch {message=(error as? ArticleFailure ?? .ioFailure).message}
     }
     func openSavedArticle() async {
-        guard session == nil, !working else {return}
-        do {
-            let list=try await store.list()
-            guard !list.articles.isEmpty else {message=list.failures.isEmpty ? "保存した下書きはありません。" : ArticleFailure.corruptData.message; return}
-            let alert=NSAlert(); alert.messageText="保存した下書きを開く"
-            let menu=NSPopUpButton(frame:NSRect(x:0,y:0,width:360,height:28))
-            for article in list.articles {menu.addItem(withTitle:article.content.title.isEmpty ? "タイトルなし" : article.content.title)}
-            alert.accessoryView=menu; alert.addButton(withTitle:"開く"); alert.addButton(withTitle:"取り消す")
-            guard alert.runModal() == .alertFirstButtonReturn else {return}
-            activate(ArticleEditSession(article:list.articles[menu.indexOfSelectedItem],store:store))
-        } catch {message=(error as? ArticleFailure ?? .ioFailure).message}
+        await awaitFixture()
+        guard !working, !leaving else {return}
+        #if DEBUG
+        if fixtureReadArmed {beginFixtureMetric("list-loading-draw")}
+        #endif
+        await presentation.openDrafts(); synchronizeSession()
     }
     func openArticle() async {
-        guard !working, session == nil else { return }
-        working = true; defer { working = false }
-        do {
-            switch try await workspace.resolve() {
-            case .existing(let article): activate(ArticleEditSession(article: article, store: store))
-            case .newArticle(let source):
-                let draft = ArticleEditSession(source: source, store: store)
-                activate(draft)
-                _ = await draft.save()
-            case .matchingCandidates: message = "対応する下書き候補があります。無断で新しい記事は作りません。"
-            }
-        } catch { message = (error as? ArticleFailure ?? .ioFailure).message }
+        await awaitFixture()
+        guard !working, !leaving else { return }
+        #if DEBUG
+        if fixtureReadArmed {beginFixtureMetric("entry-loading-draw")}
+        #endif
+        if session != nil { _=await leave(to:.currentSelection) }
+        else { await presentation.beginCurrentSelection(); synchronizeSession() }
     }
-    func leave() async -> Bool {
-        guard let session else { return true }
+    func chooseDraft(_ id:UUID) async {
+        await presentation.chooseExisting(id)
+        if presentation.pendingNavigation != nil {
+            suspendsCandidates=true
+            if candidateSheetVisible {await withCheckedContinuation {candidateDismissal=$0}}
+            _=await leave(to:.article(id))
+            if presentation.pendingNavigation == nil {presentation.cancelCandidates()}
+            suspendsCandidates=false
+        }
+        synchronizeSession()
+    }
+    func candidateDidDismiss() {candidateSheetVisible=false; candidateDismissal?.resume(); candidateDismissal=nil}
+    func retryDraftList() async {
+        if let id=presentation.pendingAssociationProjectID {await chooseDraft(id)}
+        else {await presentation.retryCandidates()}
+    }
+    func createDraft() async {await presentation.createNew(); synchronizeSession()}
+    func leave(to destination:ArticleNavigationDestination = .back) async -> Bool {
         guard !working, !leaving else { return false }
         leaving=true; defer {leaving=false}
-        while session.isSaving {try? await Task.sleep(for:.milliseconds(50)); if Task.isCancelled {return false}}
-        guard session.isDirty else { finishLeaving(); return true }
+        if await presentation.requestNavigation(destination) {synchronizeSession(); return true}
+        guard presentation.pendingNavigation == destination else {return false}
         let alert = NSAlert(); alert.messageText = "未保存の変更があります"
         alert.informativeText = "記事を保存してから閉じますか？"
         alert.addButton(withTitle: "保存して閉じる"); alert.addButton(withTitle: "変更を破棄"); alert.addButton(withTitle: "編集を続ける")
+        alert.buttons[2].keyEquivalent="\u{1b}"
         let response: NSApplication.ModalResponse
         if let window = NSApp.keyWindow {
             response = await withCheckedContinuation { continuation in alert.beginSheetModal(for: window) { continuation.resume(returning: $0) } }
         } else { response = alert.runModal() }
         let choice: ArticleLeaveChoice = response == .alertFirstButtonReturn ? .save : response == .alertSecondButtonReturn ? .discard : .keepEditing
-        if await session.canLeave(choice) { finishLeaving(); return true }
-        return false
+        let result=await presentation.resolveNavigation(choice)
+        synchronizeSession(); return result
     }
     func attach(_ window: NSWindow?) {
         // Pickerのwindow生成/焦点はSwiftUIのdelegateへ任せる。
@@ -102,11 +219,14 @@ import HitotsuzuriCore
     }
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard session != nil else { return true }
-        Task { if await leave() { sender.performClose(nil) } }; return false
+        departure.request(.closeWindow,decision:{[weak self] in await self?.leave(to:.closeWindow) ?? false},completion:{if $0 {sender.performClose(nil)}})
+        return false
     }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard session != nil else { return .terminateNow }
-        Task { sender.reply(toApplicationShouldTerminate: await leave()) }; return .terminateLater
+        if let pending=departure.pending {return pending == .terminate ? .terminateLater : .terminateCancel}
+        departure.request(.terminate,decision:{[weak self] in await self?.leave(to:.terminate) ?? false},completion:{sender.reply(toApplicationShouldTerminate:$0)})
+        return .terminateLater
     }
     func probe() {
         guard !working, let session else { return }
@@ -205,3 +325,32 @@ struct ArticleWindowAttachment: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView { let view = NSView(); Task { @MainActor in coordinator.attach(view.window) }; return view }
     func updateNSView(_ view: NSView, context: Context) { Task { @MainActor in coordinator.attach(view.window) } }
 }
+
+#if DEBUG
+/// 実表示パスの計測専用。描画値や成功状態を偽装せず、windowの描画とfield editorを観測する。
+struct ArticleFixtureDisplayProbe:NSViewRepresentable {
+    let coordinator:ArticleAppCoordinator
+    let revision:String
+    let sessionID:UUID
+    func makeNSView(context:Context)->ProbeView {ProbeView()}
+    func updateNSView(_ view:ProbeView,context:Context) {
+        view.coordinator=coordinator; view.observedSessionID=sessionID; view.requestMeasurement()
+    }
+    final class ProbeView:NSView {
+        weak var coordinator:ArticleAppCoordinator?
+        var observedSessionID:UUID?
+        private var scheduled=false
+        override func viewDidMoveToWindow() {super.viewDidMoveToWindow(); requestMeasurement()}
+        func requestMeasurement() {
+            guard !scheduled else {return}; scheduled=true
+            DispatchQueue.main.asyncAfter(deadline:.now() + .milliseconds(1)) {[weak self] in
+                guard let self else {return}
+                self.scheduled=false
+                guard let window=self.window else {return}
+                window.displayIfNeeded()
+                if self.coordinator?.completeFixtureDisplayMetrics(in:window,observedSessionID:self.observedSessionID) == false {self.requestMeasurement()}
+            }
+        }
+    }
+}
+#endif

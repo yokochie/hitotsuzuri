@@ -22,6 +22,14 @@ public enum ArticleFingerprint {
     }
 
     static func digest(_ bytes: Data) -> String { SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined() }
+
+    static func association(projectID: UUID, expected: SavedArticle, source: ArticleSource) -> String {
+        var writer = CanonicalWriter()
+        writer.string("hitotsuzuri.article.operation.v1"); writer.string("associate")
+        writer.string(projectID.uuidString.lowercased()); writer.integer(expected.savedRevision)
+        writer.source(source)
+        return digest(writer.data)
+    }
 }
 
 private struct CanonicalWriter {

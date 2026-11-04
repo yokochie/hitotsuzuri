@@ -169,6 +169,9 @@ import XCTest
     }
 }
 private actor ArticleResponseLossStore:ArticleStoring {
+    func resumeWithSelection(projectID: UUID, operationID: UUID, expected: SavedArticle, source: ArticleSource) async throws -> SavedArticle {
+        try await disk.resumeWithSelection(projectID: projectID, operationID: operationID, expected: expected, source: source)
+    }
     let disk:ArticlePersistence, loseCreate:Bool
     private var lost=false
     private struct Request {
@@ -213,6 +216,7 @@ private actor ArticleResponseLossStore:ArticleStoring {
     func list() async throws ->ArticleDraftList {try await disk.list()}
 }
 private actor ArticleSaveGate: ArticleStoring {
+    func resumeWithSelection(projectID: UUID, operationID: UUID, expected: SavedArticle, source: ArticleSource) throws -> SavedArticle { throw ArticleFailure.busy }
     var started=false
     var continuation:CheckedContinuation<Void,Never>?
     func complete() {continuation?.resume(); continuation=nil}

@@ -2,31 +2,46 @@ import Foundation
 import Observation
 
 @MainActor @Observable public final class ArticleEditSession {
+    public let sessionID = UUID()
     public let projectID: UUID
     public let source: ArticleSource
     public var content: ArticleContent
+    public var metadataInput: ArticleMetadataInput
     public private(set) var saved: SavedArticle?
     public private(set) var isSaving = false
     public private(set) var failure: ArticleFailure?
     private let store: any ArticleStoring
+    private var savedMetadataInput: ArticleMetadataInput?
     private struct PendingSave {
         let id:UUID
         let content:ArticleContent
         let base:SavedArticle?
+        let metadata:ArticleMetadataInput
         var outcomeUnknown=false
     }
     private var pendingOperation:PendingSave?
 
     public init(article: SavedArticle, store: any ArticleStoring) {
         projectID = article.projectID; source = article.source; content = article.content
+        metadataInput = ArticleMetadataInput(content: article.content)
+        savedMetadataInput = ArticleMetadataInput(content: article.content)
         saved = article; self.store = store
     }
-    public init(source: ArticleSource, store: any ArticleStoring) {
-        projectID = UUID(); self.source = source; content = ArticleContent(source: source)
+    public init(source: ArticleSource, store: any ArticleStoring, initialContent: ArticleContent? = nil) {
+        let value=initialContent ?? ArticleContent(source: source)
+        projectID = UUID(); self.source = source; content = value
+        metadataInput = ArticleMetadataInput(content: value)
         self.store = store
     }
+    public var hasUncertainSave: Bool { pendingOperation?.outcomeUnknown == true }
+    public func validatedContent() throws -> ArticleContent {
+        let value=try metadataInput.applying(to:content)
+        try value.validate(source:source)
+        return value
+    }
     public var isDirty: Bool {
-        saved.map { $0.fingerprint != ArticleFingerprint.content(source: source, content: content) } ?? true
+        guard let value=try? validatedContent() else { return true }
+        return saved.map { $0.fingerprint != ArticleFingerprint.content(source: source, content: value) || metadataInput != savedMetadataInput } ?? true
     }
     public var state: ArticleSaveState {
         if isSaving { return .saving }
@@ -34,6 +49,11 @@ import Observation
         return saved == nil ? .newUnsaved : isDirty ? .dirty : .clean
     }
     public var stateMessage: String {
+        if hasUncertainSave { return "保存結果を照合する必要があります。" + (failure.map { " " + $0.message } ?? "") }
+        if let message=metadataInput.validationMessage { return message }
+        return saveStateMessage
+    }
+    private var saveStateMessage: String {
         switch state {
         case .newUnsaved: "未保存の記事"
         case .clean: "下書きを保存しました。"
@@ -45,7 +65,10 @@ import Observation
 
     @discardableResult public func save() async -> Bool {
         guard !isSaving else { return false }
-        let snapshot = content
+        let snapshot:ArticleContent
+        do { snapshot=try validatedContent() }
+        catch { failure=error as? ArticleFailure ?? .invalidInput; return false }
+        let snapshotMetadata=metadataInput
         isSaving = true; failure = nil
         defer { isSaving = false }
         do {
@@ -53,12 +76,14 @@ import Observation
             // 基準版を更新し、今回の保存写しを別操作として送る。
             if let pending=pendingOperation {
                 saved=try await perform(pending)
+                savedMetadataInput=pending.metadata
                 pendingOperation=nil
                 if saved?.fingerprint == ArticleFingerprint.content(source:source,content:snapshot) {return true}
             }
-            let operation=PendingSave(id:UUID(),content:snapshot,base:saved)
+            let operation=PendingSave(id:UUID(),content:snapshot,base:saved,metadata:snapshotMetadata)
             pendingOperation=operation
             saved=try await perform(operation)
+            savedMetadataInput=operation.metadata
             pendingOperation = nil
             return true
         } catch {

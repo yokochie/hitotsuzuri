@@ -21,6 +21,7 @@ public protocol ArticleStoring: Sendable {
     func open(_ projectID: UUID) async throws -> SavedArticle
     func list() async throws -> ArticleDraftList
     func save(projectID: UUID, operationID: UUID, expected: SavedArticle, content: ArticleContent) async throws -> SavedArticle
+    func resumeWithSelection(projectID: UUID, operationID: UUID, expected: SavedArticle, source: ArticleSource) async throws -> SavedArticle
 }
 
 public enum ArticleResolution: Sendable {

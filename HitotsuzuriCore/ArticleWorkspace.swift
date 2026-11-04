@@ -8,9 +8,11 @@ public actor ArticleWorkspace {
         self.selections = selections; self.articles = articles
     }
     public func resolve() async throws -> ArticleResolution {
-        let source: ArticleSource
+        try await resolveArticle(readCommittedSelection())
+    }
+    public func readCommittedSelection() async throws -> ArticleSource {
         switch await selections.loadSelection() {
-        case .valid(let value): source = try ArticleSource(selection: value)
+        case .valid(let value): return try ArticleSource(selection: value)
         case .missing: throw ArticleFailure.missing
         case .failure(let failure):
             switch failure {
@@ -19,6 +21,9 @@ public actor ArticleWorkspace {
             default: throw ArticleFailure.ioFailure
             }
         }
+    }
+    public func resolveArticle(_ source: ArticleSource) async throws -> ArticleResolution {
+        guard source.isValid else { throw ArticleFailure.invalidInput }
         let list = try await articles.list()
         let exact = list.articles.filter { $0.sourceSelectionIDs.contains(source.selectionID) }
         if exact.count == 1 { return .existing(exact[0]) }
@@ -27,5 +32,10 @@ public actor ArticleWorkspace {
         guard list.failures.isEmpty else { throw ArticleFailure.corruptData }
         let matching = list.articles.filter { $0.source.albumID == source.albumID && $0.source.orderedAssetIDs == source.orderedAssetIDs }
         return matching.isEmpty ? .newArticle(source) : .matchingCandidates(matching)
+    }
+    public func listDrafts() async throws -> ArticleDraftList { try await articles.list() }
+    public func openArticle(_ id: UUID) async throws -> SavedArticle { try await articles.open(id) }
+    public func resumeWithSelection(operationID: UUID, expected: SavedArticle, source: ArticleSource) async throws -> SavedArticle {
+        try await articles.resumeWithSelection(projectID: expected.projectID, operationID: operationID, expected: expected, source: source)
     }
 }

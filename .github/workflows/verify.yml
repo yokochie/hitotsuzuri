@@ -4,6 +4,11 @@ on:
   push:
     branches: [main, 'codex/**']
   workflow_dispatch:
+    inputs:
+      verify_all:
+        description: Run the complete suite and weighted product coverage
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -11,6 +16,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   native:
+    # Full verification can also run on the feature branch before this workflow reaches main.
+    if: (github.event_name != 'workflow_dispatch' || !inputs.verify_all) && (github.event_name != 'push' || !contains(github.event.head_commit.message, '[verify-all]'))
     runs-on: xcode-27
     timeout-minutes: 30
     steps:
@@ -28,19 +35,29 @@ jobs:
           else
             echo "Keyboard navigation preference is not explicitly configured."
           fi
-      - name: Verify XCTest and product coverage
+      - name: Verify smoke and functional regression
+        run: bash scripts/verify-native.sh --functional
+  native-performance:
+    if: (github.event_name != 'workflow_dispatch' || !inputs.verify_all) && (github.event_name != 'push' || !contains(github.event.head_commit.message, '[verify-all]'))
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Verify smoke and detailed performance
+        run: bash scripts/verify-native.sh --performance
+  native-all:
+    # Partial jobs do not establish whole-product coverage. A [verify-all] push runs only this job.
+    if: (github.event_name == 'workflow_dispatch' && inputs.verify_all) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-all]'))
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Verify complete suite and weighted product coverage
         run: bash scripts/verify-native.sh
-      - name: Diagnose product coverage after test failure
-        if: failure()
-        shell: bash
-        run: |
-          shopt -s nullglob
-          native_results=(.build/Native-*.xcresult)
-          if [[ ${#native_results[@]} -ne 1 ]]; then
-            echo "Expected one result bundle from this clean checkout." >&2
-            exit 1
-          fi
-          swift scripts/check-coverage.swift "${native_results[0]}"
   baseline-native:
     # Temporary diagnostic for this U1 branch: distinguish inherited failures
     # on the hosted image from changes introduced by article support.
