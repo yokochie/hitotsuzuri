@@ -11,15 +11,16 @@ import UniformTypeIdentifiers
         SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:LocalImageAccess(driver:FixtureImages()),store:FixtureStore())
     }
     static func makePickerWithArticles() -> (SelectionWorkflow, ArticleAppCoordinator) {
-        let store = FixtureStore(), root = FileManager.default.temporaryDirectory.appendingPathComponent("picker-article-" + UUID().uuidString)
+        let store = FixtureStore(), root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath().appendingPathComponent("picker-article-" + UUID().uuidString)
         return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:LocalImageAccess(driver:FixtureImages()),store:store), ArticleAppCoordinator(selections:store,directory:root))
     }
     static func makeArticles() -> (SelectionWorkflow, ArticleAppCoordinator) {
-        let args = ProcessInfo.processInfo.arguments
-        let index = args.firstIndex(of:"--article-test-root")
-        let name = index.flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } ?? UUID().uuidString
+        let namedRoot=ProcessInfo.processInfo.environment["HZS_ARTICLE_TEST_ROOT"]
+        let name=namedRoot ?? UUID().uuidString
+        print("Article fixture enabled: namedRoot=\(namedRoot != nil)")
         let safe = name.filter { $0.isLetter || $0.isNumber || $0 == "-" }
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("ArticleFixture-" + safe, isDirectory:true)
+        // OS管理の一時baseだけを正規化。生成したjob領域/選択先のリンク拒否は維持。
+        let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath().appendingPathComponent("ArticleFixture-" + safe, isDirectory:true)
         let selection = try! JSONDecoder().decode(CommittedSelection.self,from:Data(#"{"schemaVersion":1,"selectionID":"11111111-1111-1111-1111-111111111111","albumID":"album-a","albumTitle":"合成写真の記事","orderedAssetIDs":["album-a-photo-1","album-a-photo-2","album-a-photo-3","album-a-photo-4"],"confirmedAt":1}"#.utf8))
         let store = FixtureStore(selection:selection,settings:TargetFolderSettings(folderIDs:["root-a"]))
         return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:LocalImageAccess(driver:FixtureImages()),store:store), ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root),fixtureDestination:root.appendingPathComponent("Output"),previewImages:LocalImageAccess(driver:ArticleFixturePreviews())))

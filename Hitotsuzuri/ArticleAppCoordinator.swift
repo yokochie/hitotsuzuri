@@ -19,6 +19,8 @@ import HitotsuzuriCore
     private var exportTask: Task<Void, Never>?
     private var requestID: UUID?
     private var leaving=false
+    private weak var attachedWindow:NSWindow?
+    private var previousWindowDelegate:(any NSWindowDelegate)?
     private let fixtureDestination: URL?
     init(selections: any SelectionStoring, directory: URL, reader: any ArticleImageReading = PhotoKitArticleImageReader(), fixtureDestination: URL? = nil,previewImages:any ImageAccessing = LocalImageAccess()) {
         let store = ArticlePersistence(directory: directory.appendingPathComponent("Articles", isDirectory: true))
@@ -30,11 +32,12 @@ import HitotsuzuriCore
     private func activate(_ draft:ArticleEditSession) {
         previewTask?.cancel(); previews?.cancel()
         session=draft
+        attach(NSApp.keyWindow ?? NSApp.mainWindow)
         let previews=ArticlePhotoPreviews(assetIDs:draft.source.orderedAssetIDs,images:previewImages)
         self.previews=previews
         previewTask=Task {await previews.load()}
     }
-    private func finishLeaving() {previewTask?.cancel(); previewTask=nil; previews?.cancel(); previews=nil; session=nil}
+    private func finishLeaving() {restoreWindowDelegate(); previewTask?.cancel(); previewTask=nil; previews?.cancel(); previews=nil; session=nil}
     func loadRecovery() async {
         do {
             recovery=try await journal.pending()
@@ -85,10 +88,21 @@ import HitotsuzuriCore
         if await session.canLeave(choice) { finishLeaving(); return true }
         return false
     }
-    func attach(_ window: NSWindow?) { window?.delegate = self }
+    func attach(_ window: NSWindow?) {
+        // Pickerのwindow生成/焦点はSwiftUIのdelegateへ任せる。
+        guard session != nil else {restoreWindowDelegate(); return}
+        guard let window else {return}
+        if attachedWindow === window, window.delegate === self {return}
+        restoreWindowDelegate()
+        attachedWindow=window; previousWindowDelegate=window.delegate; window.delegate=self
+    }
+    private func restoreWindowDelegate() {
+        if let window=attachedWindow, window.delegate === self {window.delegate=previousWindowDelegate}
+        attachedWindow=nil; previousWindowDelegate=nil
+    }
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard session != nil else { return true }
-        Task { if await leave() { sender.close() } }; return false
+        Task { if await leave() { sender.performClose(nil) } }; return false
     }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard session != nil else { return .terminateNow }
@@ -163,6 +177,14 @@ import HitotsuzuriCore
 /// SwiftUI のアプリdelegateを直接差し替えず、標準Adaptorから終了調整を受ける。
 @MainActor final class ArticleApplicationDelegate:NSObject,NSApplicationDelegate {
     weak var coordinator:ArticleAppCoordinator?
+    func applicationDidFinishLaunching(_ notification:Notification) {
+        #if DEBUG
+        let arguments=ProcessInfo.processInfo.arguments
+        if arguments.contains("--article-test-fixture") || arguments.contains("--ui-test-fixture") {
+            print("Fixture launched: windows=\(NSApp.windows.count), modal=\(NSApp.modalWindow != nil)")
+        }
+        #endif
+    }
     func applicationShouldTerminate(_ sender:NSApplication) ->NSApplication.TerminateReply {
         coordinator?.applicationShouldTerminate(sender) ?? .terminateNow
     }

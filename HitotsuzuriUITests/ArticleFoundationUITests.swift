@@ -4,12 +4,15 @@ final class ArticleFoundationUITests: XCTestCase {
     override func setUpWithError() throws {continueAfterFailure=false}
     @MainActor private func launch() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["--article-test-fixture", "--article-test-root", "ui-article-" + name.replacingOccurrences(of: "/", with: "-")]
+        app.launchArguments = ["--article-test-fixture"]
+        app.launchEnvironment["HZS_ARTICLE_TEST_ROOT"]="ui-article-"+name.replacingOccurrences(of:"/",with:"-")
         app.launch(); app.activate()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout:10),app.debugDescription)
         return app
     }
     @MainActor private func open(_ app: XCUIApplication) {
+        app.activate()
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout:10),app.debugDescription)
         let entry=app.buttons["article-open"]
         XCTAssertTrue(entry.waitForExistence(timeout:10),app.debugDescription)
         entry.click()
