@@ -90,3 +90,4 @@
 
 <!-- Project-specific corrections from human feedback. -->
 <!-- Format: NEVER/ALWAYS [behavior] (learned [date]) -->
+- VoiceOverの考慮は不要とする。今後の本プロジェクトの作業でも、VoiceOverの追加設計・検証を要求しない。 (learned 2026-11-04) <!-- cid:261104-phase2-article-support:rough-mockups:7b01b011ff3977cb3371a24b58d270ac71fd3e4bae99f88e0ae1631e117066ea -->
