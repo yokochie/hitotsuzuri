@@ -24,14 +24,20 @@ final class ArticleFoundationUITests: XCTestCase {
         app.terminate(); app.launch(); open(app)
         XCTAssertEqual(app.textFields["article-title"].stringValue, "再開する文章")
     }
-    func testTextOpensWithoutPhotoPreview() { let app = launch(); open(app); XCTAssertTrue(app.textViews["article-introduction"].exists) }
+    func testTextOpensWithoutPhotoPreview() {
+        let app=launch(); open(app)
+        XCTAssertTrue(app.staticTexts["article-preview-state-2"].waitForExistence(timeout:5))
+        XCTAssertTrue(app.textViews["article-introduction"].exists)
+        app.textViews["article-introduction"].click(); app.textViews["article-introduction"].typeText("写真なしでも文章を保持")
+        app.buttons["article-save"].click()
+    }
     func testUnsavedLeaveCanContinueEditing() {
         let app = launch(); open(app); app.textFields["article-title"].click(); app.textFields["article-title"].typeText("変更")
-        app.buttons["article-back"].click(); XCTAssertTrue(app.dialogs.firstMatch.waitForExistence(timeout: 5))
+        app.buttons["article-back"].click(); XCTAssertTrue(app.sheets.firstMatch.waitForExistence(timeout: 5) || app.dialogs.firstMatch.exists)
         app.buttons["編集を続ける"].click(); XCTAssertTrue(app.textFields["article-title"].exists)
     }
     func testOneImageExportReportsSuccess() {
-        let app = launch(); open(app); app.buttons["article-probe"].click()
+        let app = launch(); open(app); app.typeKey("e",modifierFlags:[.command,.shift])
         XCTAssertTrue(app.staticTexts["画像1枚の検証出力が完了しました。"].waitForExistence(timeout: 10))
     }
 }

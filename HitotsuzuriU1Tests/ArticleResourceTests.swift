@@ -2,6 +2,26 @@ import XCTest
 @testable import HitotsuzuriCore
 
 @MainActor final class ArticleResourceTests: XCTestCase {
+    func testCancelReturnsBeforeWorkerReleasesBudgetAndKeepsGate() async throws {
+        let driver=ArticleReaderFake(), gate=ArticleConversionGate()
+        driver.input=try ArticleImageFixture.make(width:30,height:20)
+        let access=ArticleImageAccess(reader:driver,convert:{input,budget in
+            let image=try ArticleImageConverter.convert(input,budget:budget)
+            gate.markStarted(); gate.release.wait(); return image
+        }), id=UUID()
+        let task=Task {try await access.image("a",requestID:id)}
+        while !gate.started {await Task.yield()}
+        XCTAssertGreaterThan(access.reservedImageBytes,0)
+        let start=ContinuousClock().now; access.cancel(id)
+        do {_ = try await task.value; XCTFail()} catch {XCTAssertEqual(error as? ArticleFailure,.cancelled)}
+        XCTAssertLessThan(start.duration(to:ContinuousClock().now),.milliseconds(500))
+        do {_ = try await access.image("b"); XCTFail()} catch {XCTAssertEqual(error as? ArticleFailure,.busy)}
+        gate.release.signal()
+        while access.isBusy {await Task.yield()}
+        while access.reservedImageBytes > 0 {await Task.yield()}
+        XCTAssertEqual(access.reservedImageBytes,0)
+        XCTAssertLessThanOrEqual(access.peakReservedImageBytes,256*1024*1024)
+    }
     func testNetworkIsAlwaysFalseAndImageSucceeds() async throws {
         let driver = ArticleReaderFake(), access = ArticleImageAccess(reader: driver)
         let input = try ArticleImageFixture.make(width: 30, height: 20)
@@ -46,6 +66,12 @@ import XCTest
         do { _ = try await access.image("b"); XCTFail() } catch { XCTAssertEqual(error as? ArticleFailure, .busy) }
         access.cancel(id); _ = try? await first.value
     }
+}
+private final class ArticleConversionGate:@unchecked Sendable {
+    let release=DispatchSemaphore(value:0), lock=NSLock()
+    private var value=false
+    var started:Bool {lock.lock(); defer {lock.unlock()}; return value}
+    func markStarted() {lock.lock(); value=true; lock.unlock()}
 }
 
 @MainActor final class ArticleReaderFake: ArticleImageReading {

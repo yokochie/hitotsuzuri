@@ -1,4 +1,20 @@
 import Foundation
+import OSLog
+
+public enum ArticleDiagnosticStage:String,Sendable {
+    case saveStarted,saveSucceeded,imageRequested,imageConverting,imageSucceeded,probeWriting,probeSucceeded,failed
+}
+/// 任意文字列や記事識別子を受け付けず、分類だけを通常診断へ渡す。
+public struct ArticleDiagnostics:Sendable {
+    private let sink:@Sendable (String)->Void
+    public init(sink:@escaping @Sendable (String)->Void) {self.sink=sink}
+    public static let live=ArticleDiagnostics {line in
+        Logger(subsystem:"com.yokochie.Hitotsuzuri",category:"article").info("\(line,privacy:.public)")
+    }
+    func record(_ stage:ArticleDiagnosticStage,failure:ArticleFailure?=nil) {
+        sink(stage.rawValue+(failure.map {":"+$0.rawValue} ?? ""))
+    }
+}
 
 public protocol ArticleStoring: Sendable {
     func create(projectID: UUID, operationID: UUID, source: ArticleSource, content: ArticleContent) async throws -> SavedArticle

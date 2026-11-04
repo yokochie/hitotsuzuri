@@ -24,6 +24,11 @@ final class ArticleDirectory {
         guard fd >= 0 else { throw failure() }
         return ArticleDirectory(descriptor: fd)
     }
+    func createChildExclusive(_ name:String) throws ->ArticleDirectory {
+        try validate(name)
+        guard mkdirat(descriptor,name,0o700) == 0 else {throw failure()}
+        return try child(name,create:false)
+    }
 
     func read(_ name: String) throws -> Data {
         try validate(name)
@@ -60,10 +65,11 @@ final class ArticleDirectory {
                 }
             }
             guard fsync(fd) == 0 else { throw failure() }
+            guard fcntl(fd,F_FULLFSYNC) == 0 else {throw failure()}
         } catch { _ = unlinkat(descriptor, name, 0); throw error }
     }
 
-    func replace(_ name: String, data: Data, expected: Data?) throws {
+    func replace(_ name: String, data: Data, expected: Data?,afterRename:() throws ->Void = {}) throws {
         let temporary = "pending-" + UUID().uuidString
         try writeNew(temporary, data: data)
         defer { _ = unlinkat(descriptor, temporary, 0) }
@@ -71,10 +77,11 @@ final class ArticleDirectory {
         do { current = try read(name) } catch ArticleFailure.missing { current = nil }
         guard current == expected else { throw ArticleFailure.conflict }
         guard renameat(descriptor, temporary, descriptor, name) == 0 else { throw failure() }
+        do {try afterRename()} catch {throw ArticleFailure.uncertainResult}
         guard fsync(descriptor) == 0 else { throw ArticleFailure.uncertainResult }
     }
 
-    func withLock<T>(_ body: () throws -> T) throws -> T {
+    func withLock<T>(isolation: isolated (any Actor)? = #isolation, _ body: () throws -> T) throws -> T {
         let fd = openat(descriptor, ".lock", O_RDWR | O_CREAT | O_NOFOLLOW | O_NONBLOCK, 0o600)
         guard fd >= 0 else { throw failure() }
         defer { Darwin.close(fd) }
@@ -86,10 +93,11 @@ final class ArticleDirectory {
     }
 
     func synchronize() throws { guard fsync(descriptor) == 0 else { throw failure() } }
-    func moveExclusive(_ source: String, to destination: String) throws {
+    func moveExclusive(_ source: String, to destination: String,afterRename:() throws ->Void = {}) throws {
         try validate(source); try validate(destination)
         guard renameatx_np(descriptor, source, descriptor, destination, UInt32(RENAME_EXCL)) == 0 else { throw failure() }
-        try synchronize()
+        do {try afterRename()} catch {throw ArticleFailure.uncertainResult}
+        do {try synchronize()} catch {throw ArticleFailure.uncertainResult}
     }
     func remove(_ name: String, directory: Bool = false) throws {
         try validate(name)

@@ -1,0 +1,97 @@
+{
+  "stage": "code-generation",
+  "unit": "u1-article-foundation",
+  "version": 1,
+  "writes": [
+    {
+      "path": ".github/workflows/verify.yml"
+    },
+    {
+      "path": "Hitotsuzuri/ArticleAppCoordinator.swift"
+    },
+    {
+      "path": "Hitotsuzuri/ArticleView.swift"
+    },
+    {
+      "path": "Hitotsuzuri/DebugFixture.swift"
+    },
+    {
+      "path": "Hitotsuzuri/Hitotsuzuri.entitlements"
+    },
+    {
+      "path": "Hitotsuzuri/HitotsuzuriApp.swift"
+    },
+    {
+      "path": "Hitotsuzuri/PickerView.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleEditSession.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleFileSystem.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleFingerprint.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleImageAccess.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleImageConverter.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleModels.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticlePersistence.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticlePorts.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleProbeDelivery.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleWorkspace.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleImageTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleIntegrationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleModelTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticlePersistenceTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleProbeTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleRecoveryTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleResourceTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleSessionTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleTestDoubles.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleWorkspaceTests.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/ArticleFoundationUITests.swift"
+    },
+    {
+      "path": "scripts/verify-article-foundation.sh"
+    }
+  ]
+}

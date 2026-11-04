@@ -4,10 +4,13 @@ import CryptoKit
 /// 型タグ・長さ・順序を共有し、本文のUnicode/改行を正規化しない。
 public enum ArticleFingerprint {
     public static func content(source: ArticleSource, content: ArticleContent) -> String {
+        digest(canonicalBytes(source:source,content:content))
+    }
+    static func canonicalBytes(source:ArticleSource,content:ArticleContent) ->Data {
         var writer = CanonicalWriter()
         writer.string("hitotsuzuri.article.content.v1")
         writer.source(source); writer.content(content)
-        return digest(writer.data)
+        return writer.data
     }
 
     static func operation(kind: String, projectID: UUID, revision: Int?, source: ArticleSource, content: ArticleContent) -> String {
@@ -38,19 +41,22 @@ private struct CanonicalWriter {
         if let value { integer(value) } else { field(0, Data()) }
     }
     mutating func source(_ value: ArticleSource) {
-        string(value.selectionID.uuidString.lowercased()); string(value.albumID); string(value.albumTitle)
-        integer(value.orderedAssetIDs.count)
+        string("source")
+        named("selectionID",value.selectionID.uuidString.lowercased()); named("albumID",value.albumID); named("albumTitle",value.albumTitle)
+        string("orderedAssetIDs"); integer(value.orderedAssetIDs.count)
         for id in value.orderedAssetIDs { string(id) }
-        integer(Int((value.confirmedAt.timeIntervalSince1970 * 1000).rounded()))
-        integer(value.selectionRevision)
+        string("confirmedAtUTCms"); integer(Int((value.confirmedAt.timeIntervalSince1970 * 1000).rounded()))
+        string("selectionRevision"); integer(value.selectionRevision)
     }
     mutating func content(_ value: ArticleContent) {
-        string(value.title); string(value.introduction); integer(value.photoTexts.count)
-        for photo in value.photoTexts { string(photo.assetID); string(photo.text) }
-        string(value.closing)
-        if let date = value.shootingDate { integer(date.year); integer(date.month); integer(date.day) }
+        string("content")
+        named("title",value.title); named("introduction",value.introduction); string("photoTexts"); integer(value.photoTexts.count)
+        for photo in value.photoTexts { named("assetID",photo.assetID); named("text",photo.text) }
+        named("closing",value.closing); string("shootingDate")
+        if let date = value.shootingDate { string("year"); integer(date.year); string("month"); integer(date.month); string("day"); integer(date.day) }
         else { field(0, Data()) }
-        string(value.dateCandidateState.rawValue)
-        string(value.location); string(value.equipment); string(value.film); string(value.people)
+        named("dateCandidateState",value.dateCandidateState.rawValue)
+        named("location",value.location); named("equipment",value.equipment); named("film",value.film); named("people",value.people)
     }
+    mutating func named(_ name:String,_ value:String) {string(name); string(value)}
 }

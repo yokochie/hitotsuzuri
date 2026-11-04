@@ -15,15 +15,19 @@ public struct ArticleImageInput: @unchecked Sendable {
 public final class ArticleImageBudget: @unchecked Sendable {
     private let lock = NSLock()
     private var reserved = 0
+    private var peak = 0
     public let limit: Int
     public init(limit: Int = 256 * 1024 * 1024) { self.limit = limit }
     func reserve(_ count: Int) throws -> ArticleImageLease {
         lock.lock(); defer { lock.unlock() }
         guard count > 0, count <= limit - reserved else { throw ArticleFailure.capacity }
         reserved += count
+        peak=max(peak,reserved)
         return ArticleImageLease(budget: self, count: count)
     }
     fileprivate func release(_ count: Int) { lock.lock(); reserved -= count; lock.unlock() }
+    public var reservedBytes:Int {lock.lock(); defer {lock.unlock()}; return reserved}
+    public var peakReservedBytes:Int {lock.lock(); defer {lock.unlock()}; return peak}
 }
 final class ArticleImageLease: Sendable {
     let budget: ArticleImageBudget, count: Int

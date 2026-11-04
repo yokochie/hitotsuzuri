@@ -1,5 +1,59 @@
 import Foundation
 import Photos
+import Observation
+
+public enum ArticlePhotoPreviewState:Sendable {
+    case waiting,loading,ready(ImageBuffer),failed(ArticleFailure)
+    public var message:String {
+        switch self {
+        case .waiting:"画像の取得待ち"
+        case .loading:"画像を取得中…"
+        case .ready:"画像を取得しました"
+        case .failed(let error):error.message
+        }
+    }
+}
+
+/// 表示用512px経路。記事正本・本文入力・出力用JPEGとは独立して取得する。
+@MainActor @Observable public final class ArticlePhotoPreviews {
+    public private(set) var states:[String:ArticlePhotoPreviewState]
+    public private(set) var isLoading=false
+    private let assetIDs:[String]
+    private let images:any ImageAccessing
+    private var generation=UUID()
+    public init(assetIDs:[String],images:any ImageAccessing) {
+        self.assetIDs=assetIDs; self.images=images
+        states=Dictionary(uniqueKeysWithValues:assetIDs.map {($0,.waiting)})
+    }
+    public func load() async {
+        guard !isLoading else {return}
+        isLoading=true; let current=generation
+        defer {if generation == current {isLoading=false}}
+        images.release(except:Set(assetIDs))
+        for id in assetIDs {
+            guard generation == current, !Task.isCancelled else {return}
+            states[id] = .loading
+            do {
+                let image=try await images.image(id,validation:false)
+                guard generation == current, !Task.isCancelled else {return}
+                states[id] = .ready(image)
+            } catch {
+                guard generation == current, !Task.isCancelled else {return}
+                let failure:ArticleFailure
+                switch error as? PickerFailure {
+                case .authorization:failure = .permissionDenied
+                case .invalidReference:failure = .invalidReference
+                case .timedOut:failure = .timedOut
+                case .cancelled:failure = .cancelled
+                case .capacity,.oversizedData:failure = .capacity
+                default:failure = .assetUnavailable
+                }
+                states[id] = .failed(failure)
+            }
+        }
+    }
+    public func cancel() {generation=UUID(); isLoading=false; images.cancelDisplayRequests(); images.release(except:[]); states=[:]}
+}
 
 @MainActor public protocol ArticleImageReading {
     func request(_ id: String, networkAllowed: Bool, completion: @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) -> Int
@@ -37,10 +91,16 @@ import Photos
     private let reader: any ArticleImageReading
     private let clock: any ImageClock
     private let budget = ArticleImageBudget()
+    private let convert:@Sendable (ArticleImageInput,ArticleImageBudget) throws ->ArticleJPEG
     private var current: Job?
-    public init(reader: any ArticleImageReading, clock: any ImageClock = ContinuousImageClock()) { self.reader = reader; self.clock = clock }
+    private let diagnostics:ArticleDiagnostics
+    public init(reader: any ArticleImageReading, clock: any ImageClock = ContinuousImageClock(),convert:@escaping @Sendable (ArticleImageInput,ArticleImageBudget) throws ->ArticleJPEG = {try ArticleImageConverter.convert($0,budget:$1)},diagnostics:ArticleDiagnostics = .live) { self.reader = reader; self.clock = clock; self.convert=convert; self.diagnostics=diagnostics }
+    public var isBusy:Bool {current != nil}
+    public var reservedImageBytes:Int {budget.reservedBytes}
+    public var peakReservedImageBytes:Int {budget.peakReservedBytes}
     public func image(_ assetID: String, requestID: UUID = UUID()) async throws -> ArticleJPEG {
         guard current == nil else { throw ArticleFailure.busy }
+        diagnostics.record(.imageRequested)
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 let job = Job(id: requestID, deadline: clock.now() + .seconds(30), continuation: continuation)
@@ -64,11 +124,13 @@ import Photos
         switch result {
         case .failure(let error): finish(job, result: .failure(error))
         case .success(let input):
+            diagnostics.record(.imageConverting)
             job.converting = true
             let budget = budget
+            let convert=convert
             Task { [weak self] in
                 let result = await Task.detached { () -> Result<ArticleJPEG, ArticleFailure> in
-                    do { return .success(try ArticleImageConverter.convert(input, budget: budget)) }
+                    do { return .success(try convert(input,budget)) }
                     catch { return .failure(error as? ArticleFailure ?? .assetUnavailable) }
                 }.value
                 guard let self else { return }
@@ -83,6 +145,10 @@ import Photos
     private func finish(_ job: Job, result: Result<ArticleJPEG, ArticleFailure>) {
         guard current === job else { return }
         if let continuation = job.continuation {
+            switch result {
+            case .success: diagnostics.record(.imageSucceeded)
+            case .failure(let error): diagnostics.record(.failed,failure:error)
+            }
             job.continuation = nil; job.timer?.cancel(); job.timer = nil
             if let token = job.token { reader.cancel(token) }
             continuation.resume(with: result.mapError { $0 as Error })

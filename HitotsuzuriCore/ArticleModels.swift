@@ -35,7 +35,7 @@ public struct ArticleSource: Codable, Equatable, Sendable {
     public let selectionRevision: Int
 
     public init(selection: CommittedSelection) throws {
-        guard selection.isValid else { throw ArticleFailure.invalidInput }
+        guard selection.isValid, articleTimestampIsRepresentable(selection.confirmedAt) else { throw ArticleFailure.invalidInput }
         selectionID = selection.selectionID
         albumID = selection.albumID
         albumTitle = selection.albumTitle
@@ -47,8 +47,13 @@ public struct ArticleSource: Codable, Equatable, Sendable {
     public var isValid: Bool {
         !albumID.isEmpty && orderedAssetIDs.count == 4
             && Set(orderedAssetIDs).count == 4 && orderedAssetIDs.allSatisfy { !$0.isEmpty }
-            && confirmedAt.timeIntervalSince1970.isFinite && selectionRevision == 1
+            && articleTimestampIsRepresentable(confirmedAt) && selectionRevision == 1
     }
+}
+
+private func articleTimestampIsRepresentable(_ date:Date) ->Bool {
+    let milliseconds=(date.timeIntervalSince1970*1000).rounded()
+    return milliseconds.isFinite && milliseconds >= Double(Int64.min) && milliseconds < Double(Int64.max)
 }
 
 public struct ArticleCalendarDay: Codable, Equatable, Sendable {

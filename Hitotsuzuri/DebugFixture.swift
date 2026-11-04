@@ -22,7 +22,7 @@ import UniformTypeIdentifiers
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("ArticleFixture-" + safe, isDirectory:true)
         let selection = try! JSONDecoder().decode(CommittedSelection.self,from:Data(#"{"schemaVersion":1,"selectionID":"11111111-1111-1111-1111-111111111111","albumID":"album-a","albumTitle":"合成写真の記事","orderedAssetIDs":["a","b","c","d"],"confirmedAt":1}"#.utf8))
         let store = FixtureStore(selection:selection)
-        return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:LocalImageAccess(driver:FixtureImages()),store:store), ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root),fixtureDestination:root.appendingPathComponent("Output")))
+        return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:LocalImageAccess(driver:FixtureImages()),store:store), ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root),fixtureDestination:root.appendingPathComponent("Output"),previewImages:LocalImageAccess(driver:ArticleFixturePreviews())))
     }
 }
 @MainActor private final class FixtureLibrary:LibrarySource {
@@ -80,5 +80,13 @@ private actor FixtureStore:SelectionStoring {
         return 1
     }
     func cancel(_ request:Int) {}
+}
+@MainActor private final class ArticleFixturePreviews:ImageDriving {
+    private let images=FixtureImages()
+    func request(_ id:String,completion:@escaping @MainActor (ImageOutcome)->Void)->Int {
+        if id == "b" {completion(.unavailable); return -1}
+        return images.request(id,completion:completion)
+    }
+    func cancel(_ request:Int) {images.cancel(request)}
 }
 #endif

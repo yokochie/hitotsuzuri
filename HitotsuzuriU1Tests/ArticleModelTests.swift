@@ -2,6 +2,23 @@ import XCTest
 @testable import HitotsuzuriCore
 
 final class ArticleModelTests: XCTestCase {
+    func testPublishedReferenceVectorMatchesIndependentEncoding() throws {
+        let decoder=JSONDecoder(); decoder.dateDecodingStrategy = .secondsSince1970
+        let source=try decoder.decode(ArticleSource.self,from:Data(#"{"selectionID":"11111111-1111-1111-1111-111111111111","albumID":"album","albumTitle":"記事","orderedAssetIDs":["a","b","c","d"],"confirmedAt":0,"selectionRevision":1}"#.utf8))
+        let content=ArticleContent(source:source)
+        XCTAssertEqual(ArticleFingerprint.canonicalBytes(source:source,content:content).count,848)
+        XCTAssertEqual(ArticleFingerprint.content(source:source,content:content),"c371afcd1918af5e9d37c02cc94c6dfbd059aeee0aa0e26ea8b86aa1e5af26a3")
+    }
+    func testUnrepresentableSourceTimestampIsRejected() throws {
+        let selection=CommittedSelection(albumID:"album",albumTitle:"記事",orderedAssetIDs:["a","b","c","d"],confirmedAt:Date(timeIntervalSince1970:Double.greatestFiniteMagnitude))
+        XCTAssertThrowsError(try ArticleSource(selection:selection))
+    }
+    func testCanonicalEncodingContainsFieldNames() throws {
+        let source=try ArticleFixtures.source(), content=ArticleContent(source:source)
+        let bytes=ArticleFingerprint.canonicalBytes(source:source,content:content)
+        XCTAssertNotNil(bytes.range(of:Data("title".utf8)))
+        XCTAssertNotNil(bytes.range(of:Data("orderedAssetIDs".utf8)))
+    }
     func source(_ ids: [String] = ["a", "b", "c", "d"]) throws -> ArticleSource {
         try ArticleSource(selection: CommittedSelection(albumID: "album", albumTitle: "日本語@260101", orderedAssetIDs: ids))
     }

@@ -41,11 +41,11 @@
 - [x] Step 6: 永続化Red。ArticlePersistenceTests/ArticleRecoveryTestsで初期作成/保存/再開、不在/破損/未知版、操作ID再試行、後続保存後の旧ID、同期/確定前後の障害、外部変更/リンク/容量不足を先に検証。
 - [x] Step 7: 永続化Green。ArticleFileSystem/Persistenceに記事別不変操作/current・排他/同期/検証を実装。同operationID照合を競合判定より先にし、確定後不確定は照合する。正常ボリュームの必要APIを小さな試験で実証。
 - [x] Step 8: 永続化Refactor。失敗で元byte保持、確定参照だけを正とする復旧、逐次走査、索引派生を整理して再実行。
-- [ ] Step 9: 操作調整Red。ArticleWorkspaceTests/ArticleSessionTestsで画像なし文章再開、二重起動、保存中編集/古い応答、未保存離脱3択/保存失敗、候補がある時の無断作成防止を先に試験。
-- [ ] Step 10: 操作調整Green。ArticleWorkspace/EditSessionを実装し、既存SelectionStoringから直接読込。lastCommittedの画像成功に依存させず、基本全本文欄を持つ。
-- [ ] Step 11: 操作調整Refactor。正本と作業コピー・session/operation/generationを整理し全該当試験を再実行。
+- [x] Step 9: 操作調整Red。ArticleWorkspaceTests/ArticleSessionTestsで画像なし文章再開、二重起動、保存中編集/古い応答、未保存離脱3択/保存失敗、候補がある時の無断作成防止を先に試験。
+- [x] Step 10: 操作調整Green。ArticleWorkspace/EditSessionを実装し、既存SelectionStoringから直接読込。lastCommittedの画像成功に依存させず、基本全本文欄を持つ。
+- [x] Step 11: 操作調整Refactor。正本と作業コピー・session/operation/generationを整理し全該当試験を再実行。
 - [ ] Step 12: 画像/出力境界Red。ArticleImageTests/ArticleResourceTests/ArticleProbeTestsで現在編集/向き/縮小/JPEG/不要メタデータ、network=false、30秒、取消受理/終端、バッファ所有、保存先選択前grantなし、確定/片付け失敗を先に試験。
-- [ ] Step 13: 画像/出力境界Green。PhotoKit入力URLからImage I/O変換・sRGB新規JPEG、実処理単一ゲート・予約256MiB、期限/取消状態を実装。完了採用直前にも絶対期限比較、同時は期限優先。先頭1枚を別フォルダへ非上書き確定。OS処理残存と論理終端を分離。
+- [x] Step 13: 画像/出力境界Green。PhotoKit入力URLからImage I/O変換・sRGB新規JPEG、実処理単一ゲート・予約256MiB、期限/取消状態を実装。完了採用直前にも絶対期限比較、同時は期限優先。先頭1枚を別フォルダへ非上書き確定。OS処理残存と論理終端を分離。
 - [ ] Step 14: 画像/出力Refactor。権限寿命/遅延応答/回復記録を整理、容量とOSメモリの測定/非対応分類を再確認。未達を閾値変更で隠さない。
 - [ ] Step 15: フロントエンドRed。ArticleFoundationUITestsの開始/日本語編集/保存再起動/画像なし/未保存離脱/1枚出力を先に実行し失敗を記録。合成fixtureの必要配線をrunner準備として分離。
 - [ ] Step 16: フロントエンドGreen。ArticleView/CoordinatorとApp/Picker入口を接続。識別子・文字状態・キーボード・狭幅・閉じる/終了確認、フォルダ選択を実装。写真取得不能でもフォームを開く。

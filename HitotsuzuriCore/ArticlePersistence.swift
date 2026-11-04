@@ -1,6 +1,6 @@
 import Foundation
 
-public enum ArticlePersistenceCheckpoint: Sendable { case beforeOperation, beforeCurrent, afterCurrent }
+public enum ArticlePersistenceCheckpoint: Sendable { case beforeOperation, beforeCurrent, currentRenamed, afterCurrent }
 
 private struct ArticleCurrent: Codable {
     var schemaVersion = 1
@@ -19,8 +19,9 @@ private struct ArticleOperation: Codable {
 public actor ArticlePersistence: ArticleStoring {
     private let directory: URL
     private let checkpoint: @Sendable (ArticlePersistenceCheckpoint) throws -> Void
-    public init(directory: URL, checkpoint: @escaping @Sendable (ArticlePersistenceCheckpoint) throws -> Void = { _ in }) {
-        self.directory = directory; self.checkpoint = checkpoint
+    private let diagnostics:ArticleDiagnostics
+    public init(directory: URL, checkpoint: @escaping @Sendable (ArticlePersistenceCheckpoint) throws -> Void = { _ in },diagnostics:ArticleDiagnostics = .live) {
+        self.directory = directory; self.checkpoint = checkpoint; self.diagnostics=diagnostics
     }
 
     public func open(_ projectID: UUID) throws -> SavedArticle {
@@ -45,6 +46,9 @@ public actor ArticlePersistence: ArticleStoring {
     }
 
     public func create(projectID: UUID, operationID: UUID, source: ArticleSource, content: ArticleContent) throws -> SavedArticle {
+        try observeSave {try createRecord(projectID:projectID,operationID:operationID,source:source,content:content)}
+    }
+    private func createRecord(projectID:UUID,operationID:UUID,source:ArticleSource,content:ArticleContent) throws ->SavedArticle {
         try content.validate(source: source)
         let project = try projectDirectory(projectID, create: true)
         return try project.withLock {
@@ -58,6 +62,9 @@ public actor ArticlePersistence: ArticleStoring {
     }
 
     public func save(projectID: UUID, operationID: UUID, expected: SavedArticle, content: ArticleContent) throws -> SavedArticle {
+        try observeSave {try saveRecord(projectID:projectID,operationID:operationID,expected:expected,content:content)}
+    }
+    private func saveRecord(projectID:UUID,operationID:UUID,expected:SavedArticle,content:ArticleContent) throws ->SavedArticle {
         try expected.validate(); try content.validate(source: expected.source)
         guard projectID == expected.projectID else { throw ArticleFailure.invalidInput }
         let project = try projectDirectory(projectID, create: false)
@@ -75,6 +82,11 @@ public actor ArticlePersistence: ArticleStoring {
             }
             return try commit(project, operationID: operationID, previous: loaded.operation.operationID, input: input, article: article, expected: loaded.bytes)
         }
+    }
+    private func observeSave(_ operation:() throws ->SavedArticle) throws ->SavedArticle {
+        diagnostics.record(.saveStarted)
+        do {let result=try operation(); diagnostics.record(.saveSucceeded); return result}
+        catch {diagnostics.record(.failed,failure:error as? ArticleFailure ?? .ioFailure); throw error}
     }
 
     private func commit(_ project: ArticleDirectory, operationID: UUID, previous: UUID?, input: String, article: SavedArticle, expected: Data?) throws -> SavedArticle {
@@ -94,10 +106,12 @@ public actor ArticlePersistence: ArticleStoring {
         }
         let head = ArticleCurrent(projectID: article.projectID, operationID: operationID, operationDigest: ArticleFingerprint.digest(bytes))
         try checkpoint(.beforeCurrent)
+        let checkpoint=checkpoint
         do {
-            try project.replace("current", data: encode(head), expected: expected)
+            try project.replace("current", data: encode(head), expected: expected,afterRename:{try checkpoint(.currentRenamed)})
             try checkpoint(.afterCurrent)
         } catch {
+            if error as? ArticleFailure == .uncertainResult {throw error}
             if let stored = try? loadCurrent(project, projectID: article.projectID), stored.operation.operationID == operationID { return stored.operation.article }
             throw error
         }
@@ -114,6 +128,7 @@ public actor ArticlePersistence: ArticleStoring {
             guard visited.insert(operation.operationID).inserted else { throw ArticleFailure.corruptData }
             if operation.operationID == operationID {
                 guard operation.inputDigest == input else { throw ArticleFailure.invalidInput }
+                try project.synchronize()
                 return operation.article
             }
             if let previous = operation.previous {
@@ -147,8 +162,38 @@ public actor ArticlePersistence: ArticleStoring {
     }
     private func decode<T: Decodable>(_ type: T.Type, _ bytes: Data) throws -> T {
         guard let header = try? JSONSerialization.jsonObject(with: bytes) as? [String: Any], let version = header["schemaVersion"] as? Int else { throw ArticleFailure.corruptData }
+        try rejectDuplicateKeys(bytes)
         guard version == 1 else { throw ArticleFailure.unsupportedVersion }
         let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .millisecondsSince1970
         do { return try decoder.decode(type, from: bytes) } catch { throw ArticleFailure.corruptData }
+    }
+
+    /// Foundation の JSON は重複キーを最後の値へ畳むため、型への変換前に拒否する。
+    private func rejectDuplicateKeys(_ bytes: Data) throws {
+        let tokens = Array(bytes)
+        var stack: [Set<String>?] = [], index = 0
+        while index < tokens.count {
+            switch tokens[index] {
+            case 123: stack.append(Set<String>()); index += 1
+            case 91: stack.append(nil); index += 1
+            case 125, 93: guard !stack.isEmpty else {throw ArticleFailure.corruptData}; stack.removeLast(); index += 1
+            case 34:
+                let start = index; index += 1
+                var escaped = false
+                while index < tokens.count {
+                    let token = tokens[index]; index += 1
+                    if escaped {escaped = false}
+                    else if token == 92 {escaped = true}
+                    else if token == 34 {break}
+                }
+                let end = index
+                while index < tokens.count, [9,10,13,32].contains(tokens[index]) {index += 1}
+                if index < tokens.count, tokens[index] == 58, let object = stack.indices.last, var keys = stack[object] {
+                    guard let key = try? JSONDecoder().decode(String.self,from:Data(tokens[start..<end])), keys.insert(key).inserted else {throw ArticleFailure.corruptData}
+                    stack[object] = keys
+                }
+            default: index += 1
+            }
+        }
     }
 }

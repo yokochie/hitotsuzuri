@@ -2,6 +2,26 @@ import XCTest
 @testable import HitotsuzuriCore
 
 @MainActor final class ArticleSessionTests: XCTestCase {
+    func testEditingDuringSaveStaysDirtyAndResponseCannotReplaceInput() async throws {
+        let original=try await ArticleFixtures.create(ArticlePersistence(directory:ArticleFixtures.root())), gate=ArticleSaveGate()
+        let session=ArticleEditSession(article:original,store:gate); session.content.title="保存対象"
+        let task=Task {await session.save()}
+        while !(await gate.started) {await Task.yield()}
+        session.content.title="保存中の新入力"
+        await gate.complete()
+        let success=await task.value
+        XCTAssertTrue(success); XCTAssertTrue(session.isDirty)
+        XCTAssertEqual(session.saved?.content.title,"保存対象"); XCTAssertEqual(session.content.title,"保存中の新入力")
+    }
+    func testDoubleSaveAndDiscardAreRejectedWhileSaving() async throws {
+        let original=try await ArticleFixtures.create(ArticlePersistence(directory:ArticleFixtures.root())), gate=ArticleSaveGate()
+        let session=ArticleEditSession(article:original,store:gate)
+        let task=Task {await session.save()}
+        while !(await gate.started) {await Task.yield()}
+        let second=await session.save(), leave=await session.canLeave(.discard)
+        XCTAssertFalse(second); XCTAssertFalse(leave)
+        await gate.complete(); _ = await task.value
+    }
     func testEditingIsNotAutomaticSave() async throws {
         let store = ArticlePersistence(directory: ArticleFixtures.root()), a = try await ArticleFixtures.create(store)
         let session = ArticleEditSession(article: a, store: store)
@@ -38,5 +58,19 @@ import XCTest
         let store = ArticlePersistence(directory: ArticleFixtures.root()), a = try await ArticleFixtures.create(store)
         let session = ArticleEditSession(article: a, store: store); session.content.title = "saved"
         let leave = await session.canLeave(.save); XCTAssertTrue(leave); XCTAssertFalse(session.isDirty)
+    }
+}
+private actor ArticleSaveGate: ArticleStoring {
+    var started=false
+    var continuation:CheckedContinuation<Void,Never>?
+    func complete() {continuation?.resume(); continuation=nil}
+    func create(projectID:UUID,operationID:UUID,source:ArticleSource,content:ArticleContent) throws -> SavedArticle {try SavedArticle(projectID:projectID,source:source,content:content)}
+    func open(_ projectID:UUID) throws ->SavedArticle {throw ArticleFailure.missing}
+    func list()->ArticleDraftList {ArticleDraftList()}
+    func save(projectID:UUID,operationID:UUID,expected:SavedArticle,content:ArticleContent) async throws ->SavedArticle {
+        started=true
+        await withCheckedContinuation {continuation=$0}
+        var result=expected; result.content=content; result.savedRevision += 1; result.fingerprint=ArticleFingerprint.content(source:expected.source,content:content)
+        return result
     }
 }

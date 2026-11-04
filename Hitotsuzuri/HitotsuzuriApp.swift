@@ -22,7 +22,10 @@ struct HitotsuzuriApp: App {
         _articles=State(initialValue:ArticleAppCoordinator(selections:store,directory:directory))
     }
     var body: some Scene { Window("ひとつづり",id:"picker") { PickerView(workflow:workflow,articles:articles) }.defaultSize(width:1280,height:800).windowResizability(.contentMinSize).commands {
-        CommandMenu("記事") { Button("選択した写真の記事を開く") {Task {await articles.openArticle()}}.keyboardShortcut("n") }
+        CommandMenu("記事") {
+            Button("選択した写真の記事を開く") {Task {await articles.openArticle()}}.keyboardShortcut("n")
+            Button("保存した下書きを開く") {Task {await articles.openSavedArticle()}}
+        }
     } }
 }
 
