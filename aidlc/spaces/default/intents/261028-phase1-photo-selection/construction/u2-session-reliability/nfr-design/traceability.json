@@ -1,0 +1,99 @@
+{
+  "stage": "nfr-design",
+  "unit": "u2-session-reliability",
+  "upstream_ids": [
+    "NFR2.21",
+    "NFR2.22",
+    "NFR2.23",
+    "NFR2.24",
+    "NFR3.21",
+    "NFR3.22",
+    "NFR3.23",
+    "NFR3.24",
+    "NFR3.25",
+    "NFR3.26",
+    "NFR3.27",
+    "NFR4.21",
+    "NFR5.21",
+    "NFR5.22",
+    "NFR1.21"
+  ],
+  "coverage": [
+    {
+      "id": "NFR2.21",
+      "status": "OK",
+      "target": "performance-design.md P21"
+    },
+    {
+      "id": "NFR2.22",
+      "status": "OK",
+      "target": "performance-design.md P21"
+    },
+    {
+      "id": "NFR2.23",
+      "status": "OK",
+      "target": "performance-design.md P21"
+    },
+    {
+      "id": "NFR2.24",
+      "status": "OK",
+      "target": "scalability-design.md C21"
+    },
+    {
+      "id": "NFR3.21",
+      "status": "OK",
+      "target": "security-design.md S21"
+    },
+    {
+      "id": "NFR3.22",
+      "status": "OK",
+      "target": "security-design.md S21; reliability-design.md R22"
+    },
+    {
+      "id": "NFR3.23",
+      "status": "OK",
+      "target": "security-design.md S22"
+    },
+    {
+      "id": "NFR3.24",
+      "status": "OK",
+      "target": "security-design.md S22; scalability-design.md C21"
+    },
+    {
+      "id": "NFR3.25",
+      "status": "OK",
+      "target": "reliability-design.md R21"
+    },
+    {
+      "id": "NFR3.26",
+      "status": "OK",
+      "target": "reliability-design.md R22"
+    },
+    {
+      "id": "NFR3.27",
+      "status": "OK",
+      "target": "reliability-design.md R23"
+    },
+    {
+      "id": "NFR4.21",
+      "status": "OK",
+      "target": "reliability-design.md R21 R23"
+    },
+    {
+      "id": "NFR5.21",
+      "status": "OK",
+      "target": "observability-design.md O21"
+    },
+    {
+      "id": "NFR5.22",
+      "status": "OK",
+      "target": "observability-design.md O21"
+    },
+    {
+      "id": "NFR1.21",
+      "status": "OK",
+      "target": "logical-components.md L21"
+    }
+  ],
+  "reverse": []
+}

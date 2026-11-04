@@ -1,0 +1,85 @@
+{
+  "stage": "code-generation",
+  "unit": "u1-integrated-selection",
+  "version": 1,
+  "writes": [
+    {
+      "path": ".gitignore"
+    },
+    {
+      "path": "Hitotsuzuri.xcodeproj/project.pbxproj"
+    },
+    {
+      "path": "Hitotsuzuri.xcodeproj/xcshareddata/xcschemes/Hitotsuzuri.xcscheme"
+    },
+    {
+      "path": "Hitotsuzuri/Hitotsuzuri.entitlements"
+    },
+    {
+      "path": "Hitotsuzuri/HitotsuzuriApp.swift"
+    },
+    {
+      "path": "Hitotsuzuri/Info.plist"
+    },
+    {
+      "path": "Hitotsuzuri/PickerView.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/Diagnostics.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/LocalImageAccess.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/Models.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PhotoLibraryAccess.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/Ports.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PresentationSnapshot.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/SelectionPersistence.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/SelectionWorkflow.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/TestDoubles.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/U1ImageTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/U1IntegrationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/U1LibraryTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/U1ModelTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/U1PersistenceTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/U1PresentationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/U1WorkflowTests.swift"
+    },
+    {
+      "path": "scripts/check-coverage.swift"
+    },
+    {
+      "path": "scripts/verify-u1.sh"
+    }
+  ]
+}

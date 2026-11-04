@@ -1,0 +1,38 @@
+{
+  "stage": "nfr-requirements",
+  "unit": "u3-native-experience",
+  "upstream_ids": [
+    "NFR1",
+    "NFR2",
+    "NFR3",
+    "NFR4",
+    "NFR5"
+  ],
+  "coverage": [
+    {
+      "id": "NFR1",
+      "status": "OK",
+      "target": "NFR1.31"
+    },
+    {
+      "id": "NFR2",
+      "status": "OK",
+      "target": "NFR2.31 NFR2.32 NFR2.33 NFR2.34"
+    },
+    {
+      "id": "NFR3",
+      "status": "OK",
+      "target": "NFR3.31 NFR3.32 NFR3.33"
+    },
+    {
+      "id": "NFR4",
+      "status": "OK",
+      "target": "NFR4.31 NFR4.32 NFR4.33 NFR4.34"
+    },
+    {
+      "id": "NFR5",
+      "status": "OK",
+      "target": "NFR5.31 NFR5.32 NFR5.33"
+    }
+  ]
+}

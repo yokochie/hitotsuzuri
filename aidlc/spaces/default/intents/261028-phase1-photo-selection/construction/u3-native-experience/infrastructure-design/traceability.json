@@ -1,0 +1,98 @@
+{
+  "stage": "infrastructure-design",
+  "unit": "u3-native-experience",
+  "upstream_ids": [
+    "NFR1.31",
+    "NFR2.31",
+    "NFR2.32",
+    "NFR2.33",
+    "NFR2.34",
+    "NFR3.31",
+    "NFR3.32",
+    "NFR3.33",
+    "NFR4.31",
+    "NFR4.32",
+    "NFR4.33",
+    "NFR4.34",
+    "NFR5.31",
+    "NFR5.32",
+    "NFR5.33"
+  ],
+  "coverage": [
+    {
+      "id": "NFR1.31",
+      "status": "OK",
+      "target": "infrastructure-specification.md"
+    },
+    {
+      "id": "NFR2.31",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR2.32",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR2.33",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR2.34",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR3.31",
+      "status": "OK",
+      "target": "infrastructure-specification.md"
+    },
+    {
+      "id": "NFR3.32",
+      "status": "OK",
+      "target": "infrastructure-specification.md"
+    },
+    {
+      "id": "NFR3.33",
+      "status": "OK",
+      "target": "infrastructure-specification.md"
+    },
+    {
+      "id": "NFR4.31",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR4.32",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR4.33",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR4.34",
+      "status": "OK",
+      "target": "monitoring-design.md"
+    },
+    {
+      "id": "NFR5.31",
+      "status": "OK",
+      "target": "cicd-pipeline.md"
+    },
+    {
+      "id": "NFR5.32",
+      "status": "OK",
+      "target": "cicd-pipeline.md"
+    },
+    {
+      "id": "NFR5.33",
+      "status": "OK",
+      "target": "cicd-pipeline.md"
+    }
+  ]
+}

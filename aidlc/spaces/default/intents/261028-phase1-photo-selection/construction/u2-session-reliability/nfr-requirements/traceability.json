@@ -1,0 +1,39 @@
+{
+  "stage": "nfr-requirements",
+  "unit": "u2-session-reliability",
+  "upstream_ids": [
+    "NFR1",
+    "NFR2",
+    "NFR3",
+    "NFR4",
+    "NFR5"
+  ],
+  "coverage": [
+    {
+      "id": "NFR1",
+      "status": "OK",
+      "target": "NFR1.21"
+    },
+    {
+      "id": "NFR2",
+      "status": "OK",
+      "target": "NFR2.21 NFR2.22 NFR2.23 NFR2.24"
+    },
+    {
+      "id": "NFR3",
+      "status": "OK",
+      "target": "NFR3.21 NFR3.22 NFR3.23 NFR3.24 NFR3.25 NFR3.26 NFR3.27"
+    },
+    {
+      "id": "NFR4",
+      "status": "OK",
+      "target": "NFR4.21"
+    },
+    {
+      "id": "NFR5",
+      "status": "OK",
+      "target": "NFR5.21 NFR5.22"
+    }
+  ],
+  "reverse": []
+}
