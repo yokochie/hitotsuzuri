@@ -1,0 +1,27 @@
+name: Verify native application
+on:
+  pull_request:
+  push:
+    branches: [main, 'codex/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Record operating system and Xcode SDK
+        run: |
+          sw_vers
+          xcodebuild -version
+          xcode-select -p
+          xcodebuild -showsdks
+      - name: Verify XCTest and product coverage
+        run: bash scripts/verify-native.sh

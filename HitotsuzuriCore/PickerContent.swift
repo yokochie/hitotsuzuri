@@ -13,7 +13,8 @@ public struct PickerContent:View {
     @State private var compactLayout=false
     @State private var focusTransfer=0
     @FocusState private var focus:PickerFocus?
-    public init(workflow:SelectionWorkflow,presentation:PickerPresentationState=PickerPresentationState(),measurement:NativeMeasurement=NativeMeasurement()) {self.workflow=workflow; _presentation=State(initialValue:presentation); _measurement=State(initialValue:measurement)}
+    private let onArticle: (() -> Void)?
+    public init(workflow:SelectionWorkflow,presentation:PickerPresentationState=PickerPresentationState(),measurement:NativeMeasurement=NativeMeasurement(),onArticle:(() -> Void)?=nil) {self.workflow=workflow; _presentation=State(initialValue:presentation); _measurement=State(initialValue:measurement); self.onArticle=onArticle}
     public var body:some View {
         GeometryReader { proxy in
             let compact=PickerPresentationState.isCompact(proxy.size.width)
@@ -149,6 +150,7 @@ public struct PickerContent:View {
         return VStack(alignment:.leading,spacing:8) {
             HStack {
                 Text("選んだ写真").font(.headline).accessibilityAddTraits(.isHeader); Text(snapshot.countText).monospacedDigit(); Spacer()
+                if let onArticle { Button("記事を開く", action:onArticle).accessibilityIdentifier("article-open") }
                 if workflow.isSaving || workflow.restoreState.isBusy {ProgressView().controlSize(.small)}
                 Button(snapshot.confirmTitle) {confirmFromUI()}.buttonStyle(.borderedProminent).disabled(!snapshot.canConfirm).focusable().focused($focus,equals:.confirm).accessibilityIdentifier("selection-confirm")
                     .onKeyPress(.space) {confirmFromUI(); return .handled}
