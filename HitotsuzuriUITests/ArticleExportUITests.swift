@@ -66,9 +66,13 @@ import XCTest
         action("article-export", app).click(); _ = completed(app)
         replace(field("article-title", app), "Later unsaved text")
         XCTAssertEqual(field("article-title", app).value as? String, "Later unsaved text")
-        action("article-export-copy-fixed", app).click()
-        let copied = app.staticTexts["article-export-fixture-copy"]
-        XCTAssertTrue(copied.draftExists(timeout: 5)); XCTAssertTrue(displayedText(copied).contains("Fixed output text")); XCTAssertFalse(displayedText(copied).contains("Later unsaved text"))
+        let copy = action("article-export-copy-fixed", app)
+        XCTAssertEqual((copy.value as? String) ?? "", "")
+        copy.click()
+        let captured = NSPredicate { _, _ in MainActor.assumeIsolated { ((copy.value as? String) ?? "").contains("Fixed output text") } }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: captured, object: nil)], timeout: 5), .completed, "実コピー成功後の固定本文を操作自身の値から確認する")
+        let copied = (copy.value as? String) ?? ""
+        XCTAssertTrue(copied.contains("Fixed output text")); XCTAssertFalse(copied.contains("Later unsaved text"))
         XCTAssertTrue(state(app, contains: "未保存").exists)
     }
     func testFinderFailureKeepsSuccessfulResult() {

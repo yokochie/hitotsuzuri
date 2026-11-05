@@ -29,6 +29,9 @@ struct ArticleExportView: View {
                 Button("出力時点の本文をコピー") { Task { await coordinator.copyCompletedExport() } }
                     .disabled(coordinator.working).focusable().focused(focus, equals: "article-export-copy-fixed")
                     .accessibilityIdentifier("article-export-copy-fixed").id("article-export-copy-fixed")
+                    #if DEBUG
+                    .accessibilityValue(coordinator.fixtureCopiedExportText)
+                    #endif
                 Button("Finderで出力フォルダを開く") { Task { await coordinator.revealCompletedExport() } }
                     .disabled(coordinator.working).focusable().focused(focus, equals: "article-export-reveal")
                     .accessibilityIdentifier("article-export-reveal").id("article-export-reveal")
@@ -51,11 +54,6 @@ struct ArticleExportView: View {
             }
             Text("本文をnoteへ貼り付け、imagesフォルダの01〜04を順番に手動で挿入してください。")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            #if DEBUG
-            if !coordinator.fixtureCopiedExportText.isEmpty {
-                Text(coordinator.fixtureCopiedExportText).font(.caption2).lineLimit(2).accessibilityIdentifier("article-export-fixture-copy")
-            }
-            #endif
         }
     }
 }
