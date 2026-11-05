@@ -915,3 +915,105 @@
 **Context**: verification > inception-construction-verification.md
 
 ---
+
+## Artifact Created
+**Timestamp**: 2026-11-05T11:36:29Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-05T11:37:28Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/unit-test-instructions.md
+**Context**: construction > code-generation > unit-test-instructions.md
+
+---
+
+## Question Asked
+**Timestamp**: 2026-11-05T11:37:36Z
+**Event**: QUESTION_ASKED
+**Question Id**: fe22ef78
+**Question Type**: plan-approval
+**Question Chat**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Question Shows**: sha256:a0dbc3e704e71e03310b6b3d8ab54cb0b47c6acebe7b1d3d2ce74ed4eaa67f85
+**Stage**: code-generation
+**Ask Id**: 81fd69f58a94d548531172bae4442341
+**Options**: ["Approve Plan","Request Changes","I'll edit the files"]
+**Question Text SHA-256**: f9130f37b257072ebbd4554a40a4fdb3e2d4ca6638e48c0ec54eb70feb460884
+**Questions File**: aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/code-generation-questions.md
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-05T11:40:36Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: 52442044
+**Open Questions**: fe22ef78
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/code-generation-questions.md","entries":{"Plan Approval":"052e1564b1094282"}}
+
+---
+
+## Plan Approval Recorded
+**Timestamp**: 2026-11-05T11:40:41Z
+**Event**: PLAN_APPROVAL_RECORDED
+**Stage**: code-generation
+**Details**: Approve Plan
+**Checkpoint**: plan-approval
+**Plan Target**: stage:code-generation
+**Intent**: 01a1ab59-7de5-7700-a1bb-ac1fb56c37c2
+**Directive Epoch**: sha256:5229b02aff9c0c8a77c0da5734a73a2e43e4a1965878a9baa2ae3b9d4c97bb7a
+**Run floor**: STAGE_STARTED:2026-11-05T11:32:18Z#1
+**Approval Fingerprint**: sha256:v3:44450d42082c46346bf95b7004bdd695cfdb85e577dfa2c066c96577d1e7420a
+**Questions File**: aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/code-generation-questions.md
+**Questions SHA-256**: 52794fd433207e2a877e6c2a2cd019bc898e4271f855de876ae9328de93b5116
+**Prompt SHA-256**: 7b791a329fd709eae4f397bd783ba6756af95cca7e228bb270eba61a0d0e23a0
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Asked By**: engine
+**Person Reply**: 1
+**Message Id**: 52442044
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-05T11:43:04Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T11:44:27Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-05T11:45:11Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1ab6b-fa0f-7620-94ce-20a20cacc7bf
+**Message**: Core回帰6件を追加し、CI Redへ渡せる状態です。\n\n- `HitotsuzuriU1Tests/ArticleDirectoryAccessTests.swift`\n- 計画はStep1だけ完了チェック。Step2はRed確認待ち。\n- Python選択契約28件成功、新クラス自動検出確認、差分チェック成功。\n- 製品コード・DEBUG fixture・UIは未変更。ローカルnative/
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T11:45:34Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
