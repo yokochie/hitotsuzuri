@@ -89,6 +89,14 @@ import XCTest
         XCTAssertTrue(copied.contains("Fixed output text")); XCTAssertFalse(copied.contains("Later unsaved text"))
         XCTAssertTrue(displayedText(diagnostic).contains("pasteboard-succeeded;captured"))
         XCTAssertTrue(displayedText(diagnostic).contains("capturedMatches=true"))
+        XCTAssertTrue(displayedText(diagnostic).contains("button=1;task=1;"), "一回のマウス操作が実callbackとTaskを一回ずつ開始する")
+        field("article-title", app).click()
+        for _ in 0..<22 { app.typeKey(.tab, modifierFlags: []) }
+        app.typeKey(.space, modifierFlags: [])
+        let keyboardCopied = NSPredicate { _, _ in MainActor.assumeIsolated { self.displayedText(diagnostic).contains("button=1;task=2;") } }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: keyboardCopied, object: nil)], timeout: 5), .completed, "設定変更なしのTab/Spaceでも固定コピーへ到達: \(displayedText(diagnostic))")
+        XCTAssertTrue(((copy.value as? String) ?? "").contains("Fixed output text"))
+        XCTAssertFalse(((copy.value as? String) ?? "").contains("Later unsaved text"))
         XCTAssertTrue(state(app, contains: "未保存").exists)
     }
     func testFinderFailureKeepsSuccessfulResult() {

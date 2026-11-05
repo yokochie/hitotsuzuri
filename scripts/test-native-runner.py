@@ -237,8 +237,14 @@ class ExportDiagnosticWorkflowTests(unittest.TestCase):
         if not workflow: return
         steps = workflow["jobs"]["fixed-copy"]["steps"]
         commands = [step["run"] for step in steps if "run" in step]
-        self.assertEqual(len(commands), 1)
-        command = commands[0]
+        self.assertEqual(len(commands), 2)
+        environment = next((command for command in commands if "sw_vers" in command), "")
+        for expected in ["xcodebuild -version", "defaults read -g AppleKeyboardUIMode", "not explicitly configured"]:
+            self.assertIn(expected, environment)
+        self.assertNotIn("defaults write", environment)
+        diagnostics = [command for command in commands if "-only-testing:" in command]
+        self.assertEqual(len(diagnostics), 1)
+        command = diagnostics[0]
         self.assertEqual(command.count("-only-testing:"), 1)
         self.assertIn("-only-testing:HitotsuzuriUITests/ArticleExportUITests/testFixedCompletionCopyDoesNotUseLaterEditorChanges", command)
         self.assertNotIn("--functional", command)

@@ -13,6 +13,15 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
+      - name: Record operating system, Xcode and existing keyboard preference
+        run: |
+          sw_vers
+          xcodebuild -version
+          if defaults read -g AppleKeyboardUIMode; then
+            echo "Keyboard navigation preference is explicitly configured."
+          else
+            echo "Keyboard navigation preference is not explicitly configured."
+          fi
       - name: Diagnose exactly one synthetic fixed-copy case
         run: xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination platform=macOS -only-testing:HitotsuzuriUITests/ArticleExportUITests/testFixedCompletionCopyDoesNotUseLaterEditorChanges -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/ArticleExport-copy-diagnostic.xcresult CODE_SIGN_IDENTITY=- test
       - name: Preserve only this synthetic app diagnostic

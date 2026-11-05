@@ -32,7 +32,10 @@ struct ArticleExportView: View {
                     #endif
                     Task { await coordinator.copyCompletedExport() }
                 }
-                    .disabled(coordinator.working).focusable().focused(focus, equals: "article-export-copy-fixed")
+                    // マウス押下でedit focusを新規取得して移動しない。独自Tabの明示対象には従来の全focusを許す。
+                    .disabled(coordinator.working)
+                    .focusable(interactions: focus.wrappedValue == "article-export-copy-fixed" ? [.edit, .activate] : .activate)
+                    .focused(focus, equals: "article-export-copy-fixed")
                     .accessibilityIdentifier("article-export-copy-fixed").id("article-export-copy-fixed")
                     #if DEBUG
                     .accessibilityValue(coordinator.fixtureCopiedExportText)
