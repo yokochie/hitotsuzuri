@@ -19,4 +19,24 @@
 - 本人実機の直接原因まで確定したとは扱わない。通常Sandbox経路の回帰は修正後に追加する。
 
 ## Green
-未実行。Redを確認した後、承認済み計画の最小修正へ進む。
+- 対象SHA `88978d6fbac624961c3880ac894facf1c0070469`、[PR CI 42022838099](https://github.com/yokochie/hitotsuzuri/actions/runs/42022838099)。重複push run `42022831466`はcancel。
+- Core job `127229603834`はsuccess（1分35秒）。runnerの結果検査が全460件の実行成功を確認。新規ArticleDirectoryAccessTestsは6件全成功（0.153秒）、先のRed2件も成功した。
+- 同jobの完了ログで、以下の共通利用者・保護試験の成功を確認した。単なるファイル存在の確認ではない。
+
+| クラス | 成功件数 |
+|---|---:|
+| ArticleDirectoryAccessTests | 6 |
+| ArticleRecoveryTests | 11 |
+| ArticlePersistenceTests | 10 |
+| ArticleProbeTests | 14 |
+| ArticleExportWriterTests | 21 |
+| ArticleExportJournalTests | 8 |
+| ArticleExportIntegrationTests | 19 |
+| ArticleExportOSActionTests | 8 |
+
+- `git diff 2241780 HEAD -- Hitotsuzuri.xcodeproj Hitotsuzuri/Hitotsuzuri.entitlements scripts .github`は差分なし。本人の未commit scheme差分は今回の変更に含めていない。
+- main native job `127230329025`はsuccess（19分36秒）。fixture smoke2件成功、主bundle524件（Core460＋UI64）実行成功、全製品行coverage5284/5798=91.13%。runnerが全ケースPassedを確認しており0skip。
+- `ArticleSandboxStorageUITests.testArticleCanStartSaveAndReopenInApplicationSupport`は27.277秒で成功。Application Supportの保存モード表示、記事開始、タイトル/本文保存、再起動後の同じ候補識別子と本文、候補1件、app内cleanup成功を同ケースで確認した。
+- CIの主bundleは`.build/Native-functional-20261105-115817-2e6be51346164fbb81ff8c973807fe22.xcresult`。これはrunner上の場所であり、ローカルには取得していない。
+- Red→Greenの間に変更した製品動作はArticleFileSystemの入口/child作成だけ。ArticlePersistenceは変更不要。Sandbox/entitlements/保存形式/CI/coverage閾値を変更していない。
+- 本人環境での通常操作確認は未確認。合成データのCI成功とは別に保持する。性能の一式測定も今回再実行していない。
