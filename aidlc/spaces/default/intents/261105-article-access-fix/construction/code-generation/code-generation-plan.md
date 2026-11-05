@@ -28,7 +28,7 @@
 ## Implementation Steps
 
 - [x] **Step 1 — 実行準備・baseline（全要件）**: 未変更製品と既存runnerを確認する。PR CI `42016213433`（対象8229a1d）は全機能517件・smoke2件成功、製品coverage5227/5739=91.08%。現HEAD8727406は記録のみで製品は同一。ソース差分なしを確認してbaselineに採用し、同じbaselineをローカルUIで取り直さない。既存Python選択契約試験を1回実行し、新クラスを拾う設定を静的確認する。
-- [ ] **Step 2 — データアクセス Red（FR1、FR2、NFR1）**: Core結合試験6件とfixture準備・復元を追加する。検索のみ祖先の下に既に許可された末端を用意し、一覧・作成・保存・再開の期待を確認。実データに触れない。製品helperは未変更のまま、試験だけのコミットを既存ドラフトPRのブランチへpushし、CIのCoreで意図した権限エラーを観測する。コンパイルやfixture由来の失敗なら修正して正しいRedを得る。
+- [x] **Step 2 — データアクセス Red（FR1、FR2、NFR1）**: Core結合試験6件とfixture準備・復元を追加する。検索のみ祖先の下に既に許可された末端を用意し、一覧・作成・保存・再開の期待を確認。実データに触れない。製品helperは未変更のまま、試験だけのコミットを既存ドラフトPRのブランチへpushし、CIのCoreで意図した権限エラーを観測する。コンパイルやfixture由来の失敗なら修正して正しいRedを得る。
 - [ ] **Step 3 — データアクセス Green（FR1、FR2、NFR1）**: Step 2の意図した失敗を確認後、対象パスの直接openと、欠けたディレクトリだけの作成を実装する。`O_NOFOLLOW_ANY`（現行SDKのsys/fcntl.hに定義あり）を用い、中間/末端symlinkの拒否を維持する。ENOENTだけを作成経路へ送り、EACCES/EPERM・ELOOP等を握り潰さない。必要ならArticlePersistence.listの権限分類を最小限修正する。
 - [ ] **Step 4 — Sandbox経路の回帰を追加（FR1、NFR3）**: DEBUG fixtureのApplication Support隔離モードと1件のUI試験を追加する。既存の記事入口・手動保存・再開UIを操作し、本文と同じ記事を再開できることを確認。frontendの業務ロジック変更はないため新しいUI機能のTDD層は追加しない。データアクセスRedの保護対象を実アプリ経路で確認する試験である。
 - [ ] **Step 5 — CI GreenとRefactor（FR1〜FR3、NFR1〜NFR3）**: 修正＋Sandbox回帰をpushし、既存CIでCore→smoke→全機能・全製品coverageを1回通す。Red/GreenのSHA、run/job、実行件数、0skip、coverageを記録する。同じSHAでpush/PRの2実行が生じたら重複push runだけをcancelし、PR runを残す。成功後、必要な読みやすさの整理だけを行い、整理でソースを変えた場合のみ再検証する。無関係なリファクタはしない。

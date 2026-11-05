@@ -6,21 +6,66 @@ import ImageIO
 import CoreGraphics
 import UniformTypeIdentifiers
 
-// UI試験専用。全境界をメモリに閉じ、実Photos/保存領域を生成しない。
+// UI試験専用。実Photosと通常保存データを使わず、合成adapterと試験所有rootだけを使う。
 @MainActor enum DebugFixture {
+    private enum Storage: String { case temporary, applicationSupport = "application-support" }
+    private static var storage: Storage {
+        let raw = ProcessInfo.processInfo.environment["HZS_ARTICLE_TEST_STORAGE"] ?? "temporary"
+        guard let value = Storage(rawValue: raw) else { preconditionFailure("未対応の試験保存領域です。") }
+        return value
+    }
+    private static func ownedBase() -> URL {
+        if storage == .temporary { return FileManager.default.temporaryDirectory.resolvingSymlinksInPath() }
+        do { return try SelectionPersistence.applicationDirectory() }
+        catch { preconditionFailure("試験用Application Supportを解決できませんでした。") }
+    }
     private static func ownedRoot()->URL {
         let token=ProcessInfo.processInfo.environment["HZS_ARTICLE_TEST_ROOT"] ?? "uitest-"+UUID().uuidString
         precondition(token.hasPrefix("uitest-") && UUID(uuidString:String(token.dropFirst(7)))?.uuidString == String(token.dropFirst(7)),"試験rootは生成済みUUIDだけを許可")
-        return FileManager.default.temporaryDirectory.resolvingSymlinksInPath().appendingPathComponent("ArticleFixture-"+token,isDirectory:true)
+        return ownedBase().appendingPathComponent("ArticleFixture-"+token,isDirectory:true)
+    }
+    private struct StorageOwner: Codable, Equatable {
+        let token: String
+        let device: UInt64
+        let inode: UInt64
+    }
+    private static func currentOwner(_ root: URL) throws -> StorageOwner {
+        let values = try root.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard values.isDirectory == true, values.isSymbolicLink != true,
+              root.resolvingSymlinksInPath().path == root.path else { throw ArticleFailure.invalidReference }
+        let attributes = try FileManager.default.attributesOfItem(atPath: root.path)
+        guard let device = attributes[.systemNumber] as? NSNumber,
+              let inode = attributes[.systemFileNumber] as? NSNumber else { throw ArticleFailure.ioFailure }
+        return StorageOwner(token: root.lastPathComponent, device: device.uint64Value, inode: inode.uint64Value)
+    }
+    private static func verifyApplicationSupportOwner(_ root: URL) throws {
+        let expected = try currentOwner(root)
+        let receipt = root.appendingPathComponent(".fixture-owner.json")
+        let values = try receipt.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        guard values.isRegularFile == true, values.isSymbolicLink != true,
+              let size = values.fileSize, size <= 1024 else { throw ArticleFailure.invalidReference }
+        let stored = try JSONDecoder().decode(StorageOwner.self, from: Data(contentsOf: receipt))
+        guard stored == expected else { throw ArticleFailure.invalidReference }
+    }
+    private static func prepareApplicationSupportRoot(_ root: URL) throws {
+        guard storage == .applicationSupport else { return }
+        if FileManager.default.fileExists(atPath: root.path) { try verifyApplicationSupportOwner(root); return }
+        try FileManager.default.createDirectory(at: ownedBase(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+        let receipt = try JSONEncoder().encode(currentOwner(root))
+        try receipt.write(to: root.appendingPathComponent(".fixture-owner.json"), options: .withoutOverwriting)
     }
     private static func cleanOwnedRoot(_ root:URL) throws {
-        let base=FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+        let base=ownedBase()
         guard root.deletingLastPathComponent().path == base.path,
               root.resolvingSymlinksInPath().path == root.path,
               (try? root.resourceValues(forKeys:[.isSymbolicLinkKey]).isSymbolicLink) != true,
               root.lastPathComponent.hasPrefix("ArticleFixture-uitest-"),
               UUID(uuidString:String(root.lastPathComponent.dropFirst(22))) != nil else {throw ArticleFailure.invalidInput}
-        if FileManager.default.fileExists(atPath:root.path) {try FileManager.default.removeItem(at:root)}
+        if FileManager.default.fileExists(atPath:root.path) {
+            if storage == .applicationSupport { try verifyApplicationSupportOwner(root) }
+            try FileManager.default.removeItem(at:root)
+        }
         guard !FileManager.default.fileExists(atPath:root.path) else {throw ArticleFailure.ioFailure}
     }
     static func makeWorkflow()->SelectionWorkflow {
@@ -56,6 +101,11 @@ import UniformTypeIdentifiers
                 coordinator.message="試験データを回収しました。"
             } catch {coordinator.message="試験データの回収に失敗しました。"}
             return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:images,store:store),coordinator)
+        }
+        if storage == .applicationSupport {
+            do { try prepareApplicationSupportRoot(root) }
+            catch { preconditionFailure("隔離した試験保存領域の準備・所有確認に失敗しました。") }
+            coordinator.message = "試験保存領域：Application Support"
         }
         if draftCase == "invalid-raw" {coordinator.fixtureDraftPreparation={$0.metadataInput.change(year:"2026",month:"2",day:"31")}}
         if ["save-delay","performance"].contains(fixtureCase) {coordinator.fixtureReleaseSave={await draftStore.releaseSave()}}

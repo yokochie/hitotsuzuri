@@ -9,18 +9,26 @@ final class ArticleDirectory {
     deinit { Darwin.close(descriptor) }
 
     static func open(_ url: URL, create: Bool) throws -> ArticleDirectory {
-        guard url.isFileURL else { throw ArticleFailure.invalidReference }
-        var directory = ArticleDirectory(descriptor: Darwin.open("/", O_RDONLY | O_DIRECTORY))
-        guard directory.descriptor >= 0 else { throw ArticleFailure.ioFailure }
-        for component in url.standardizedFileURL.pathComponents.dropFirst() {
-            directory = try directory.child(component, create: create)
-        }
-        return directory
+        let path = url.path
+        guard url.isFileURL, path.hasPrefix("/"), !path.contains("\0") else { throw ArticleFailure.invalidReference }
+        // 祖先を列挙用に開かず、対象までの全成分をカーネルのnofollow検査に委ねる。
+        let descriptor = Darwin.open(path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW_ANY)
+        if descriptor >= 0 { return ArticleDirectory(descriptor: descriptor) }
+        let code = errno
+        guard create, code == ENOENT else { throw failure(code) }
+        let parentURL = url.deletingLastPathComponent()
+        guard parentURL.path != path else { throw ArticleFailure.missing }
+        let parent = try open(parentURL, create: true)
+        return try parent.child(url.lastPathComponent, create: true)
     }
 
     func child(_ name: String, create: Bool) throws -> ArticleDirectory {
         try validate(name)
-        if create, mkdirat(descriptor, name, 0o700) != 0, errno != EEXIST { throw failure() }
+        let existing = openat(descriptor, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+        if existing >= 0 { return ArticleDirectory(descriptor: existing) }
+        let code = errno
+        guard create, code == ENOENT else { throw Self.failure(code) }
+        if mkdirat(descriptor, name, 0o700) != 0, errno != EEXIST { throw failure() }
         let fd = openat(descriptor, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
         guard fd >= 0 else { throw failure() }
         return ArticleDirectory(descriptor: fd)
@@ -109,7 +117,10 @@ final class ArticleDirectory {
         guard !name.isEmpty, name != ".", name != "..", !name.contains("/"), !name.contains("\0") else { throw ArticleFailure.invalidReference }
     }
     private func failure() -> ArticleFailure {
-        switch errno {
+        Self.failure(errno)
+    }
+    private static func failure(_ code: Int32) -> ArticleFailure {
+        switch code {
         case ENOENT: .missing
         case ELOOP, ENOTDIR: .invalidReference
         case EACCES, EPERM: .permissionDenied

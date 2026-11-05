@@ -1017,3 +1017,30 @@
 **Context**: construction > code-generation > ci-evidence.md
 
 ---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T11:48:22Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T11:52:28Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-05T11:53:50Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1ab6b-fa0f-7620-94ce-20a20cacc7bf
+**Message**: 修正とSandbox回帰試験の準備ができました。\n\n- `ArticleFileSystem.swift`: 祖先の読取openを廃止し、`O_NOFOLLOW_ANY`で対象を直接open。欠けた部分だけ作成。\n- `DebugFixture.swift` / `FixtureLaunch.swift`: Application Supportの専用UUID領域、所有照合とapp内cleanup
+
+---
