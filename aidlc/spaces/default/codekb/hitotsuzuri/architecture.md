@@ -1,54 +1,60 @@
-# 現行アーキテクチャ
+# Architecture Analysis
 
-## Architecture Analysis
+## System Overview
+SwiftUI/AppKitの単一macOSアプリとCore frameworkで構成する。UI状態はMainActorのObservation、保存と出力はactor、画像変換・本文生成は分離した処理で扱う。外部サーバーやデータベースはない。
 
-### System Overview
-単一macOSアプリと共有Core framework。SwiftUI画面はMainActorのObservableなSelectionWorkflowを参照し、プロトコル注入で写真・画像・保存を分離する。Coreには純粋なドメインだけでなくUIとAppKit/PhotoKit実装も同居する。
-
-### Architectural Style
-ローカルな状態管理とアダプタ境界を持つ単一アプリ。外部サービスや分散処理はない。SelectionPersistenceはactor、PhotoKitの一覧探索はTask.detached、UI公開状態と画像要求制御はMainActor。
-
-### Component Relationships
+## Component Relationships
 ```mermaid
-flowchart LR
-  App["HitotsuzuriApp"] --> UI["PickerContent"]
-  UI --> W["SelectionWorkflow"]
-  UI --> N["NativeFolderBrowser"]
-  W --> L["PhotoLibraryAccess"]
-  W --> I["LocalImageAccess"]
-  W --> P["SelectionPersistence"]
-  L --> Photos["PhotoKit"]
-  I --> Photos
-  P --> JSON["settings.json / selection.json"]
+flowchart TD
+    App["HitotsuzuriApp"] --> Picker["PickerView / SelectionWorkflow"]
+    App --> Coordinator["ArticleAppCoordinator"]
+    Picker --> Selection["SelectionPersistence"]
+    Picker --> Photos["PhotoLibraryAccess / LocalImageAccess"]
+    Coordinator --> Presentation["ArticlePresentation / ArticleEditSession"]
+    Presentation --> Workspace["ArticleWorkspace"]
+    Workspace --> Selection
+    Workspace --> Articles["ArticlePersistence"]
+    Coordinator --> Export["ArticleExportSession / OSActions / Delivery"]
+    Export --> Images["ArticleImageAccess / Converter"]
+    Export --> Writer["ArticleExportWriter / Journal"]
+    Articles --> Files["ArticleDirectory"]
+    Writer --> Files
 ```
-テキスト代替: AppがUIとWorkflowを生成し、Workflowが写真参照・画像取得・保存の各境界を呼ぶ。UIのフォルダ操作はNativeFolderBrowserを介してWorkflowへ戻る。構文は宣言済みノード・括弧・矢印を目視確認した。
+<!-- Text fallback: Appは選択Workflowと記事Coordinatorを生成する。記事画面はPresentationとWorkspaceを通して選択・記事保存へ進む。出力はSessionからOSActions、Delivery、画像変換とWriterへ進み、保存と出力はArticleDirectoryを共有する。 -->
 
-### Data Flow
-ライブラリIDは不透明な文字列として渡す。表示画像はImageBufferの共有不変ストレージで保持し、描画プロバイダの寿命もカウントする。確定時は順序配列とアルバムを固定し、世代・編集revision・操作IDを照合して古い結果を排除する。
+## Data Flow
+Application Support/Hitotsuzuriに確定選択を保存し、その `Articles/<projectID>/` に操作記録とcurrentを保存する。新記事は確定した4枚から初期化して保存を試す。既存記事の対応はselectionIDを優先し、同じalbumID・同じ写真順序の場合は候補を提示する。本文出力は保存済み版へ固定する。
 
-### Key Design Decisions
-フォルダ設定と確定選択は別JSON、schemaVersion 1。復元候補は4枚全体成功後に公開。未知版・破損は通常保存で上書きしない。明示的再確定だけが破損原本をSHA256名で退避して回復する。参照は必要時の再検証で、PhotoKit変更通知による常時同期は実装していない。
+## Key Design Decisions
+小さなprotocolでOS依存を差し替える。記事の操作ID・入力digest・前版・currentを用いて再試行と競合を区別し、未知形式・破損を上書きしない。ファイル操作は開いた親fd相対で行いsymlinkを拒否する。出力先は本人のパネル選択で一時アクセスを保持し、再起動時は再選択を要する。
 
-### Improvement Opportunities
-記事用画像と表示用取得の契約、記事の独立再開、手動下書き保存と離脱保護、選択IDの同一性はPhase2の追加設計点。現時点で存在しないサービスを現行構造へ書き加えない。
+## Improvement Opportunities
+親fd相対操作の安全性と、絶対パスの入口で全祖先を読取openする点を分離する必要がある。詳細は `code-quality-assessment.md`。既存の保存形式と写真選択の契約を変える必要性は見つかっていない。
 
 ## Interaction Diagrams
 ```mermaid
 sequenceDiagram
-  participant UI as PickerContent
-  participant W as SelectionWorkflow
-  participant L as PhotoLibraryAccess
-  participant I as LocalImageAccess
-  participant P as SelectionPersistence
-  UI->>W: confirm()
-  W->>L: validate(folders, albumID, assets)
-  L-->>W: valid or error
-  W->>I: validate four images with shared deadline
-  I-->>W: four final buffers or error
-  W->>P: confirmSelection(snapshot)
-  P-->>W: persisted or error
-  W-->>UI: saved state or retained edit with failure
+    participant UI as PickerView
+    participant P as ArticlePresentation
+    participant W as ArticleWorkspace
+    participant S as SelectionPersistence
+    participant A as ArticlePersistence
+    participant D as ArticleDirectory
+    UI->>P: beginCurrentSelection
+    P->>W: readCommittedSelection
+    W->>S: loadSelection
+    S-->>P: ArticleSource
+    P->>W: listDrafts
+    W->>A: list
+    A->>D: open Articles directory
+    alt EACCES or EPERM
+        D-->>P: permissionDenied
+        P-->>UI: 記事読込エラー
+    else 読込可能
+        A-->>P: 記事一覧
+        P->>P: 既存版を開く または 新規保存を試す
+    end
 ```
-テキスト代替: 4枚確定は現在参照・4枚画像の再検証、固定内容の永続化、成功状態の公開の順。途中失敗は旧確定と編集を保持する。参加者と呼出し構文を目視確認した。
+<!-- Text fallback: 記事開始は確定選択を読んでから記事一覧のディレクトリを開く。このopenで権限エラーになると写真プレビューを始める前に失敗表示する。成功時は既存版の再開か新規作成へ進む。 -->
 
-起動時は認可確認、設定と選択の独立読込、階層探索、保存選択の所属・4枚画像検証、最後に一括公開を行う。認可や参照・画像の失敗時は編集表示をクリアし、保存原本は変更しない。
+出力は保存済み入力の固定→保存先選択とgrant→親実体identity取得→journal begin→一時folder生成→画像を順次変換・書込→全文とdigest照合→排他的rename→journal finish。中断時は記録・実体・digestを照合し、所有できないものは削除しない。

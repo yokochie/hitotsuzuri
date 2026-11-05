@@ -14,5 +14,13 @@
     "scope": "mvp",
     "status": "complete",
     "request": "82f0d304"
+  },
+  {
+    "uuid": "01a1ab59-7de5-7700-a1bb-ac1fb56c37c2",
+    "slug": "article-access-fix",
+    "dirName": "261105-article-access-fix",
+    "scope": "bugfix",
+    "status": "in-flight",
+    "request": "b40a151c"
   }
 ]

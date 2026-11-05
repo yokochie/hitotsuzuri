@@ -1,27 +1,11 @@
 # 依存関係
 
-## ビルド依存
-Hitotsuzuri.app → HitotsuzuriCore.framework（embed）。U1/U2/U3 unit-test → Core。UITests → Hitotsuzuri.app。全体は単一Xcode project/shared scheme。SwiftPM・CocoaPods等の外部依存はprojectにない。
+`Hitotsuzuri.app → HitotsuzuriCore.framework → Apple SDK` が製品のmodule関係。CoreはAppをimportしない。Xcode projectにSwift Package/外部library依存は見つからない。
 
-## ソース依存
-| ソース群 | import・主な依存 |
-|---|---|
-| App/PickerView | SwiftUI、Core。DebugFixtureはFoundation、Core |
-| Workflow | Foundation、Observation、Ports、Models、Diagnostics |
-| PhotoLibraryAccess | Foundation、Photos、LibrarySource |
-| LocalImageAccess | Foundation、AppKit、Photos、ImageDriving/ImageClock |
-| SelectionPersistence | Foundation、CryptoKit、SelectionStoringと保存値 |
-| PickerContent/NativeFolderBrowser | SwiftUI、AppKit、Workflow・Presentation・Images |
-| Models/Ports/PresentationSnapshot/PickerAccessibility/FrameMeasurement | FoundationとCoreの値 |
-| PickerPresentationState | Foundation、Observation |
-| NativeMeasurement | Foundation、AppKit、Observation、Darwin |
-| Diagnostics | OSLog |
-| 検証scripts | xcodebuild、xcrun xccov、swift。任意測定はCoreとApple画面/OCR framework |
+App生成時の保存URLは `SelectionPersistence.applicationDirectory()` のApplication Support/Hitotsuzuriを基本とし、失敗時にhome下へfallbackする。Articles、ProbeRecovery、ExportJobsはその子。写真表示用LocalImageAccessと書出し用PhotoKitArticleImageReaderは別の要求寿命を持つ。
 
-Core内は同一モジュール参照で、相互importを持つ別packageの循環はない。ただし画面とWorkflow・OS adapterが同じframeworkに集まり、UIから画像の表示変換も扱う。純粋ドメイン限定のCoreではない。
+ArticlePersistence、ArticleProbeDelivery/Journal、ArticleExportWriter/Journal/FileSystemはArticleDirectoryを共有する。共通helperの変更は記事を開く操作以外の新規保存・取消・回復・Finder検査にも波及するため、既存の保護試験を維持する。
 
-## ランタイム依存
-写真ライブラリの許可、ローカル画像、アプリ専用保存領域。任意の画面計測だけ既存の画面収録許可を確認し、通常製品から起動しない。インターネット・外部DB・クラウドアカウントには依存しない。
+第三者CI依存はcheckoutと限定診断用upload-artifact。いずれもcommit SHA固定で、通常verifyはcheckout時のcredential永続化を無効にする。runnerはxcode-27。CI以外への自動配置・本番公開の構成はない。
 
-## Phase2で新たに検証が必要な境界
-記事用の高解像度画像、JPEG/Markdown、利用者指定先への書込、クリップボード、Finder、下書き保存は未実装。現在のentitlementsには利用者選択ファイルの書込権限設定は見当たらず、保存先のSandboxアクセスを実証する必要がある。これは追加方式の確定ではない。
+通常のPhotoKit・写真実体・選択パネルのgrant・FinderはOS環境に依存する。DEBUG fixtureは合成PhotosとtemporaryDirectoryを使用し、通常Application Supportの祖先権限と等価とは限らない。詳細は品質評価を参照。

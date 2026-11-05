@@ -1,18 +1,19 @@
-# 技術スタック
+# 技術構成
 
-| 項目 | 観測値・根拠 |
+| 技術 | ソースから確認した指定・用途 |
 |---|---|
-| 言語 | Swift、projectのSWIFT_VERSION=6.0。スクリプトはBashとSwift |
-| 対応OS設定 | MACOSX_DEPLOYMENT_TARGET=27.0、SDKROOT=macosx |
-| ビルド | Xcode project、objectVersion 71、compatibilityVersion Xcode 16.0、LastUpgradeCheck 2720。これらはファイル値で、インストール済みXcode版を証明しない |
-| UI | SwiftUI、AppKit。写真フォルダはNSOutlineViewを包む |
-| 状態・並行処理 | Observation、MainActor、Task/task group、actor、Sendable、ContinuousClock |
-| 写真 | Photos/PhotoKit。読取、非通信の表示画像要求 |
-| 永続化 | Codable JSON、Foundation FileManager、CryptoKit SHA256 |
-| 診断 | OSLog。通常ログは失敗種別のみ |
-| テスト | XCTest。shared schemeの4 testables、カバレッジ有効 |
-| 補助測定 | ScreenCaptureKit、Vision、CoreMedia、Darwin。開発者用任意ツール |
-| 署名とSandbox | Manual/ad-hoc設定、アプリSandbox、写真ライブラリentitlement |
-| 外部パッケージ | projectに登録された第三者パッケージ参照なし |
+| Swift | SWIFT_VERSION=6.0。actor、MainActor、async/await、Sendable |
+| macOS / Xcode | Deployment target 27.0、scheme LastUpgradeVersion 2720。実際のinstall versionは今回未実測 |
+| SwiftUI / Observation | window・View・Observable状態 |
+| AppKit | NSOpenPanel、NSAlert、NSPasteboard、NSWorkspace、NSOutlineView |
+| Photos | システム写真ライブラリの階層・画像・編集入力の参照 |
+| Foundation / Darwin | JSON・ファイル・URL、openat/mkdirat/flock/fsync/rename |
+| CryptoKit | SHA256入力fingerprintと出力digest |
+| ImageIO / CoreImage / UniformTypeIdentifiers | JPEG縮小、向き、色空間、metadata制御 |
+| OSLog | 個人文章を含まない分類ログ |
+| XCTest / XCUITest | Core・結合・native UI・性能 |
+| Python3 / bash / Swift scripts | 試験選択契約、xcodebuild、coverage、計測 |
+| ScreenCaptureKit / Vision / CoreMedia | native計測補助スクリプト |
+| GitHub Actions | xcode-27 runner上のCore→機能UI・coverage |
 
-Apple frameworkの個別版は固定されずSDKに従う。ビルド・OS・実機の動作版確認は今回行っていない。CI設定・formatter/linter設定・パッケージロックは調査した製品構成にない。
+外部package managerと第三者実行時ライブラリは見つからない。App Sandbox、写真library、user-selected.read-write entitlementsを宣言する。認可の拡張やSandbox解除は現行構成では行わない。

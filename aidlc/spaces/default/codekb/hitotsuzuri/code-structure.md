@@ -1,40 +1,24 @@
 # コード構成
 
-## ターゲット
-App、Core framework、U1/U2/U3 unit-test、UITestsの6 target。Xcodeのfilesystem synchronized groupsにより各ディレクトリを対応targetへ登録する。
-
-## ファイル分類
-| 場所・ファイル | 分類と責務 |
+| 領域 | 分類と責務 |
 |---|---|
-| Hitotsuzuri/HitotsuzuriApp.swift | Configuration: 実境界の生成、単一Window |
-| Hitotsuzuri/PickerView.swift | UI: Core画面を起動しworkflow.startを呼ぶ |
-| Hitotsuzuri/DebugFixture.swift | Test support: DEBUG限定のメモリ写真・画像・保存 |
-| Hitotsuzuri/Info.plist、Hitotsuzuri.entitlements | Configuration: 表示名・写真説明・Sandbox |
-| Core/Models.swift | Model: 編集選択と確定選択、復元・保存状態 |
-| Core/Ports.swift | Contract/Model: 境界protocol、写真階層、画像・失敗・保存値 |
-| Core/SelectionWorkflow.swift | UseCase: 探索・選択・確定・復元・応答の世代管理 |
-| Core/SelectionPersistence.swift | Repository: JSON・版検査・退避回復 |
-| Core/PhotoLibraryAccess.swift | Adapter: 写真ライブラリ読取、階層と所属検証 |
-| Core/LocalImageAccess.swift | Adapter/Service: ローカル表示画像・期限・枠・LRU |
-| Core/PickerContent.swift | UI: 3領域、写真・選択枠・保存状態、キー操作、表示画像変換 |
-| Core/NativeFolderBrowser.swift | UI adapter: NSOutlineViewによる階層・複数選択 |
-| Core/PickerPresentationState.swift | Presentation: 領域・展開・フォーカスID、compact判定 |
-| Core/PickerAccessibility.swift | Presentation/Utility: 写真ラベル・グリッド移動 |
-| Core/PresentationSnapshot.swift | Presentation: 状態から日本語表示へ投影 |
-| Core/NativeMeasurement.swift、FrameMeasurement.swift | Utility: 任意の入力・表示計測証拠と判定 |
-| Core/Diagnostics.swift | Utility: 失敗enumのみOSLog |
-| HitotsuzuriU1Tests/ | Test: 基本モデル、写真・画像境界、保存、選択・結合 |
-| HitotsuzuriU2Tests/ | Test: 復元・破損退避・競合・再試行 |
-| HitotsuzuriU3Tests/ | Test: 表示・キー・資源・計測・保存成功境界 |
-| HitotsuzuriUITests/NativeInputTests.swift | Test: synthetic appの実キー・マウス・狭幅操作 |
-| scripts/verify-*.sh | Tool: 対象別Xcode試験、カバレッジ検査 |
-| scripts/check-coverage.swift | Tool: 製品全体の重み付き行カバレッジ、80%閾値 |
-| scripts/measure-native.swift | Tool: 開発者限定の画面照合測定 |
+| Hitotsuzuri/HitotsuzuriApp.swift、Info.plist、entitlements | 構成・依存生成・通常起動とDEBUG fixture分岐 |
+| PickerView、ArticleView、ArticleMetadataFields、ArticlePreviewView、ArticleExportView | View。記事候補、入力、プレビュー、出力進捗・回復 |
+| ArticleAppCoordinator | Controller。OSパネル・window終了確認・プレビューと出力の接続 |
+| DebugFixture | DEBUG専用の合成ライブラリ・画像・保存root・遅延注入 |
+| Core/Models、Ports | 選択モデル・型付き失敗・library/image/storage境界 |
+| SelectionWorkflow、PhotoLibraryAccess、LocalImageAccess、SelectionPersistence | 選択UseCase・PhotoKit adapter・画像queue/cache・JSON repository |
+| PickerContent、PickerPresentationState、PresentationSnapshot、PickerAccessibility、NativeFolderBrowser | 選択UIと状態・キーボード操作・NSOutlineView adapter |
+| ArticleModels、ArticlePorts、ArticleFingerprint | 記事モデル・保存protocol・canonical digest |
+| ArticleWorkspace、ArticlePersistence、ArticleFileSystem | 選択から記事への関連付け・操作ログ保存・POSIX fd相対I/O |
+| ArticleEditSession、ArticlePresentation、ArticleMetadataInput、ArticleInitialContent、ArticleProjection、ArticleOutputPorts | 手動保存・遷移・日付候補・本文/Markdown生成・出力契約 |
+| ArticleImageAccess、ArticleImageConverter | PhotoKit編集入力・要求寿命・縮小JPEG変換とmemory budget |
+| ArticleProbeDelivery | 1枚の検証出力と専用回復journal |
+| ArticleExportModels、Manifest、FileSystem、Journal、Writer、Delivery、OSActions、Session | 4枚出力の値・形式・実体照合・保存・生成・進行・OS操作・画面状態 |
+| Diagnostics、NativeMeasurement、FrameMeasurement | 分類のみのログとnative計測値 |
+| 4つのTests領域 | model/unit/integration/UI/性能のXCTestとtest doubles |
+| scripts/ | bash入口、Python試験選択、Swift coverage/画面計測 |
+| .github/workflows/ | 機能CIと限定診断 |
+| docs/ | 設計資料。現行契約と区別して参照 |
 
-表中Coreは `HitotsuzuriCore/` を指す。データベースmigrationやHTTP controllerはない。
-
-## 命名・配置の慣行
-Swift camelCase/PascalCase、public境界と内部の実アダプタ、protocolとFake、MainActorのObservableな状態、actorの保存。小さな処理を同じ行にまとめる記法が多い。U2/U3のFake・helperには重複がある。
-
-## ドキュメントと生成物
-READMEは見出しだけ。docsはPhase1設計とPhase2以降の提案2点。設計資料はソースの証拠ではない。ビルド出力・個人Xcode設定は調査対象外。
+AppはCoreをimportし、CoreからAppへの依存はない。Core内部は同一moduleのprotocolで実装を注入する。外部package依存や循環するpackage graphは見つからない。詳細なコンポーネント責務は `component-inventory.md` に集約する。
