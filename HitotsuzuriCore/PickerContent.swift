@@ -100,7 +100,9 @@ public struct PickerContent:View {
             heading(.albums)
             List(selection:Binding(get:{workflow.activeAlbum?.id},set:{id in if let album=workflow.albums.first(where:{$0.id==id}) {Task {await workflow.selectAlbum(album)}}})) {
                 ForEach(workflow.albums) {album in Text(name(album.title)).lineLimit(1).help(name(album.title)).accessibilityLabel(name(album.title))
-                    .tag(album.id)}
+                    .frame(maxWidth:.infinity,alignment:.leading).contentShape(Rectangle())
+                    .tag(album.id)
+                    .simultaneousGesture(TapGesture().onEnded {selectAlbumFromMouse(album)})}
             }.focused($focus,equals:.albums)
                 .onKeyPress(keys:[.tab,KeyEquivalent("\u{19}")]) {press in
                     #if DEBUG
@@ -220,6 +222,19 @@ public struct PickerContent:View {
         measurement.record(eventSeconds:timestamp,beforePositions:beforePositions,positions:afterPositions)
     }
     private func confirmFromUI() {Task {await workflow.confirm()}}
+    private func selectAlbumFromMouse(_ album:LibraryAlbum) {
+        guard !workflow.isEditingFrozen,workflow.albums.contains(where:{$0.id==album.id}) else {return}
+        // 行の選択とキー操作の所有を同じユーザー操作で揃える。
+        // プラットフォームの「マウス選択時にfirstResponderも移る」挙動には依存しない。
+        focusTransfer += 1
+        lastInteractionRegion = .albums
+        presentation.remember(album.id,in:.albums)
+        focus = .albums
+        #if DEBUG
+        recordFixtureFocus("mouse-album-focus")
+        #endif
+        Task {await workflow.selectAlbum(album)}
+    }
     private func focusConfirmation() {focusTransfer += 1; focus = .confirm}
     @discardableResult private func selectFirstAlbumForTabEntry()->Bool {
         guard let event=NSApp.currentEvent,event.type == .keyDown || event.type == .keyUp,

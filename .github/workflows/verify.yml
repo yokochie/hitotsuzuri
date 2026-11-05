@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   native-core:
-    if: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/codex/phase2-u2-draft-experience' && contains(github.event.head_commit.message, '[input-focus]')) }}
+    if: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/codex/phase2-u2-draft-experience' && (contains(github.event.head_commit.message, '[input-focus]') || contains(github.event.head_commit.message, '[input-regression]'))) }}
     runs-on: xcode-27
     timeout-minutes: 15
     steps:
@@ -57,7 +57,7 @@ jobs:
         run: bash scripts/verify-native.sh --functional
   input-focus-diagnostic:
     # This branch-only diagnostic does not satisfy the full verification gate.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/phase2-u2-draft-experience' && contains(github.event.head_commit.message, '[input-focus]')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/phase2-u2-draft-experience' && (contains(github.event.head_commit.message, '[input-focus]') || contains(github.event.head_commit.message, '[input-regression]'))
     runs-on: xcode-27
     timeout-minutes: 10
     steps:
@@ -73,7 +73,11 @@ jobs:
       - name: Check test selection contracts
         run: python3 scripts/test-native-runner.py
       - name: Verify smoke and two input focus cases only
+        if: ${{ !contains(github.event.head_commit.message, '[input-regression]') }}
         run: bash scripts/verify-native.sh --input-focus
+      - name: Verify smoke and eight previous input failures only
+        if: contains(github.event.head_commit.message, '[input-regression]')
+        run: bash scripts/verify-native.sh --input-regression
   baseline-native:
     # Temporary diagnostic for this U1 branch: distinguish inherited failures
     # on the hosted image from changes introduced by article support.

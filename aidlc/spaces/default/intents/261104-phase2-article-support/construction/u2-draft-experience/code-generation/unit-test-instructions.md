@@ -37,6 +37,8 @@ Native入力の原因切り分け専用に、`bash scripts/verify-native.sh --in
 
 このU2ブランチのpushに`[input-focus]`印がある場合だけ、限定診断jobが起動し、全体jobを診断目的で重複実行しない。PRと通常pushは従来どおり全体機能検証を実行する。限定jobの成功を統合条件の達成には使わず、根本原因の確認後に全体検証とcoverageを別途満たす。
 
+原因修正後は `bash scripts/verify-native.sh --input-regression` でsmoke2件→CI41939982311の失敗8メソッドだけを実行する。同じブランチの`[input-regression]`印pushはこの8件の限定jobを実行する。各メソッドの成功を要求し、全体coverageは判定しない。追加前21契約中1失敗（3.436秒）、実装後21件成功（3.155秒）。成功済みCoreや記事UI/性能を診断目的で反復しない。
+
 push/PRではnative-coreが全Core機能（実測5件を除く）を実行し、その成功後にnative（--functional・全製品加重80%）が動く。性能jobは削除。GITHUB_ACTIONS=trueでは無引数全体、--performance、性能UIクラス指定を起動前に拒否し、その他のクラス指定でもCore実測5件を除く。決定論的な予算/期限/取消の機能検査は残す。U1ブランチの旧版比較baseline-nativeは保持するが現ブランチでは起動しない。新構成のCI実行はまだ成功確認していない。
 
 ## 設定と最初の実行

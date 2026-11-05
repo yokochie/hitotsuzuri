@@ -98,3 +98,16 @@ Native失敗8件: testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos、test
 追加診断では、compact-album-restorationがfocus=none/albumRow=2/ready=0、共通photo-tab-entryの4件がfocus=albums/albumRow=1/ready=12/selected=0。写真準備完了だけではTab後の論理focusが写真へ移っていないことを確認した。実firstResponderの診断値はView更新時の参考値で同一時刻の断定に使わない。待機時間追加だけで解消したとは扱わず、原因の製品/試験/環境の切り分けは未完。
 
 Macは修正したsmoke2件とUI性能4件がすべて成功、exit0。Core5件は先の成功を維持し重複しない。Mac性能の成功とCI Native入力8件の失敗を分けて記録する。
+
+## Native焦点の限定診断 41943778942（既知失敗の再現Red）
+
+- commit2d132ad818c7c05cb55c8130a1f424ee7183f538、[実行](https://github.com/yokochie/hitotsuzuri/actions/runs/41943778942)、job126970796900。本人8f182267が承認した原因切り分けとして実行した。通常全体jobは起動せず、smoke2成功、代表2失敗（36.285秒）。runner契約20件は成功。限定実行を全体成功とは扱わない。
+- compact例はmouse-album-C時点でfocus=none/albumRow2/ready8。traceはobserved-confirm|observed-noneだけで、resize後の接続要求履歴がない。wide例はmouse後focus=none/albumRow1/ready12、Tab後に初めてobserved-albumsとなり、album-key-tabやconnect履歴がない。
+- したがって今回は接続要求後のguard棄却ではなく、クリックによるアルバム選択とFocusStateの不一致が先にある。ネイティブfirstResponder型は更新時の参考値という限界を維持する。代表2件がMacで成功してCIで失敗する差をこの診断で確認できたため、クリックのフォーカス処理を最小修正する。extraTabやtimeout緩和で期待を変更しない。
+- 最大12件のDEBUG fixture履歴は描画/スケジューリングに観測影響を与えうる。一度の成功だけを根本解消の証拠にせず、元の失敗8ケースの確認が残る。
+
+### 根拠に基づく修正候補
+
+アルバム行のマウス操作で、選択とlastInteractionRegion/記憶位置/FocusStateを明示的に揃え、古い保留要求を世代で無効化する。無効状態/存在しないalbumのguard、既存selectAlbumの認可/保存中保護を保持し、画像応答からは呼ばない。代表2件はクリック直後のalbums焦点も要求し、ローカル2成功/0skip、testing32.706秒、exit0。CIの失敗8件はまだ候補未検証。
+
+8件を正確に要求する--input-regressionと同印のブランチ限定pushを追加した。短いrunner契約は21件中1失敗（3.436秒）→21成功（3.155秒）。YAML構文も確認した。代表2件を含む8件のCIを1回実行し、別の2件CIを重複させない。

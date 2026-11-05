@@ -110,6 +110,7 @@ final class NativeInputTests:XCTestCase {
         let app=launch(); app.staticTexts["テスト親A"].click(); app.staticTexts["テストアルバムC"].click()
         expectPhotoCount(8,app)
         recordInputStage("mouse-album-C",app)
+        expectInputFocus("albums",stage:"mouse-album-C-focus",app)
         let window=app.windows.firstMatch
         let corner=window.coordinate(withNormalizedOffset:CGVector(dx:1,dy:1)).withOffset(CGVector(dx:-1,dy:-1))
         corner.click(forDuration:0.2,thenDragTo:window.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:760,dy:660)))
@@ -208,6 +209,7 @@ final class NativeInputTests:XCTestCase {
     @MainActor func testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns() {
         let app=launch(); openAlbum(app)
         recordInputStage("wide-album-before-tab",app)
+        expectInputFocus("albums",stage:"wide-mouse-album-focus",app)
         app.typeKey(.tab,modifierFlags:[]); expectInputFocus("photo:1",stage:"wide-tab-photo",app)
         app.typeKey(.space,modifierFlags:[])
         XCTAssertTrue(app.staticTexts["1 / 4枚"].waitForExistence(timeout:3))

@@ -18,6 +18,14 @@ INPUT_FOCUS = [
     "HitotsuzuriUITests/NativeInputTests/testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns",
     "HitotsuzuriUITests/NativeInputTests/testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos",
 ]
+INPUT_REGRESSION = INPUT_FOCUS + ["HitotsuzuriUITests/NativeInputTests/"+name for name in [
+    "testCompactAlbumTabCanActivateEnabledConfirm",
+    "testCompactConfirmShiftTabReturnsToAlbumRow",
+    "testCompactPhotoTabCanActivateEnabledConfirm",
+    "testCompactPhotoTabConfirmAndShiftTabReturnCanSave",
+    "testPhotoTabWithEnabledConfirmCanSaveBySpace",
+    "testTabReentryPreservesMultipleFoldersAlbumAndPhotoDraft",
+]]
 TARGETS = ["HitotsuzuriU1Tests", "HitotsuzuriU2Tests", "HitotsuzuriU3Tests", "HitotsuzuriUITests"]
 CORE_PERFORMANCE = [
     "HitotsuzuriU1Tests/ArticleIntegrationTests/testLongTextSaveThirtySamples",
@@ -98,7 +106,7 @@ def main():
     if args:
         modes = ["--core", "--smoke", "--functional", "--performance"]
         if scope == "native":
-            modes.append("--input-focus")
+            modes.extend(["--input-focus", "--input-regression"])
         if len(args) == 1 and args[0] in modes:
             mode = args[0][2:]
         elif all(name in allowed for name in args):
@@ -138,10 +146,11 @@ def main():
         run_group("Smoke", ["-only-testing:HitotsuzuriUITests/"+SMOKE], [SMOKE])
     if mode == "smoke":
         return
-    if mode == "input-focus":
-        run_group("Native-input-focus", ["-only-testing:"+case for case in INPUT_FOCUS],
-                  ["NativeInputTests"], INPUT_FOCUS)
-        print("焦点診断2件のみ: 全体成功/カバレッジの判定ではありません。", flush=True)
+    if mode in ["input-focus", "input-regression"]:
+        cases = INPUT_FOCUS if mode == "input-focus" else INPUT_REGRESSION
+        run_group("Native-"+mode, ["-only-testing:"+case for case in cases],
+                  ["NativeInputTests"], cases)
+        print(f"入力診断{len(cases)}件のみ: 全体成功/カバレッジの判定ではありません。", flush=True)
         return
     if selected is None:
         selected = list(allowed)

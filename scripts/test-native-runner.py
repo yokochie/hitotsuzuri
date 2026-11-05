@@ -169,5 +169,14 @@ elif name=="xcrun":
         result=self.run_script("--input-focus",script="verify-native.sh",GITHUB_ACTIONS="true",CONTRACT_OMIT_FOCUS="1")
         self.assertNotEqual(result.returncode,0)
         self.assertIn("testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns",result.stderr)
+    def test_input_regression_selects_exactly_the_eight_failures(self):
+        result=self.run_script("--input-regression",script="verify-native.sh",GITHUB_ACTIONS="true")
+        self.assertEqual(result.returncode,0,result.stderr)
+        calls=[c for c in self.calls() if c[0]=="xcodebuild"]
+        self.assertEqual(len(calls),2)
+        cases=[x for x in calls[-1] if x.startswith("-only-testing:")]
+        self.assertEqual(len(set(cases)),8)
+        self.assertTrue(all(x.startswith("-only-testing:HitotsuzuriUITests/NativeInputTests/test") for x in cases))
+        self.assertFalse(any(c[0]=="swift" for c in self.calls()))
 
 if __name__ == "__main__": unittest.main()
