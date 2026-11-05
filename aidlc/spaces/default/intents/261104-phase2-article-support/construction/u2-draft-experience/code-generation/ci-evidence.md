@@ -111,3 +111,9 @@ Macは修正したsmoke2件とUI性能4件がすべて成功、exit0。Core5件�
 アルバム行のマウス操作で、選択とlastInteractionRegion/記憶位置/FocusStateを明示的に揃え、古い保留要求を世代で無効化する。無効状態/存在しないalbumのguard、既存selectAlbumの認可/保存中保護を保持し、画像応答からは呼ばない。代表2件はクリック直後のalbums焦点も要求し、ローカル2成功/0skip、testing32.706秒、exit0。CIの失敗8件はまだ候補未検証。
 
 8件を正確に要求する--input-regressionと同印のブランチ限定pushを追加した。短いrunner契約は21件中1失敗（3.436秒）→21成功（3.155秒）。YAML構文も確認した。代表2件を含む8件のCIを1回実行し、別の2件CIを重複させない。
+
+## Native入力修正後の限定Green 41944668158
+
+- commit60f28abcc8e8af7882c60cf56d682b087f0c6a5e、[実行](https://github.com/yokochie/hitotsuzuri/actions/runs/41944668158)、job126973779158は成功。smoke2件と、既知失敗8件の各メソッドすべてが成功した。8件134.705秒、指定8メソッドの成功もrunnerが検査した。
+- mouse-album-focus→observed-albums→album-key-tab→connect-photo:1適用→observed-photo:1をCIでも確認できた。狭幅復元も最新要求が適用され、旧要求のsuperseded棄却は正常に機能している。元の選択/保存/逆Tab等の期待を保持したまま、既知8件がRedからGreenへ変わった。
+- 原因切り分け用の一時CI job/印分岐と旧U1比較jobは役目を終えて削除し、通常2jobに戻して全機能回帰/全製品80%を確認する。Mac性能は再実行しない。限定Greenだけで全体coverageを合格にはしない。

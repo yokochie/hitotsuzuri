@@ -349,3 +349,87 @@ xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'plat
 
 - require_escalatedの限定1件のみ。確定summaryは1実行/1成功/0失敗/0skip、exit0。UI25.109秒/testing36.087秒。入力欄の表示/操作可能性、保存前本文実値、実保存、入口/一覧各1回のloading表示→response解放→一覧取消/編集復帰、同じ本文/タイトル保持、最後の所有root回収まで通過した。QoS priority inversion warningは1件。
 - 変更はArticleDraftUITestsとArticleDraftUITestCase、および本TDDのみ。既存manifest43パス内、新規pathなし、2ソースdiff-checkはexit0。長い全体/性能/他UI/CIは実行していない。ソースと記録を凍結し、rootの本人Mac性能・CI機能確認へ返却する。
+## 本人Mac専用性能の最終候補・一度の実行（2026-11-05）
+
+- ソース凍結のまま `bash scripts/verify-native.sh --performance` をrequire_escalatedで一度実行。選択はU1実測3件+U2実測2件→smoke2方式→UI性能4件。Core後のsmokeで失敗し、runnerが非0終了してUI性能を起動しなかった。再試験/全体/ソース修正なし。
+- 環境: macOS27.2 build26B123、Xcode27.2 build27B52、MacBook Pro/Mac15,3/Apple M3（8core=performance4+efficiency4）/16GB。開始前と終了後のpmsetはともにAC Power/AC attached/79%/not charging。全期間の電源状態監視ではなく2時点の観測である。system_profilerはActivation Lock checkのtimeout警告を出したが機種情報を返し、同コマンドの終了後に試験を開始した。OS設定/電源設定/本人アプリは変更していない。
+
+### Core性能5件: 成功
+
+- `.build/Native-core-20261105-091508-6e699b0c5e61487dbe663ccdb42e3ba7.xcresult`
+- 確定summary5実行/5成功/0失敗/0skip。U1の3件19.729秒、U2の2件24.134秒、xcodebuild testing elapsed45.003秒。Core段階はexit0、選択した5methodの実行をrunnerも検証した。runtime warningはsummaryにない。
+- U1保存30回p95=0.014366292s。cold-store再開10回は[0.000842625,0.00043575,0.000376583,0.000358375,0.000418083,0.000366625,0.000360375,0.000367542,0.00035375,0.000357208]s。別プロセスのcold起動やOSディスクキャッシュcoldはこの値ではない。
+- U1実画像変換30回max=0.166400458s、baseline中央値11,485,952B、samplePeak103,908,624B、delta92,422,672B、OS lifetime peakは107,529,008B→107,529,008B。OSピークは試験以前で、当該変換への短いピークの帰属は未確認という元の出力を維持する。
+- U2は100記事/対象1000操作/タイトル200文字/6本文各10000文字。保存30回p95=0.015248917s/max=0.015298958s、Core再開30回p95=0.004813542s/max=0.004975958s、純粋投影100回p95=0.009454041s/max=0.009721041s。別集計cold-store/session10回はp95/max=0.00412025sで、実アプリcold起動やOSキャッシュflushは未計測。
+- U2表示メモリ30回: baseline実5.000899084s/418sample、中央値41,632,512B、本処理139sample、samplePeak29,590,272B、delta0、directPeak4,194,304B。要求周期10msの専用Threadで全観測最大間隔0.012970666s（baseline最大も同値）、元50ms条件を満たした。OS lifetime peakは45,794,048B→45,794,048Bで当該表示への厳密な帰属は未確認。sample増分0を割当ゼロとは解釈しない。
+- U2合成512px表示30回はloadMax0.001603s、取消受理max0.000417167s/論理終端max0.000484917s。未応答表示の取消30回は受理max0.000054625s/論理終端max0.000336709s。実Photosの取得時間/製品UI全体のメモリとは別のCoreプロセス試験である。
+
+### smoke: 記事成功・Picker入口失敗、以降停止
+
+- `.build/Smoke-20261105-091556-f892a664723b4bad84ebee8ddeb90e41.xcresult`
+- 確定summary2実行/1成功/1失敗/0skip、UI25.035秒、xcodebuild testing elapsed34.912秒。記事方式は8.782秒で成功。Picker方式は16.253秒でFixtureSmokeUITests.swift:17の「テスト親A」入口待機に失敗した。全コマンドの最終exit65。
+- 最初の短いログからWindow不在とrootへ伝えたが、確定summaryを読んで訂正済み。実際はWindowが存在しWindow確認は通過、幅765ptのcompact表示で領域が「写真」、photo-grid0枚、期待したフォルダ行がなかった。AXにはApplication/WindowのDisabledもあるが、この値だけで認証/製品/環境の原因を断定しない。無関係なメニューバー等の全文は記録へ複製しない。
+- UI性能4件は**未実行**で対応bundleも作成していない。cold10起動/loading30回/長文描画各30回/field-editor実測を今回成功したとは扱わない。Core5件の成功や過去UI性能値で補完しない。
+- 失敗を直ちにrootへ報告し、OS/認証操作・再実行・ソース変更をせず停止。rootのリモートCI機能確認とは別の本人Macでの部分結果であり、性能全体合格/全体coverage/CI成功を意味しない。このTDD追記後に全writeを再凍結した。
+## Picker smokeの表示領域前提修正・残るMac UI性能のみの確認
+
+- 本人9f7ab16dに従い、成功済みCore性能5件を再実行せず、Pickerの起動確認が正当にフォルダ入口へ到達できるようテスト前提だけを修正した。先行失敗の狭幅765pt/写真領域ではフォルダ行が表示されない。既存Native操作と同じregion-pickerの「フォルダ」を、実enabled/hittable確認後に選ぶ。広幅のフォルダ入口または狭幅switcherが準備済みならすぐ進み、未準備時だけ同じ10秒条件待ち。Window/フォルダ入口のenabled/hittableという元の期待を維持した。製品source/保存領域/OS設定には変更なし。
+- sourceを凍結して次をrequire_escalatedで一度実行。選択はsmoke2件→UI性能4件だけで、Coreの実行コマンドは発行されていない。
+
+```bash
+bash scripts/verify-native.sh ArticleDraftPerformanceUITests
+```
+
+- smoke bundle: `.build/Smoke-20261105-092133-91779c7589e54b46bae798ee745f0a6c.xcresult`。確定2実行/2成功/0失敗/0skip、UI17.027秒/testing17.822秒。記事9.076秒、Picker7.951秒で、双方の最後の所有root回収も成功した。runtime warningはsummaryにない。
+- Mac UI性能bundle: `.build/Native-selected-20261105-092155-1201c1732b2241db8136be0f5bb8aa36.xcresult`。確定4実行/4成功/0失敗/0skip、UI712.291秒/testing723.052秒、最終exit0。各caseの所有root回収も成功。QoS priority inversion warningは4件ある。実行後のpmsetはAC Power/AC attached/79%/not chargingで、先行記録と同じ本人Mac環境（Mac15,3/M3/16GB/macOS27.2/Xcode27.2）。全期間の電源監視ではない。
+
+| 実測対象 | 件数 | p95秒 | 最大秒 |
+|---|---:|---:|---:|
+| App.init→入力可能/firstResponder（cold） | 異なる10プロセス | 1.216727792 | 1.216727792 |
+| 入口loading描画 | 30 | 0.043553209 | 0.044339375 |
+| 一覧loading描画 | 30 | 0.059137 | 0.104686542 |
+| 保存中文字描画 | 31 | 0.019604792 | 0.0216415 |
+| 無応答画像/保存中の実入力描画 | 30試行/60sample | 0.01142475 | 0.014688708 |
+| preview描画 | 30 | 0.172049416 | 0.192501166 |
+| editor入力可能 | 30 | 0.147706125 | 0.152690583 |
+| 下書きreopen入力可能 | 30 | 0.136201792 | 0.147389792 |
+| 実field-editor追加診断 | 2sample | 別p95なし | 0.010409917 |
+
+- cold case58.170秒、loading case355.958秒、長文case271.566秒、field-editor case26.597秒。元の各not-ready timeout=0アサーションをすべて通過した。保存/入力/loadingは元max0.5秒、preview/editorは元p95条件、再開は元2秒条件を維持して成功。
+- loading/長文/再開は100記事/対象初期1000操作、タイトル200文字/6本文各10000文字の準備条件を維持。描画計測はhandler受付からnative draw、入力可能は実TextField/field editorのwindow所属・enabled/editable・firstResponder・UTF8実値を照合した元方式のまま。coldはApp.init以降であり、起動前OS bootstrap/OSディスクcache coldは測定していない。実Photos性能や製品UIメモリ測定へ拡張解釈しない。
+- 先行のCore性能5件は `Native-core-20261105-091508-6e699b0c5e61487dbe663ccdb42e3ba7.xcresult` の成功証拠を保持。今回の差分はsmokeテストの表示前提のみでapp/計測sourceは不変。Coreを重複実行した値として合算せず、先行5件と今回UI4件が別bundleで確認できたことを記録する。OS lifetime peak帰属の既存未確認も消さない。
+- traceabilityは許可されたNFR3.20/21/22のtargetだけを実担当ArticleDraftPerformanceUITests.swiftへ修正し、今回のMac実測成功を根拠にOKを維持した。NFR3.20は入口/一覧/保存/入力の各最大値、NFR3.21はpreview/editor各30回p95、NFR3.22はUI再開30回p95と先行Core保存/再開30回が現在証拠。NFR5.20/21のGAP、plan15–18の未完は変更せず、CI/全体機能/全製品80%の成功をこの性能結果から推定しない。
+- 今回のsource変更はFixtureSmokeUITests.swiftだけ（既存manifest43内）。TDDと指定3IDの対応表を更新後、全writeを凍結しrootの最終CI/独立レビューへ返却した。追加ローカル機能・全体・再試験は実行しない。
+## Native Tab遷移・CIだけの失敗を切り分ける限定診断
+
+- 本人8f182267の承認に基づき、CI41939982311のNative8失敗と現行focus経路を静的確認。wide側の4例は写真12枚readyでもTab後focus=albums/selected0、compactアルバム復元はfocus=none/ready0だった。これだけではListのTab handlerが呼ばれていないのか、restoreConnectedFocusのnil化→Task.yield後guardで棄却されたのかを区別できない。根拠なくOS環境や製品の一方を原因と決めない。
+- 製品の焦点遷移条件/キー順/timeoutは変えず、--ui-test-fixtureかつDEBUGに限り、album Tab/backtab受信、接続要求番号、FocusState観測、適用/棄却理由（世代・領域・選択/記事変更等）の最大12件履歴を既存overlayのAX値へ追加。写真は表示位置番号だけで、私的写真ID/本文/パスは含めない。既存のwide代表にもTab直後のphoto1焦点assertionを追加し、Space選択と逆Tab往復の元assertionは保持。余分なTabや待機延長による回避はしていない。
+- @Stateの診断履歴は再描画/スケジューリングへ観測影響を与えうる。この版の一度の成功だけを既存CI8失敗の根本解消とはしない。nativeAtViewUpdateの参考値も原子的な現在firstResponderとして厳密判定しない。
+
+```bash
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriUITests/NativeInputTests/testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns -only-testing:HitotsuzuriUITests/NativeInputTests/testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/U2-Input-Focus-Trace-20261105-094600.xcresult CODE_SIGN_IDENTITY=- test
+```
+
+- require_escalatedで代表2件だけを一度実行。確定summary2実行/2成功/0失敗/0skip、exit0、testing33.852秒、runtime warningなし。compact代表19.168秒、wide代表13.860秒。所有root回収も双方成功。
+- ローカルcompactではconnect-albums#3がsupersededで棄却され、最新#4がapplied-albumsになりfocus=albumsへ復帰した。DownでalbumRow3、Upで2、その後1に戻り、元の写真枚数4→8→12追随が成功。ready0は写真領域を隠した当時の状態でもあり、これだけで接続失敗の原因とはしない。
+- ローカルwideでは `album-key-tab→connect-photo:1#3 requested→observed-none→connect#3 applied-photo:1→observed-photo:1` を観測し、元のSpace選択/ShiftTab往復を通過。CIと同じ失敗は今回の本人Macでは非再現だった。
+- 原因確定前の推測修正を避け、rootが用意する `bash scripts/verify-native.sh --input-focus` のsmoke2→同じ代表2件だけのCIへ診断を渡す。CIでhandler未受信なのかguard棄却なのかを判別できてから必要最小の修正と残8ケースの検証を進める。今回の限定成功を8件全体の成功や加重coverage成功へ置き換えない。
+- 成功済みCore/UI性能、長い全体suite、残6ケースは実行していない。今回sourceはPickerContent/NativeInputTestsの2既存パスのみでmanifest43内、新規pathなし。2ソースdiff-checkはexit0。TDD確定後に全writeを凍結してrootへ返却した。
+### 限定CIで確認したマウス選択直後のfocus不足（先行Red）
+
+- 限定CI41943778942/job126970796900はsmoke2成功、代表2失敗。compactのmouse-album-CはalbumRow2/ready8だがfocus=none、view更新時firstResponderはFolderOutlineView、traceに接続要求なし。resize後もfocusなし。wideのmouse選択直後もfocus=none/ready12/FolderOutlineViewで、初回Tab後にobserved-albumsだけが追加され、album-key-tab/connectの履歴はなかった。
+- この証拠から初回Tabはアルバムから写真への遷移処理で棄却されたのではなく、フォルダからアルバムへ初めて入っていたと分かる。マウス選択はListのBindingから記事選択を変える一方、当該Listへのfocus/最終操作領域の更新をプラットフォームの暗黙の動作に任せていた。Macでの非再現をCIの成功とせず、この実失敗を先行Redとして最小修正する。
+### マウスのアルバム選択とfocus所有を揃える最小修正・ローカルGreen
+
+- List行の全幅に同時Tap gestureを付け、明示的なマウス選択の責務をselectAlbumFromMouseへ集約した。選択と同じ入力でlastInteractionRegion=albums、記憶するアルバム位置、focus=albumsを設定し、旧保留focusの世代を無効化して既存WorkflowへselectAlbumを返す。キーボードによるList selection Bindingは維持。同じアルバムへの重複選択は既存Workflowのguardが早期returnする。
+- focusを変更する前にisEditingFrozen/現在のアルバム存在を検査し、List自体はauthorized時だけ描画される。実選択の権限/選択変更/世代処理は既存Workflowへ返し、画像応答からのfocus移動は追加しない。空アルバムへ写真focusを強制せず、保存中等の無効操作も既存guardを通す。追加Tab・timeout延長・4枚選択の弱化はしない。
+- 代表2件にクリック直後のalbums焦点確認を追加し、次の1Tabで写真へ入ることとcompact復帰を、同じ元の操作/期待で検証した。
+
+```bash
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriUITests/NativeInputTests/testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns -only-testing:HitotsuzuriUITests/NativeInputTests/testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/U2-Input-Focus-Mouse-Green-20261105-095500.xcresult CODE_SIGN_IDENTITY=- test
+```
+
+- require_escalatedで同じ代表2件のみ。確定summary2実行/2成功/0失敗/0skip、exit0、testing32.706秒。compact18.208秒、wide13.732秒、summaryのruntime warningなし。所有root回収も双方成功。
+- 両例でクリック直後にmouse-album-focus→observed-albumsを確認。wideは1Tabでalbum-key-tab→photo1接続/適用となり、Space選択/逆Tab往復も成功。compactも最新のalbums接続要求が適用され、元の写真4→8→12枚追随が成功した。
+- ローカルは先行版でも非再現だったため、根本解消の最終判断はCIの再現環境で行う。rootは代表2件を重複して別実行せず、それらを含む失敗8件だけの `--input-regression` / [input-regression]限定CIへ進める。現時点で修正後CI8件は未確認。成功済みCore/UI性能と長い全体suiteは再実行していない。
+- 変更sourceはPickerContent/NativeInputTestsのみで既存manifest43内、新規pathなし。2ソースdiff-checkはexit0。TDD追記後に全writeを凍結してrootへ返却し、CI/git/最終記録はrootが担当する。
