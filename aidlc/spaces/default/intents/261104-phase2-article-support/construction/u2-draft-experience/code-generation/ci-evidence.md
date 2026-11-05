@@ -81,3 +81,20 @@ NFRの「CIの性能値は参考で、本人Mac測定の代替ではない」に
 runner契約は先に16件中4失敗（3.028秒）を確認し、実装後17件が3.184秒で成功。追加した欠落メソッド検査は同じ性能クラス内の他ケースが成功しても未実行を拒否する。これは代替コマンドでの短い検証で、製品テストの成功ではない。
 
 認証後の軽量UI1件は導入文が画面外のままclickされ失敗した。本人45362ce6の修正承認に基づき、既存のフォームスクロール・viewport内・isHittable確認を適用し、保存前の本文実値も検査。U2-Lightweight-Loading-Reveal-20261105-091200.xcresultは1成功/0失敗/0skip、UI25.109秒、exit0。CIとMac性能の新候補結果はこれから確認する。
+
+## 新構成の実行 41939982311
+
+- commit: 9d8fc2a6b27e0f8bed8ddeec943bbcaa227740b6。
+- [実行](https://github.com/yokochie/hitotsuzuri/actions/runs/41939982311)。native-core job126958001446は成功。runner契約17件とCore機能371件が成功し、native機能job126958739826へ進んだ。性能jobは存在しない。機能jobと全体coverageはまだ確定していない。
+- 同じ候補の本人MacではCore性能5件成功（45.003秒）、続くsmokeが記事1成功/Picker1失敗で終了した。compactの写真領域からフォルダ入口へ到達できていないため、UI性能4件は未実行。本人9f7ab16dが修正と残りだけの確認を承認。Core性能は重複実行しない。
+- 本人31548a2aが完了時検証を `bash scripts/verify-native.sh --functional` に変更することを承認し、正式に設定した。性能は本人Macの別実測記録と組み合わせ、機能コマンドだけで性能合格とは扱わない。
+
+### 確定結果
+
+native job126958739826は失敗。Core機能371件、smoke2件、U2通常UI23件（485.532秒）、Foundation UI6件（92.442秒）はすべて成功。NativeInputTestsは26件中18成功/8失敗（377.294秒）。主bundleの全UI55件は47成功/8失敗で、xcodebuild exit65により加重coverage判定は実行されていない。成功済みの各群を全体成功へ置き換えない。
+
+Native失敗8件: testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos、testCompactAlbumTabCanActivateEnabledConfirm、testCompactConfirmShiftTabReturnsToAlbumRow、testCompactPhotoTabCanActivateEnabledConfirm、testCompactPhotoTabConfirmAndShiftTabReturnCanSave、testPhotoTabWithEnabledConfirmCanSaveBySpace、testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns、testTabReentryPreservesMultipleFoldersAlbumAndPhotoDraft。
+
+追加診断では、compact-album-restorationがfocus=none/albumRow=2/ready=0、共通photo-tab-entryの4件がfocus=albums/albumRow=1/ready=12/selected=0。写真準備完了だけではTab後の論理focusが写真へ移っていないことを確認した。実firstResponderの診断値はView更新時の参考値で同一時刻の断定に使わない。待機時間追加だけで解消したとは扱わず、原因の製品/試験/環境の切り分けは未完。
+
+Macは修正したsmoke2件とUI性能4件がすべて成功、exit0。Core5件は先の成功を維持し重複しない。Mac性能の成功とCI Native入力8件の失敗を分けて記録する。

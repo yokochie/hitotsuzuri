@@ -14,6 +14,10 @@ CORE = ["ArticleInitialContentTests", "ArticleMetadataInputTests", "ArticleProje
         "ArticleDraftIntegrationTests"]
 SMOKE = "FixtureSmokeUITests"
 PERFORMANCE = "ArticleDraftPerformanceUITests"
+INPUT_FOCUS = [
+    "HitotsuzuriUITests/NativeInputTests/testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns",
+    "HitotsuzuriUITests/NativeInputTests/testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos",
+]
 TARGETS = ["HitotsuzuriU1Tests", "HitotsuzuriU2Tests", "HitotsuzuriU3Tests", "HitotsuzuriUITests"]
 CORE_PERFORMANCE = [
     "HitotsuzuriU1Tests/ArticleIntegrationTests/testLongTextSaveThirtySamples",
@@ -63,7 +67,7 @@ def check_result(result, expected, expected_cases=()):
         raise ValueError("指定クラスが未実行: "+", ".join(sorted(set(expected)-passed)))
     missing = {case.split("/",1)[1] for case in expected_cases} - passed_cases
     if missing:
-        raise ValueError("指定性能試験が未実行: "+", ".join(sorted(missing)))
+        raise ValueError("指定試験が未実行: "+", ".join(sorted(missing)))
     if SMOKE in expected and not {"testArticleFixtureWindowAndEntryAreReady",
                                   "testPickerFixtureWindowAndFolderEntryAreReady"}.issubset(smoke_methods):
         raise ValueError("両fixture方式のsmokeが未実行")
@@ -92,7 +96,10 @@ def main():
     mode = "all"
     selected = None
     if args:
-        if len(args) == 1 and args[0] in ["--core", "--smoke", "--functional", "--performance"]:
+        modes = ["--core", "--smoke", "--functional", "--performance"]
+        if scope == "native":
+            modes.append("--input-focus")
+        if len(args) == 1 and args[0] in modes:
             mode = args[0][2:]
         elif all(name in allowed for name in args):
             selected = list(dict.fromkeys(args))
@@ -130,6 +137,11 @@ def main():
     if needs_smoke:
         run_group("Smoke", ["-only-testing:HitotsuzuriUITests/"+SMOKE], [SMOKE])
     if mode == "smoke":
+        return
+    if mode == "input-focus":
+        run_group("Native-input-focus", ["-only-testing:"+case for case in INPUT_FOCUS],
+                  ["NativeInputTests"], INPUT_FOCUS)
+        print("焦点診断2件のみ: 全体成功/カバレッジの判定ではありません。", flush=True)
         return
     if selected is None:
         selected = list(allowed)

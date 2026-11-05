@@ -230,17 +230,17 @@
     {
       "id": "NFR3.20",
       "status": "OK",
-      "target": "HitotsuzuriUITests/ArticleDraftUITests.swift"
+      "target": "HitotsuzuriUITests/ArticleDraftPerformanceUITests.swift"
     },
     {
       "id": "NFR3.21",
       "status": "OK",
-      "target": "HitotsuzuriUITests/ArticleDraftUITests.swift"
+      "target": "HitotsuzuriUITests/ArticleDraftPerformanceUITests.swift"
     },
     {
       "id": "NFR3.22",
       "status": "OK",
-      "target": "HitotsuzuriUITests/ArticleDraftUITests.swift"
+      "target": "HitotsuzuriUITests/ArticleDraftPerformanceUITests.swift"
     },
     {
       "id": "NFR3.23",

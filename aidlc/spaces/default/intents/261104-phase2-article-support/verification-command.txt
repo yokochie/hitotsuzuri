@@ -1,1 +1,1 @@
-bash scripts/verify-native.sh
+bash scripts/verify-native.sh --functional

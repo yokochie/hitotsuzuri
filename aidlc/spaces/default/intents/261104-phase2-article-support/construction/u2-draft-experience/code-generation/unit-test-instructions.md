@@ -33,6 +33,10 @@ UI fixtureはFixtureLaunchで生成したuitest-UUID rootを追跡し、同一�
 
 ### CI
 
+Native入力の原因切り分け専用に、`bash scripts/verify-native.sh --input-focus` を追加した。smoke2件の後、testSingleTabFromAlbumOperatesPhotoAndShiftTabReturnsとtestAlbumArrowsInCompactAfterMouseSelectionFollowPhotosの両メソッドを要求し、成功以外/片方未実行を失敗にする。全体coverageや全体成功は判定しない。専用draftコマンドにはこの区分を追加しない。隔離runner契約は追加前19件中1失敗（3.181秒）、実装後20件成功（3.364秒）。
+
+このU2ブランチのpushに`[input-focus]`印がある場合だけ、限定診断jobが起動し、全体jobを診断目的で重複実行しない。PRと通常pushは従来どおり全体機能検証を実行する。限定jobの成功を統合条件の達成には使わず、根本原因の確認後に全体検証とcoverageを別途満たす。
+
 push/PRではnative-coreが全Core機能（実測5件を除く）を実行し、その成功後にnative（--functional・全製品加重80%）が動く。性能jobは削除。GITHUB_ACTIONS=trueでは無引数全体、--performance、性能UIクラス指定を起動前に拒否し、その他のクラス指定でもCore実測5件を除く。決定論的な予算/期限/取消の機能検査は残す。U1ブランチの旧版比較baseline-nativeは保持するが現ブランチでは起動しない。新構成のCI実行はまだ成功確認していない。
 
 ## 設定と最初の実行

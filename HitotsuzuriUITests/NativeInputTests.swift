@@ -207,7 +207,9 @@ final class NativeInputTests:XCTestCase {
     }
     @MainActor func testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns() {
         let app=launch(); openAlbum(app)
-        app.typeKey(.tab,modifierFlags:[]); app.typeKey(.space,modifierFlags:[])
+        recordInputStage("wide-album-before-tab",app)
+        app.typeKey(.tab,modifierFlags:[]); expectInputFocus("photo:1",stage:"wide-tab-photo",app)
+        app.typeKey(.space,modifierFlags:[])
         XCTAssertTrue(app.staticTexts["1 / 4枚"].waitForExistence(timeout:3))
         XCTAssertTrue(app.otherElements["selection-slot-1"].label.contains("写真 1"))
         app.typeKey(.tab,modifierFlags:.shift)

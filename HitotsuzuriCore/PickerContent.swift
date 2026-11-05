@@ -12,6 +12,9 @@ public struct PickerContent:View {
     @State private var lastInteractionRegion:PickerRegion?
     @State private var compactLayout=false
     @State private var focusTransfer=0
+    #if DEBUG
+    @State private var fixtureFocusHistory:[String]=[]
+    #endif
     @FocusState private var focus:PickerFocus?
     private let onArticle: (() -> Void)?
     private let canOpenArticle:Bool?
@@ -48,6 +51,9 @@ public struct PickerContent:View {
                 if let region {presentation.region=region; restoreFocus(region)}
             }
             .onChange(of:focus) {_,value in
+                #if DEBUG
+                recordFixtureFocus("observed-"+fixtureFocusLabel(value))
+                #endif
                 switch value {case .folder(let id):presentation.remember(id,in:.folders); lastInteractionRegion = .folders; case .albums:lastInteractionRegion = .albums; _=selectFirstAlbumForTabEntry(); case .photo(let id):presentation.remember(id,in:.photos); lastInteractionRegion = .photos; default:break}
             }
             .onChange(of:workflow.activeAlbum?.id) {_,id in
@@ -97,7 +103,15 @@ public struct PickerContent:View {
                     .tag(album.id)}
             }.focused($focus,equals:.albums)
                 .onKeyPress(keys:[.tab,KeyEquivalent("\u{19}")]) {press in
-                    if selectFirstAlbumForTabEntry() {return .handled}
+                    #if DEBUG
+                    recordFixtureFocus("album-key-"+((press.modifiers.contains(.shift) || press.key==KeyEquivalent("\u{19}")) ? "backtab" : "tab"))
+                    #endif
+                    if selectFirstAlbumForTabEntry() {
+                        #if DEBUG
+                        recordFixtureFocus("album-key-select-first")
+                        #endif
+                        return .handled
+                    }
                     let backwards=press.modifiers.contains(.shift) || press.key==KeyEquivalent("\u{19}")
                     if compactLayout,workflow.canConfirm,!backwards {focusConfirmation(); return .handled}
                     let next:PickerRegion=backwards ? .folders : .photos
@@ -241,6 +255,9 @@ public struct PickerContent:View {
     }
     private func restoreConnectedFocus(_ target:PickerFocus,in region:PickerRegion,id:String) {
         let transfer=focusTransfer,album=workflow.activeAlbum?.id,folders=workflow.targetFolders,draft=workflow.selection.orderedIDs
+        #if DEBUG
+        recordFixtureFocus("connect-\(fixtureFocusLabel(target))#\(transfer):requested")
+        #endif
         focus=nil
         // 明示的な領域入場のみ。View接続後に渡し、画像応答からは呼ばない。
         Task { @MainActor in
@@ -250,15 +267,34 @@ public struct PickerContent:View {
             guard transfer==focusTransfer,lastInteractionRegion==region,
                   (!compactLayout || presentation.region==region),workflow.authorization == .authorized,sameAlbum,
                   workflow.targetFolders==folders,workflow.selection.orderedIDs==draft,focus==nil,
-                  exists,!workflow.isEditingFrozen else {return}
+                  exists,!workflow.isEditingFrozen else {
+                #if DEBUG
+                let reason:String
+                if transfer != focusTransfer {reason="superseded"}
+                else if lastInteractionRegion != region {reason="interaction"}
+                else if compactLayout && presentation.region != region {reason="region"}
+                else if workflow.authorization != .authorized {reason="authorization"}
+                else if !sameAlbum {reason="album"}
+                else if workflow.targetFolders != folders {reason="folders"}
+                else if workflow.selection.orderedIDs != draft {reason="draft"}
+                else if focus != nil {reason="focus-"+fixtureFocusLabel(focus)}
+                else if !exists {reason="missing"}
+                else {reason="frozen"}
+                recordFixtureFocus("connect#\(transfer):rejected-\(reason)")
+                #endif
+                return
+            }
+            #if DEBUG
+            recordFixtureFocus("connect#\(transfer):applied-"+fixtureFocusLabel(target))
+            #endif
             focus=target
         }
     }
     private func name(_ title:String)->String {title.isEmpty ? "名称なし" : title}
     #if DEBUG
-    private var fixtureFocusDiagnostic:String {
+    private func fixtureFocusLabel(_ value:PickerFocus?)->String {
         let focused:String
-        switch focus {
+        switch value {
         case .folder:focused="folder"
         case .albums:focused="albums"
         case .photo(let id):focused="photo:\((workflow.assets.firstIndex(where:{$0.id==id}) ?? -1)+1)"
@@ -266,10 +302,18 @@ public struct PickerContent:View {
         case .confirm:focused="confirm"
         case nil:focused="none"
         }
+        return focused
+    }
+    private func recordFixtureFocus(_ event:String) {
+        guard ProcessInfo.processInfo.arguments.contains("--ui-test-fixture") else {return}
+        fixtureFocusHistory=Array((fixtureFocusHistory+[event]).suffix(12))
+    }
+    private var fixtureFocusDiagnostic:String {
+        let focused=fixtureFocusLabel(focus)
         let album=workflow.activeAlbum.flatMap {active in workflow.albums.firstIndex(where:{$0.id==active.id})}.map {$0+1} ?? 0
         let ready=workflow.assets.filter {workflow.images[$0.id] != nil}.count
         let native=NSApp.keyWindow?.firstResponder.map {String(describing:type(of:$0))} ?? "none"
-        return "focus=\(focused); albumRow=\(album); selected=\(workflow.selection.orderedIDs.count); ready=\(ready); compact=\(compactLayout); nativeAtViewUpdate=\(native);"
+        return "focus=\(focused); albumRow=\(album); selected=\(workflow.selection.orderedIDs.count); ready=\(ready); compact=\(compactLayout); nativeAtViewUpdate=\(native); trace=\(fixtureFocusHistory.joined(separator:"|"));"
     }
     #endif
     @ViewBuilder private func thumbnail(_ buffer:ImageBuffer?)->some View {

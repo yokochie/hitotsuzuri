@@ -47,6 +47,8 @@ elif name=="xcrun":
     if os.environ.get("CONTRACT_ZERO")=="1": names=[]
     if os.environ.get("CONTRACT_OMIT_PERFORMANCE")=="1":
         methods.get("ArticleIntegrationTests",[]).remove("testColdOpenTenSamples()")
+    if os.environ.get("CONTRACT_OMIT_FOCUS")=="1" and "NativeInputTests" in methods:
+        methods["NativeInputTests"].remove("testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns()")
     print(json.dumps({"testNodes":[{"nodeType":"Test Suite","name":n,"result":"Passed","children":[{"nodeType":"Test Case","name":method,"result":"Passed"} for method in (["testArticleFixtureWindowAndEntryAreReady()","testPickerFixtureWindowAndFolderEntryAreReady()"] if n=="FixtureSmokeUITests" else methods.get(n,["testOne()"]))]} for n in names]}))
 '''
         for name in ["xcodebuild", "xcrun", "swift"]:
@@ -151,5 +153,21 @@ elif name=="xcrun":
         self.assertNotEqual(result.returncode,0)
         self.assertIn("testColdOpenTenSamples",result.stderr)
         self.assertEqual(len([c for c in self.calls() if c[0]=="xcodebuild"]),1)
+    def test_input_focus_is_partial_and_requires_both_named_cases(self):
+        result=self.run_script("--input-focus",script="verify-native.sh")
+        self.assertEqual(result.returncode,0,result.stderr)
+        calls=[c for c in self.calls() if c[0]=="xcodebuild"]
+        self.assertEqual(len(calls),2)
+        self.assertEqual({x for x in calls[-1] if x.startswith("-only-testing:")},{
+            "-only-testing:HitotsuzuriUITests/NativeInputTests/testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns",
+            "-only-testing:HitotsuzuriUITests/NativeInputTests/testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos"})
+        self.assertFalse(any(c[0]=="swift" for c in self.calls()))
+    def test_input_focus_is_not_a_draft_mode(self):
+        self.assertNotEqual(self.run_script("--input-focus").returncode,0)
+        self.assertEqual(self.calls(),[])
+    def test_input_focus_rejects_one_missing_case(self):
+        result=self.run_script("--input-focus",script="verify-native.sh",GITHUB_ACTIONS="true",CONTRACT_OMIT_FOCUS="1")
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn("testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns",result.stderr)
 
 if __name__ == "__main__": unittest.main()
