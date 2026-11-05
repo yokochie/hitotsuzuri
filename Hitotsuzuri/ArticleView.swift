@@ -75,6 +75,9 @@ struct ArticleView: View {
             #if DEBUG
             if let release=coordinator.fixtureReleaseSave {Button("試験：保存応答を返す") {Task {await release()}}.accessibilityIdentifier("draft-release-save")}
             if ProcessInfo.processInfo.arguments.contains("--article-test-fixture") {
+                Text("試験：固定本文コピー診断").font(.caption2)
+                    .accessibilityIdentifier("article-export-copy-diagnostic")
+                    .accessibilityValue(coordinator.fixtureCopyDiagnostic)
                 if let counts=coordinator.fixturePreviewRequestCounts {
                     Text("試験：写真要求数").font(.caption2)
                         .accessibilityIdentifier("draft-photo-request-counts")

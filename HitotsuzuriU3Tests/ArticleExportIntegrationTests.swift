@@ -10,6 +10,10 @@ import UniformTypeIdentifiers
         let images = ExportTestImages(), journal = ArticleExportJournal(directory: root.appendingPathComponent("jobs"))
         try await body(root, images, journal, ArticleExportDelivery(images: images, journal: journal), ExportFixture.prepared())
     }
+    private func resolveWithoutSuccess(_ delivery: ArticleExportDelivery, root: URL) async -> ExportResult? {
+        do { return try await delivery.recover(destination: root, cleanupConfirmed: true) }
+        catch { XCTFail("同じ親の安全な不在/生成済み部分物を解決できない: \(error)"); return nil }
+    }
     func testRealBundleManifestMatchesFourImagesAndArticle() async throws {
         try await fixture { root, _, _, delivery, prepared in
             let result = try? await delivery.run(jobID: UUID(), prepared: prepared, destination: root)
@@ -125,6 +129,91 @@ import UniformTypeIdentifiers
             _ = try? await delivery.run(jobID: UUID(), prepared: prepared, destination: root)
             XCTAssertEqual(try encoder.encode(prepared.savedInput.article), bytes)
             XCTAssertEqual(prepared.savedInput.article.fingerprint, prepared.rendered.sourceFingerprint)
+        }
+    }
+    func testRestartBeforePrepareResolvesAbsentJobAndAllowsNewExport() async throws {
+        try await fixture { root, images, journal, _, prepared in
+            let record = try ArticleExportRecoveryRecord(jobID: UUID(), prepared: prepared, parentIdentity: ArticleExportFileSystem.identity(of: root))
+            try await journal.begin(record)
+            let restarted = ArticleExportDelivery(images: images, journal: journal)
+            let beforeConfirmation = try await restarted.recover(destination: root, cleanupConfirmed: false)
+            XCTAssertNil(beforeConfirmation); let stillPending = try await journal.pending(); XCTAssertNotNil(stillPending)
+            let result = await self.resolveWithoutSuccess(restarted, root: root)
+            XCTAssertNil(result); let pending = try await journal.pending(); XCTAssertNil(pending)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent(record.finalName).path))
+            let next = try await restarted.run(jobID: UUID(), prepared: prepared, destination: root)
+            XCTAssertNotEqual(next.jobID, record.jobID)
+        }
+    }
+    func testRestartAfterCleanupBeforeJournalFinishAllowsNewExport() async throws {
+        try await fixture { root, images, journal, _, prepared in
+            let record = try ArticleExportRecoveryRecord(jobID: UUID(), prepared: prepared, parentIdentity: ArticleExportFileSystem.identity(of: root))
+            try await journal.begin(record)
+            let writer = ArticleExportWriter(destination: root, record: record), started = try await writer.prepare()
+            try await journal.update(started, expected: record); try await writer.cleanup()
+            let restarted = ArticleExportDelivery(images: images, journal: journal)
+            let result = await self.resolveWithoutSuccess(restarted, root: root)
+            XCTAssertNil(result); let pending = try await journal.pending(); XCTAssertNil(pending)
+            _ = try await restarted.run(jobID: UUID(), prepared: prepared, destination: root)
+        }
+    }
+    func testRestartDuringCleanupWithImagesDirectoryAlreadyRemoved() async throws {
+        try await fixture { root, images, journal, _, prepared in
+            let record = try ArticleExportRecoveryRecord(jobID: UUID(), prepared: prepared, parentIdentity: ArticleExportFileSystem.identity(of: root))
+            try await journal.begin(record)
+            let writer = ArticleExportWriter(destination: root, record: record), started = try await writer.prepare()
+            let written = try await writer.writeImage(ExportFixture.jpeg(), index: 1)
+            try await journal.update(written, expected: record)
+            let stage = root.appendingPathComponent(record.stagingName)
+            try FileManager.default.removeItem(at: stage.appendingPathComponent("images/01.jpg"))
+            try FileManager.default.removeItem(at: stage.appendingPathComponent("images"))
+            XCTAssertNotNil(started.imagesIdentity)
+            let result = await self.resolveWithoutSuccess(ArticleExportDelivery(images: images, journal: journal), root: root)
+            XCTAssertNil(result); let pending = try await journal.pending(); XCTAssertNil(pending)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: stage.path))
+        }
+    }
+    func testRestartDuringCleanupWithReceiptAndArticleAlreadyRemoved() async throws {
+        try await fixture { root, images, journal, _, prepared in
+            let record = try ArticleExportRecoveryRecord(jobID: UUID(), prepared: prepared, parentIdentity: ArticleExportFileSystem.identity(of: root))
+            try await journal.begin(record)
+            let writer = ArticleExportWriter(destination: root, record: record)
+            _ = try await writer.prepare()
+            for index in 1...4 { _ = try await writer.writeImage(ExportFixture.jpeg(), index: index) }
+            let sealed = try await writer.seal(); try await journal.update(sealed, expected: record)
+            let stage = root.appendingPathComponent(record.stagingName)
+            try FileManager.default.removeItem(at: stage.appendingPathComponent("owner.json"))
+            try FileManager.default.removeItem(at: stage.appendingPathComponent("article.md"))
+            let result = await self.resolveWithoutSuccess(ArticleExportDelivery(images: images, journal: journal), root: root)
+            XCTAssertNil(result); let pending = try await journal.pending(); XCTAssertNil(pending)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: stage.path))
+        }
+    }
+    func testUnpreparedRecoveryPreservesForeignStageAndFinalObjects() async throws {
+        for final in [false, true] {
+            try await fixture { root, images, journal, _, prepared in
+                let record = try ArticleExportRecoveryRecord(jobID: UUID(), prepared: prepared, parentIdentity: ArticleExportFileSystem.identity(of: root))
+                try await journal.begin(record)
+                let foreign = root.appendingPathComponent(final ? record.finalName : record.stagingName), bytes = Data("foreign".utf8)
+                try bytes.write(to: foreign)
+                do { _ = try await ArticleExportDelivery(images: images, journal: journal).recover(destination: root, cleanupConfirmed: true); XCTFail("外部物を不在と扱った") } catch { }
+                XCTAssertEqual(try Data(contentsOf: foreign), bytes)
+                let pending = try await journal.pending(); XCTAssertNotNil(pending)
+            }
+        }
+    }
+    func testDeliverySealConflictPreservesExternalBytesAndOriginalCause() async throws {
+        try await fixture { root, images, journal, _, prepared in
+            let id = UUID()
+            let delivery = ArticleExportDelivery(images: images, journal: journal, writerFactory: { url, record in
+                ArticleExportWriter(destination: url, record: record, checkpoint: { point in
+                    if point == .beforeSeal { try Data("external".utf8).write(to: url.appendingPathComponent(record.stagingName).appendingPathComponent("article.md")) }
+                })
+            })
+            do { _ = try await delivery.run(jobID: id, prepared: prepared, destination: root); XCTFail() } catch { XCTAssertEqual(error as? ArticleFailure, .cleanupFailure) }
+            let pending = try await journal.pending(); XCTAssertEqual(pending?.originalFailure, .conflict)
+            let stage = try XCTUnwrap(pending?.stagingName)
+            XCTAssertEqual(try Data(contentsOf: root.appendingPathComponent(stage).appendingPathComponent("article.md")), Data("external".utf8))
         }
     }
     func testManifestDateAndImageSettingsHaveExplicitPortableRepresentation() async throws {

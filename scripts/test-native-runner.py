@@ -214,4 +214,40 @@ elif name=="xcrun":
         self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testFourImageExportThirtyTrialsPerformance",call)
         self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testExportMemoryAndCancellationThirtyTrials",call)
 
+class ExportDiagnosticWorkflowTests(unittest.TestCase):
+    def workflow(self):
+        path = ROOT / ".github/workflows/diagnose-article-export.yml"
+        self.assertTrue(path.is_file(), "承認されたbranch限定診断workflowが存在する")
+        if not path.is_file(): return {}
+        return json.loads(subprocess.check_output(["ruby", "-ryaml", "-rjson", "-e", "puts JSON.generate(YAML.load_file(ARGV[0]))", str(path)], text=True))
+
+    def test_diagnostic_requires_exact_branch_and_explicit_commit_marker(self):
+        workflow = self.workflow()
+        if not workflow: return
+        event = workflow.get("on", workflow.get("true", {}))
+        self.assertEqual(event, {"push": {"branches": ["codex/phase2-u2-draft-experience"]}})
+        job = workflow["jobs"]["fixed-copy"]
+        self.assertEqual(job["if"], "github.ref == 'refs/heads/codex/phase2-u2-draft-experience' && contains(github.event.head_commit.message, '[u3-copy-diagnostic]')")
+        self.assertEqual(workflow["permissions"], {"contents": "read"})
+        self.assertEqual(job["runs-on"], "xcode-27")
+        self.assertEqual(job["timeout-minutes"], 10)
+
+    def test_diagnostic_runs_one_case_and_always_uploads_only_its_bundle(self):
+        workflow = self.workflow()
+        if not workflow: return
+        steps = workflow["jobs"]["fixed-copy"]["steps"]
+        commands = [step["run"] for step in steps if "run" in step]
+        self.assertEqual(len(commands), 1)
+        command = commands[0]
+        self.assertEqual(command.count("-only-testing:"), 1)
+        self.assertIn("-only-testing:HitotsuzuriUITests/ArticleExportUITests/testFixedCompletionCopyDoesNotUseLaterEditorChanges", command)
+        self.assertNotIn("--functional", command)
+        upload = steps[-1]
+        self.assertEqual(upload["if"], "always()")
+        self.assertEqual(upload["uses"], "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02")
+        self.assertEqual(upload["with"]["path"], ".build/ArticleExport-copy-diagnostic.xcresult")
+        self.assertEqual(upload["with"]["retention-days"], 1)
+        self.assertTrue(upload["with"].get("include-hidden-files", False), "所有bundle内の隠しデータも欠落させない")
+        self.assertEqual(steps[0]["uses"], "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803")
+
 if __name__ == "__main__": unittest.main()

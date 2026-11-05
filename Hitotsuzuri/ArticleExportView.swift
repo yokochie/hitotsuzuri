@@ -26,7 +26,12 @@ struct ArticleExportView: View {
             if let result = coordinator.articleExport.result, result.projectID == coordinator.session?.projectID {
                 Text("記事と画像4枚の出力が完了しました。\n" + result.directory.path)
                     .textSelection(.enabled).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("article-export-result")
-                Button("出力時点の本文をコピー") { Task { await coordinator.copyCompletedExport() } }
+                Button("出力時点の本文をコピー") {
+                    #if DEBUG
+                    coordinator.markCompletedCopyActivation()
+                    #endif
+                    Task { await coordinator.copyCompletedExport() }
+                }
                     .disabled(coordinator.working).focusable().focused(focus, equals: "article-export-copy-fixed")
                     .accessibilityIdentifier("article-export-copy-fixed").id("article-export-copy-fixed")
                     #if DEBUG

@@ -20,6 +20,21 @@ import HitotsuzuriCore
     var exportOSMessage = ""
     #if DEBUG
     private(set) var fixtureCopiedExportText = ""
+    private var fixtureCopyButtonCount = 0
+    private var fixtureCopyTaskCount = 0
+    private var fixtureCopyEvents: [String] = []
+    private var fixtureCopyCapturedMatches = false
+    var fixtureCopyDiagnostic: String {
+        "button=\(fixtureCopyButtonCount);task=\(fixtureCopyTaskCount);events=\(fixtureCopyEvents.isEmpty ? "idle" : fixtureCopyEvents.joined(separator: ">"));capturedBytes=\(fixtureCopiedExportText.utf8.count);capturedMatches=\(fixtureCopyCapturedMatches)"
+    }
+    func markCompletedCopyActivation() {
+        guard ProcessInfo.processInfo.arguments.contains("--article-test-fixture") else { return }
+        fixtureCopyButtonCount += 1; fixtureCopyEvents = ["button"]
+    }
+    private func recordCopyDiagnostic(_ event: String) {
+        guard ProcessInfo.processInfo.arguments.contains("--article-test-fixture") else { return }
+        fixtureCopyEvents = Array((fixtureCopyEvents + [event]).suffix(12))
+    }
     #endif
     private let workspace: ArticleWorkspace
     private let store: any ArticleStoring
@@ -378,14 +393,37 @@ import HitotsuzuriCore
         return articleOutput.register(ArticleExportDestinationAccess(url: url))
     }
     func copyCompletedExport() async {
-        guard let result = articleExport.result, result.projectID == session?.projectID, !working else { return }
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--article-test-fixture") { fixtureCopyTaskCount += 1 }
+        recordCopyDiagnostic("task;result=\(articleExport.result != nil);sameProject=\(articleExport.result?.projectID == session?.projectID);working=\(working)")
+        #endif
+        guard let result = articleExport.result, result.projectID == session?.projectID, !working else {
+            #if DEBUG
+            recordCopyDiagnostic("guard-rejected")
+            #endif
+            return
+        }
         do {
+            #if DEBUG
+            recordCopyDiagnostic("guard-approved;os-call")
+            #endif
             try await articleOutput.copyPlainText(result.fixedPlainText, context: .exported(jobID: result.jobID, projectID: result.projectID))
             exportOSMessage = "出力時点の本文をコピーしました。"
             #if DEBUG
-            if ProcessInfo.processInfo.arguments.contains("--article-test-fixture") { fixtureCopiedExportText = result.fixedPlainText }
+            if ProcessInfo.processInfo.arguments.contains("--article-test-fixture") {
+                fixtureCopiedExportText = result.fixedPlainText
+                fixtureCopyCapturedMatches = fixtureCopiedExportText.utf8.elementsEqual(result.fixedPlainText.utf8)
+                recordCopyDiagnostic("pasteboard-succeeded;captured")
+            }
             #endif
-        } catch { exportOSMessage = (error as? LocalizedError)?.errorDescription ?? "本文をコピーできませんでした。" }
+        } catch {
+            #if DEBUG
+            if error as? ArticleFailure == .invalidInput { recordCopyDiagnostic("context-rejected") }
+            else if error as? ArticleExportOSFailure == .clipboardFailure { recordCopyDiagnostic("pasteboard-failed") }
+            else { recordCopyDiagnostic("other-copy-error") }
+            #endif
+            exportOSMessage = (error as? LocalizedError)?.errorDescription ?? "本文をコピーできませんでした。"
+        }
     }
     func revealCompletedExport() async {
         guard let result = articleExport.result, result.projectID == session?.projectID, !working else { return }

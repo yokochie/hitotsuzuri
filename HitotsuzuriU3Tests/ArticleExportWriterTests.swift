@@ -115,6 +115,42 @@ import XCTest
         try await writer.cleanup()
         XCTAssertFalse(FileManager.default.fileExists(atPath: stage.path))
     }
+    private func assertUnproducedFileProtected(_ relative: String, partial: Bool = false) async throws {
+        let value = try record(), writer = ArticleExportWriter(destination: root, record: value)
+        _ = try await writer.prepare()
+        let path = root.appendingPathComponent(value.stagingName).appendingPathComponent(relative)
+        let bytes = partial ? Data(try ExportFixture.jpeg().bytes.prefix(17)) : Data("external known name".utf8)
+        try bytes.write(to: path)
+        do { try await writer.cleanup(); XCTFail("未記録bytesを削除した") }
+        catch { XCTAssertEqual(error as? ArticleFailure, .cleanupFailure) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path.path))
+        if FileManager.default.fileExists(atPath: path.path) { XCTAssertEqual(try Data(contentsOf: path), bytes) }
+    }
+    func testCleanupProtectsUnproducedFourthImage() async throws { try await assertUnproducedFileProtected("images/04.jpg") }
+    func testCleanupProtectsUnproducedArticle() async throws { try await assertUnproducedFileProtected("article.md") }
+    func testCleanupProtectsUnproducedManifest() async throws { try await assertUnproducedFileProtected("manifest.json") }
+    func testCleanupProtectsUnrecordedPartialImageBytes() async throws { try await assertUnproducedFileProtected("images/01.jpg", partial: true) }
+    func testCleanupProtectsChangedProducedImageBytes() async throws {
+        let value = try record(), writer = ArticleExportWriter(destination: root, record: value)
+        _ = try await writer.prepare(); _ = try await writer.writeImage(ExportFixture.jpeg(), index: 1)
+        let path = root.appendingPathComponent(value.stagingName).appendingPathComponent("images/01.jpg"), changed = Data("changed".utf8)
+        try changed.write(to: path)
+        do { try await writer.cleanup(); XCTFail("変更済みbytesを削除した") } catch { XCTAssertEqual(error as? ArticleFailure, .cleanupFailure) }
+        XCTAssertEqual(try Data(contentsOf: path), changed)
+    }
+    func testSealConflictCleanupPreservesExternalArticleAndManifest() async throws {
+        for relative in ["article.md", "manifest.json"] {
+            let value = try record(), writer = ArticleExportWriter(destination: root, record: value)
+            _ = try await writer.prepare()
+            for index in 1...4 { _ = try await writer.writeImage(ExportFixture.jpeg(), index: index) }
+            let path = root.appendingPathComponent(value.stagingName).appendingPathComponent(relative), external = Data("external conflict".utf8)
+            try external.write(to: path)
+            do { _ = try await writer.seal(); XCTFail("排他生成が既存物を受け入れた") } catch { XCTAssertEqual(error as? ArticleFailure, .conflict) }
+            do { try await writer.cleanup(); XCTFail("conflict後に外部物を削除した") } catch { XCTAssertEqual(error as? ArticleFailure, .cleanupFailure) }
+            XCTAssertTrue(FileManager.default.fileExists(atPath: path.path))
+            if FileManager.default.fileExists(atPath: path.path) { XCTAssertEqual(try Data(contentsOf: path), external) }
+        }
+    }
     func testWrongParentAndSymlinkAreRejected() async throws {
         var value = try record()
         value = ArticleExportRecoveryRecord(jobID: value.jobID, prepared: try ExportFixture.prepared(), parentIdentity: ExportFixture.identity)

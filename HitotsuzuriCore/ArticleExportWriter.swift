@@ -79,30 +79,42 @@ public actor ArticleExportWriter {
     }
     public func cleanup() throws {
         try checkpoint(.beforeCleanup)
-        guard !published, record.phase != .succeeded, let identity = record.stagingIdentity else { throw ArticleFailure.invalidReference }
+        guard !published, record.phase != .succeeded else { throw ArticleFailure.invalidReference }
         let root = try checkedRoot()
         // 完成名があれば、公開成否の照合を先に行う。完成物は自動削除しない。
-        do { _ = try root.child(record.finalName, create: false); throw ArticleFailure.uncertainResult }
-        catch ArticleFailure.missing { }
+        let rootNames = try ArticleExportFileSystem.entries(root)
+        guard !rootNames.contains(record.finalName) else { throw ArticleFailure.uncertainResult }
+        // begin→prepare前、または片付け→journal終端前の中断。不在なら削除せず解決する。
+        guard rootNames.contains(record.stagingName) else { _ = try checkedRoot(); return }
+        guard let identity = record.stagingIdentity else { throw ArticleFailure.invalidReference }
         let folder = try root.child(record.stagingName, create: false)
         guard try ArticleExportFileSystem.identity(folder) == identity else { throw ArticleFailure.invalidReference }
-        let receipt: Data?
-        do { receipt = try folder.read("owner.json") } catch ArticleFailure.missing { receipt = nil }
-        let hasReceipt = receipt == Data(record.ownershipToken.uuidString.utf8)
-        if !hasReceipt { try verify(folder, includeReceipt: false) }
         let names = try ArticleExportFileSystem.entries(folder)
         guard names.isSubset(of: ["owner.json", "images", "article.md", "manifest.json"]) else { throw ArticleFailure.cleanupFailure }
-        let images = try folder.child("images", create: false)
-        guard try ArticleExportFileSystem.identity(images) == record.imagesIdentity else { throw ArticleFailure.invalidReference }
-        let imageNames = try ArticleExportFileSystem.entries(images)
-        guard imageNames.isSubset(of: Set((1...4).map { String(format: "%02d.jpg", $0) })) else { throw ArticleFailure.cleanupFailure }
-        // 既知の生成済みbytesが外部変更されていれば、そのファイルは片付けない。
-        for (path, digest) in record.expectedDigests {
-            let bytes = try artifactBytes(path, folder: folder, images: images)
-            guard ArticleFingerprint.digest(bytes) == digest else { throw ArticleFailure.cleanupFailure }
+        if names.contains("owner.json") {
+            guard try folder.read("owner.json") == Data(record.ownershipToken.uuidString.utf8) else { throw ArticleFailure.cleanupFailure }
         }
-        for name in imageNames { try images.remove(name) }
-        try folder.remove("images", directory: true)
+        // ディレクトリreceiptは、まだ生成していない既知名のファイルを所有証明しない。
+        let documents = names.subtracting(["owner.json", "images"])
+        let images = names.contains("images") ? try folder.child("images", create: false) : nil
+        if let images { guard try ArticleExportFileSystem.identity(images) == record.imagesIdentity else { throw ArticleFailure.invalidReference } }
+        let imageNames = try images.map { try ArticleExportFileSystem.entries($0) } ?? []
+        let presentPaths = documents.union(imageNames.map { "images/" + $0 })
+        guard presentPaths.isSubset(of: Set(record.expectedDigests.keys)) else { throw ArticleFailure.cleanupFailure }
+        // 途中まで片付け済みなら不在は許容する。残る各bytesは全て生成記録と照合する。
+        for name in documents {
+            guard ArticleFingerprint.digest(try folder.read(name)) == record.expectedDigests[name] else { throw ArticleFailure.cleanupFailure }
+        }
+        if let images {
+            for name in imageNames {
+                guard ArticleFingerprint.digest(try images.read(name)) == record.expectedDigests["images/" + name] else { throw ArticleFailure.cleanupFailure }
+            }
+        }
+        _ = try checkedRoot(); try checkIdentity(root.child(record.stagingName, create: false))
+        if let images {
+            for name in imageNames { try images.remove(name) }
+            try folder.remove("images", directory: true)
+        }
         for name in names.subtracting(["images"]) { try folder.remove(name) }
         try root.remove(record.stagingName, directory: true); try root.synchronize()
     }

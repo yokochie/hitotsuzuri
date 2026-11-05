@@ -25,6 +25,15 @@ import XCTest
         guard element.exists else { return "" }
         return element.label + " " + ((element.value as? String) ?? "")
     }
+    private func attachCopyDiagnostic(_ app: XCUIApplication, phase: String) {
+        // このメソッドは合成記事fixtureだけから呼び、全画面/他アプリを撮らない。
+        let window = app.windows.firstMatch
+        let state = displayedText(app.staticTexts["article-export-copy-diagnostic"])
+        let attachment = XCTAttachment(string: "phase=\(phase)\n\(state)\n\(window.debugDescription)")
+        attachment.name = "u3-copy-\(phase)-app-accessibility"; attachment.lifetime = .keepAlways; add(attachment)
+        let screenshot = XCTAttachment(screenshot: window.screenshot())
+        screenshot.name = "u3-copy-\(phase)-app-window"; screenshot.lifetime = .keepAlways; add(screenshot)
+    }
     func testUnsavedExportConfirmationCanCancelWithoutSaving() {
         let app = launch(); replace(field("article-title", app), "Unsaved export text")
         action("article-export", app).click()
@@ -61,6 +70,8 @@ import XCTest
     }
     func testFixedCompletionCopyDoesNotUseLaterEditorChanges() {
         let app = launch(); replace(field("article-title", app), "Fixed output text")
+        let diagnostic = app.staticTexts["article-export-copy-diagnostic"]
+        XCTAssertTrue(diagnostic.draftExists(timeout: 5), "DEBUG fixtureの入口/guard/OS分類を独立headerで観測する")
         XCTAssertEqual(field("article-title", app).value as? String, "Fixed output text")
         app.buttons["article-save"].click(); XCTAssertTrue(state(app, contains: "保存しました").draftExists(timeout: 5))
         action("article-export", app).click(); _ = completed(app)
@@ -68,11 +79,16 @@ import XCTest
         XCTAssertEqual(field("article-title", app).value as? String, "Later unsaved text")
         let copy = action("article-export-copy-fixed", app)
         XCTAssertEqual((copy.value as? String) ?? "", "")
+        attachCopyDiagnostic(app, phase: "before-click")
         copy.click()
         let captured = NSPredicate { _, _ in MainActor.assumeIsolated { ((copy.value as? String) ?? "").contains("Fixed output text") } }
-        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: captured, object: nil)], timeout: 5), .completed, "実コピー成功後の固定本文を操作自身の値から確認する")
+        let outcome = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: captured, object: nil)], timeout: 5)
+        attachCopyDiagnostic(app, phase: "after-wait")
+        XCTAssertEqual(outcome, .completed, "実コピー成功後の固定本文; \(displayedText(diagnostic)); copy.exists=\(copy.exists), enabled=\(copy.isEnabled), hittable=\(copy.isHittable), frame=\(copy.frame), value=\(String(describing: copy.value)); OS=\(displayedText(app.staticTexts["article-export-os-message"]))")
         let copied = (copy.value as? String) ?? ""
         XCTAssertTrue(copied.contains("Fixed output text")); XCTAssertFalse(copied.contains("Later unsaved text"))
+        XCTAssertTrue(displayedText(diagnostic).contains("pasteboard-succeeded;captured"))
+        XCTAssertTrue(displayedText(diagnostic).contains("capturedMatches=true"))
         XCTAssertTrue(state(app, contains: "未保存").exists)
     }
     func testFinderFailureKeepsSuccessfulResult() {
