@@ -7,6 +7,7 @@ struct ArticleView: View {
     @FocusState private var focusedField:String?
     @State private var lastField="article-title"
     @State private var keyboardFocusRequest=0
+    @State private var keyboardCopyFocusRequested=false
     private var presentation:ArticlePresentation {coordinator.presentation}
     var body: some View {
         GeometryReader { geometry in
@@ -28,10 +29,17 @@ struct ArticleView: View {
                         }
                         actions.padding(16)
                     }
-                    .onChange(of:focusedField) {_,field in
+                    .onChange(of:focusedField) {old,field in
                         if let field {
                             if inputOrder.contains(field) {lastField=field}
                         }
+                        if field != "article-export-copy-fixed", field != nil || old == "article-export-copy-fixed" {keyboardCopyFocusRequested=false}
+                        recordFixtureCopyFocus(event:"focus-changed")
+                    }
+                    .onChange(of:keyboardCopyFocusRequested) {_,requested in
+                        // eligibilityを先に反映した更新で要求する。FocusState自身をeligibilityの条件にしない。
+                        if requested {focusedField="article-export-copy-fixed"; keyboardFocusRequest += 1}
+                        recordFixtureCopyFocus(event:"eligibility-updated")
                     }
                     .onChange(of:keyboardFocusRequest) {_,_ in if let field=focusedField {scroll.scrollTo(field,anchor:.center)}}
                     .onChange(of:session.sessionID) {_,_ in
@@ -179,7 +187,7 @@ struct ArticleView: View {
         }.frame(maxWidth:.infinity,alignment:.leading)
     }
     @ViewBuilder private var outputActions:some View {
-        ArticleExportView(coordinator: coordinator, focus: $focusedField)
+        ArticleExportView(coordinator: coordinator, focus: $focusedField, keyboardCopyFocusRequested: keyboardCopyFocusRequested)
         Button("画像1枚の検証出力") {coordinator.probe()}.keyboardShortcut("e",modifiers:[.command,.shift])
             .disabled(coordinator.working || session.isSaving).focusable().focused($focusedField,equals:"article-probe").accessibilityIdentifier("article-probe").id("article-probe")
         if coordinator.isProbeRunning {ProgressView().controlSize(.small); Button("検証出力を取り消す") {coordinator.cancelProbe()}}
@@ -202,9 +210,19 @@ struct ArticleView: View {
         order += ["article-save"]
         if presentation.mode == .editing, coordinator.previews?.isLoading == false {order += photoRetryOrder}
         guard let current=focusedField, let index=order.firstIndex(of:current) else {return .ignored}
-        focusedField=order[(index+(backward ? order.count-1 : 1)) % order.count]
-        keyboardFocusRequest += 1
+        let target=order[(index+(backward ? order.count-1 : 1)) % order.count]
+        if target == "article-export-copy-fixed" {
+            keyboardCopyFocusRequested=true
+        } else {
+            keyboardCopyFocusRequested=false; focusedField=target; keyboardFocusRequest += 1
+        }
+        recordFixtureCopyFocus(event:"request:"+target)
         return .handled
+    }
+    private func recordFixtureCopyFocus(event:String) {
+        #if DEBUG
+        coordinator.recordFixtureCopyFocus(focusedField, keyboardTarget: keyboardCopyFocusRequested, moves: keyboardFocusRequest, event:event)
+        #endif
     }
     private func activateFocusedButton()->KeyPress.Result {
         if coordinator.articleExport.isBusy, focusedField == "article-export-cancel" { coordinator.articleExport.cancel(); return .handled }

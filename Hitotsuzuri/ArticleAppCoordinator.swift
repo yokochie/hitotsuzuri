@@ -24,8 +24,15 @@ import HitotsuzuriCore
     private var fixtureCopyTaskCount = 0
     private var fixtureCopyEvents: [String] = []
     private var fixtureCopyCapturedMatches = false
+    private var fixtureCopyFocus = "unknown"
+    private var fixtureCopyFocusTrace: [String] = []
     var fixtureCopyDiagnostic: String {
-        "button=\(fixtureCopyButtonCount);task=\(fixtureCopyTaskCount);events=\(fixtureCopyEvents.isEmpty ? "idle" : fixtureCopyEvents.joined(separator: ">"));capturedBytes=\(fixtureCopiedExportText.utf8.count);capturedMatches=\(fixtureCopyCapturedMatches)"
+        "button=\(fixtureCopyButtonCount);task=\(fixtureCopyTaskCount);events=\(fixtureCopyEvents.isEmpty ? "idle" : fixtureCopyEvents.joined(separator: ">"));capturedBytes=\(fixtureCopiedExportText.utf8.count);capturedMatches=\(fixtureCopyCapturedMatches);\(fixtureCopyFocus);focusTrace=\(fixtureCopyFocusTrace.joined(separator: " > "))"
+    }
+    func recordFixtureCopyFocus(_ field: String?, keyboardTarget: Bool, moves: Int, event: String) {
+        guard ProcessInfo.processInfo.arguments.contains("--article-test-fixture") else { return }
+        fixtureCopyFocus="focus=\(field ?? "none");keyboardCopyTarget=\(keyboardTarget);moves=\(moves)"
+        fixtureCopyFocusTrace=Array((fixtureCopyFocusTrace+[event+";"+fixtureCopyFocus]).suffix(80))
     }
     func markCompletedCopyActivation() {
         guard ProcessInfo.processInfo.arguments.contains("--article-test-fixture") else { return }

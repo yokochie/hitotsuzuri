@@ -92,6 +92,10 @@ import XCTest
         XCTAssertTrue(displayedText(diagnostic).contains("button=1;task=1;"), "一回のマウス操作が実callbackとTaskを一回ずつ開始する")
         field("article-title", app).click()
         for _ in 0..<22 { app.typeKey(.tab, modifierFlags: []) }
+        let fixedFocus = NSPredicate { _, _ in MainActor.assumeIsolated { self.displayedText(diagnostic).contains("focus=article-export-copy-fixed;keyboardCopyTarget=true") } }
+        let focusOutcome = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: fixedFocus, object: nil)], timeout: 5)
+        attachCopyDiagnostic(app, phase: "after-keyboard-focus")
+        XCTAssertEqual(focusOutcome, .completed, "22回の実Tabが固定コピーへ焦点を移す: \(displayedText(diagnostic))")
         app.typeKey(.space, modifierFlags: [])
         let keyboardCopied = NSPredicate { _, _ in MainActor.assumeIsolated { self.displayedText(diagnostic).contains("button=1;task=2;") } }
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: keyboardCopied, object: nil)], timeout: 5), .completed, "設定変更なしのTab/Spaceでも固定コピーへ到達: \(displayedText(diagnostic))")
