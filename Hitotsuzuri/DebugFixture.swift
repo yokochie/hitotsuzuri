@@ -59,8 +59,10 @@ import UniformTypeIdentifiers
         }
         if draftCase == "invalid-raw" {coordinator.fixtureDraftPreparation={$0.metadataInput.change(year:"2026",month:"2",day:"31")}}
         if ["save-delay","performance"].contains(fixtureCase) {coordinator.fixtureReleaseSave={await draftStore.releaseSave()}}
-        if fixtureCase == "performance" {
+        if ["performance","read-delay"].contains(fixtureCase) {
             coordinator.fixturePrepareRead={await draftStore.armRead()}; coordinator.fixtureReleaseRead={await draftStore.releaseRead()}
+        }
+        if fixtureCase == "performance" {
             if ProcessInfo.processInfo.environment["HZS_DRAFT_AUTO_OPEN"] == "1" {coordinator.beginFixtureMetric("cold-input-ready",started:launchStarted)}
         }
         if ["reconfirmed","multiple","partial","long","performance"].contains(fixtureCase) {

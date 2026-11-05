@@ -50,6 +50,7 @@ Pickerと記事は同じ表示画像アクセスを共有する。4番号の受�
 - 候補771d101のCIは約30分でcancelled。smoke2・U2通常UI24・性能UI3・既存記事UI6は成功したが、Core375成功/1失敗（サンプル間隔108msが50msを超過）と、既存NativeInput12成功/5失敗があり、Native1件途中中断・8件未開始。カバレッジ検査へ到達していない。詳細と失敗したケースはci-evidence.mdを参照。U2全体合格・CI成功・80%達成とは扱わず、同じ全体実行は反復しない。
 - Retry38d447b5で計測samplerを共有executorから独立Thread/10msへ移した。5秒baselineと50ms判定・資源予算を維持し、限定1件が成功（最大間隔14.918ms、baseline5.006秒）。Nativeはキー操作ごとの焦点/選択/slotの条件確認を追加し、代表1件がローカル成功。製品のキー意味は変えていない。診断をレイアウト中立overlayへ移した最終候補と、残4件のCI確認は未完。
 - スクリプトとCIはCore先行→通常/性能の構成へ改訂した。Core失敗時にUIへ進まない短い契約等14件が成功。通常主bundleで全製品sourceの加重80%を判定し、先行Core性能2件・別jobのUI性能3件も必須とする。率の平均や製品sourceの除外は行わない。新候補のCI結果はまだ取得していない。
+- 分割候補2bd2a1aのCIは1分54秒でCore停止（375ケース成功/1ケース失敗）。専用Threadでも仮想CIの最大観測間隔100.192msが50ms条件を超えた。UI両jobは未起動で、早期停止は実証できた。Native5件とcoverageは未確認。詳細と次の未実装案はci-evidence.mdに記録し、同じ再実行は行わず判断待ちとした。
 
 最新の専用主実行は`.build/Draft-20261105-054710-2230.xcresult`、Core103件・UI25件の合計128件成功、失敗/skip 0、exit0。xcodebuild test elapsed1139.769秒。確定bundleもPassedを確認した。
 

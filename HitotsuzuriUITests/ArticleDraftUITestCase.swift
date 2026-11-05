@@ -14,7 +14,8 @@ import XCTest
         return app
     }
     func field(_ id:String,_ app:XCUIApplication)->XCUIElement {
-        let element=id == "article-location" || id == "article-equipment" || id == "article-film" || id == "article-people" ? app.textViews[id] : app.textFields[id]
+        let multiline=["article-introduction","article-closing","article-location","article-equipment","article-film","article-people"]+(1...4).map {"article-photo-\($0)"}
+        let element=multiline.contains(id) ? app.textViews[id] : app.textFields[id]
         XCTAssertTrue(element.draftExists(timeout:5),app.debugDescription)
         func visible()->Bool {
             let frame=element.frame, viewport=app.scrollViews.firstMatch.frame

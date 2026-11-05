@@ -17,7 +17,9 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
-      - name: Record Core measurement environment
+      - name: Check test selection contracts
+        run: python3 scripts/test-native-runner.py
+      - name: Record Core environment
         run: |
           sw_vers
           xcodebuild -version
@@ -52,25 +54,6 @@ jobs:
           fi
       - name: Verify smoke, full functional regression and product coverage
         run: bash scripts/verify-native.sh --functional
-  native-performance:
-    needs: native-core
-    runs-on: xcode-27
-    timeout-minutes: 30
-    env:
-      HZS_CORE_PREFLIGHT_DONE: '1'
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
-        with:
-          persist-credentials: false
-      - name: Record UI performance environment
-        run: |
-          sw_vers
-          xcodebuild -version
-          uname -m
-          sysctl -n hw.model
-          pmset -g batt
-      - name: Verify smoke and detailed performance
-        run: bash scripts/verify-native.sh --performance
   baseline-native:
     # Temporary diagnostic for this U1 branch: distinguish inherited failures
     # on the hosted image from changes introduced by article support.

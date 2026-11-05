@@ -16,6 +16,9 @@ SMOKE = "FixtureSmokeUITests"
 PERFORMANCE = "ArticleDraftPerformanceUITests"
 TARGETS = ["HitotsuzuriU1Tests", "HitotsuzuriU2Tests", "HitotsuzuriU3Tests", "HitotsuzuriUITests"]
 CORE_PERFORMANCE = [
+    "HitotsuzuriU1Tests/ArticleIntegrationTests/testLongTextSaveThirtySamples",
+    "HitotsuzuriU1Tests/ArticleIntegrationTests/testColdOpenTenSamples",
+    "HitotsuzuriU1Tests/ArticleIntegrationTests/testImageMemoryAndThirtyConversions",
     "HitotsuzuriU2Tests/ArticleDraftIntegrationTests/testLongDraftPersistenceAndProjectionPerformance",
     "HitotsuzuriU2Tests/ArticlePreviewRetryTests/testDisplayMemoryAndCancellationThirtyTrials",
 ]
@@ -31,12 +34,13 @@ def native_classes():
                 values[name] = target
     return values
 
-def check_result(result, expected):
+def check_result(result, expected, expected_cases=()):
     completed = subprocess.run(["xcrun", "xcresulttool", "get", "test-results", "tests", "--path", str(result)],
                                check=True, capture_output=True, text=True)
     document = json.loads(completed.stdout)
     passed = set()
     smoke_methods = set()
+    passed_cases = set()
     count = 0
     def inspect(node, suite=""):
         nonlocal count
@@ -48,6 +52,7 @@ def check_result(result, expected):
                 raise ValueError("未成功/未実行の試験: "+suite+"/"+name)
             count += 1
             passed.add(suite)
+            passed_cases.add(suite+"/"+name.removesuffix("()"))
             if suite == SMOKE:
                 smoke_methods.add(name.removesuffix("()"))
         for child in node.get("children", []):
@@ -56,12 +61,15 @@ def check_result(result, expected):
         inspect(node)
     if count == 0 or not set(expected).issubset(passed):
         raise ValueError("指定クラスが未実行: "+", ".join(sorted(set(expected)-passed)))
+    missing = {case.split("/",1)[1] for case in expected_cases} - passed_cases
+    if missing:
+        raise ValueError("指定性能試験が未実行: "+", ".join(sorted(missing)))
     if SMOKE in expected and not {"testArticleFixtureWindowAndEntryAreReady",
                                   "testPickerFixtureWindowAndFolderEntryAreReady"}.issubset(smoke_methods):
         raise ValueError("両fixture方式のsmokeが未実行")
     print(f"Verified {count} executed cases: {', '.join(expected)}", flush=True)
 
-def run_group(prefix, filters, expected):
+def run_group(prefix, filters, expected, expected_cases=()):
     base = Path(os.environ.get("HZS_RUNNER_RESULT_ROOT", ".build")).resolve()
     if not base.is_relative_to(Path(".build").resolve()):
         raise ValueError("result root must stay inside .build")
@@ -71,7 +79,7 @@ def run_group(prefix, filters, expected):
                     "-destination", "platform=macOS", *filters, "-enableCodeCoverage", "YES",
                     "-derivedDataPath", ".build/DerivedData", "-resultBundlePath", str(result),
                     "CODE_SIGN_IDENTITY=-", "test"], check=True)
-    check_result(result, expected)
+    check_result(result, expected, expected_cases)
     return result
 
 def main():
@@ -91,15 +99,22 @@ def main():
             mode = "selected"
         else:
             raise ValueError("未知または混在する試験区分/クラス")
+    in_ci = os.environ.get("GITHUB_ACTIONS") == "true"
+    if in_ci and (mode in ["all", "performance"] or PERFORMANCE in (selected or [])):
+        raise ValueError("性能測定は本人Mac専用です。CIでは --core / --functional を指定してください。")
+    performance_cases = [case for case in CORE_PERFORMANCE
+                         if scope == "native" or case.startswith("HitotsuzuriU2Tests/")]
     def core_group(performance_only=False):
         if performance_only:
-            filters = ["-only-testing:"+case for case in CORE_PERFORMANCE]
-            expected = [case.split("/")[1] for case in CORE_PERFORMANCE]
+            filters = ["-only-testing:"+case for case in performance_cases]
+            expected = list(dict.fromkeys(case.split("/")[1] for case in performance_cases))
         else:
             expected = [name for name,target in allowed.items() if target != "HitotsuzuriUITests"]
             filters = (["-only-testing:"+target for target in TARGETS[:-1]] if scope == "native"
                        else ["-only-testing:"+allowed[name]+"/"+name for name in expected])
-        return run_group(("Native" if scope == "native" else "Draft")+"-core", filters, expected)
+            filters.extend("-skip-testing:"+case for case in CORE_PERFORMANCE)
+        return run_group(("Native" if scope == "native" else "Draft")+"-core", filters, expected,
+                         performance_cases if performance_only else ())
     if mode == "core":
         core_group()
         print("Core専用: UIと製品全体のカバレッジは判定していません。", flush=True)
@@ -109,6 +124,8 @@ def main():
                      and os.environ.get("HZS_CORE_PREFLIGHT_DONE") == "1")
     if selected is None and mode in ["all", "functional", "performance"] and not upstream_core:
         core_group(performance_only=mode == "performance")
+    if mode == "all":
+        core_group(performance_only=True)
     needs_smoke = selected is None or any(allowed[name] == "HitotsuzuriUITests" for name in selected)
     if needs_smoke:
         run_group("Smoke", ["-only-testing:HitotsuzuriUITests/"+SMOKE], [SMOKE])
@@ -135,8 +152,8 @@ def main():
             filters.append("-skip-testing:HitotsuzuriUITests/"+PERFORMANCE)
     else:
         filters = ["-only-testing:"+allowed[name]+"/"+name for name in selected]
-    if mode in ["all", "functional"]:
-        # 先行Coreで必須実行済みの計測だけは重複しない。製品sourceの除外ではない。
+    if mode in ["all", "functional"] or in_ci:
+        # 実時間・実メモリの合否はMacの専用groupで確認する。
         filters.extend("-skip-testing:"+case for case in CORE_PERFORMANCE)
     result = run_group(("Native" if scope == "native" else "Draft")+"-"+mode, filters, selected)
     if scope == "native" and mode in ["all", "functional"]:

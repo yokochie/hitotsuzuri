@@ -81,11 +81,15 @@ struct ArticleView: View {
             if coordinator.fixtureMeasuresPerformance {
                 Button("試験：下書きを再開") {Task {await coordinator.reopenFixtureDraft()}}.accessibilityIdentifier("draft-reopen")
                 Button("試験：写真の取得を再開") {coordinator.restartFixturePreviews()}.accessibilityIdentifier("draft-restart-photos")
+            }
+            if coordinator.fixturePrepareRead != nil {
                 HStack {
                     Button("試験：読込応答を保留") {Task {await coordinator.armFixtureRead()}}.accessibilityIdentifier("draft-arm-read")
                     Button("試験：読込応答を返す") {Task {await coordinator.releaseFixtureRead()}}.accessibilityIdentifier("draft-release-read")
                     if coordinator.fixtureReadArmed {Text("試験読込保留中").accessibilityIdentifier("draft-read-armed")}
                 }
+            }
+            if coordinator.fixtureMeasuresPerformance {
                 Text(coordinator.fixtureMetricsText).font(.caption2).lineLimit(1).accessibilityIdentifier("draft-display-metrics")
             }
             #endif

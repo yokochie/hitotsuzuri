@@ -2,36 +2,28 @@ import XCTest
 
 @MainActor final class ArticleDraftUITests:ArticleDraftUITestCase {
     override func setUpWithError() throws {continueAfterFailure=false}
-    func testNativeInputMeasurementUsesCurrentFieldEditor() {
-        let app=launch("performance"), title=app.textFields["article-title"]
-        XCTAssertTrue(title.draftExists(timeout:5))
-        app.buttons["article-save"].click(); awaitMetric(app,"saving-draw",count:1)
-        title.click(); title.typeKey(.rightArrow,modifierFlags:.command)
-        title.typeKey(.leftArrow,modifierFlags:.shift); title.typeKey(.leftArrow,modifierFlags:.shift); title.typeText("00")
-        awaitCurrentInputMetric(app)
-        XCTAssertEqual((title.value as? String)?.count,200)
-        app.buttons["draft-release-save"].click()
-        let values=metrics(app)["input-draw"] ?? []
-        XCTAssertFalse(values.isEmpty); XCTAssertLessThanOrEqual(values.max() ?? .infinity,0.5)
-        XCTAssertEqual(metrics(app)["input-draw-timeouts"]?.last ?? 0,0)
-        print("Draft native input diagnostic samples=\(values.count) max=\(values.max() ?? 0) seconds")
-    }
     func testEntryAndListLoadingCanComplete() {
-        let app=launch("performance")
-        XCTAssertTrue(app.textFields["article-title"].draftExists(timeout:5))
-        for (kind,item) in [("entry-loading-draw","選択した写真の記事を開く"),("list-loading-draw","保存した下書きを開く")] {
+        let app=launch("read-delay"), body=field("article-introduction",app)
+        let expectedBody="Loading keeps this saved text."
+        XCTAssertTrue(body.draftExists(timeout:5)); replace(body,expectedBody)
+        XCTAssertEqual(body.value as? String,expectedBody)
+        app.buttons["article-save"].click()
+        XCTAssertTrue(state(app,contains:"保存しました").draftExists(timeout:5))
+        let expectedTitle=app.textFields["article-title"].value as? String
+        for (isList,item) in [(false,"選択した写真の記事を開く"),(true,"保存した下書きを開く")] {
             app.buttons["draft-arm-read"].click()
             XCTAssertTrue(app.staticTexts["draft-read-armed"].draftExists(timeout:5))
             app.menuBars.menuBarItems["記事"].click(); app.menuItems[item].click()
             XCTAssertTrue(app.staticTexts["article-loading"].draftExists(timeout:5))
-            awaitMetric(app,kind,count:1)
             app.buttons["draft-release-read"].click()
-            if kind == "list-loading-draw" {
+            if isList {
                 XCTAssertTrue(app.buttons["draft-cancel"].draftExists(timeout:5))
                 app.buttons["draft-cancel"].click()
-            } else {XCTAssertTrue(app.staticTexts["article-loading"].draftAbsent(timeout:5))}
+            }
+            XCTAssertTrue(app.staticTexts["article-loading"].draftAbsent(timeout:5))
             XCTAssertTrue(app.textFields["article-title"].exists)
-            XCTAssertEqual(metrics(app)[kind+"-timeouts"]?.last ?? 0,0)
+            XCTAssertEqual(app.textFields["article-title"].value as? String,expectedTitle)
+            XCTAssertEqual(body.value as? String,expectedBody)
         }
     }
     func testCurrentEntryShowsCandidateAndAllMetadataFields() {

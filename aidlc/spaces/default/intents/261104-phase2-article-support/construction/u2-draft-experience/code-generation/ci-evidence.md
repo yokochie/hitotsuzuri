@@ -59,3 +59,25 @@ Core失敗は22:53台に出ていたが、単一xcodebuildは後続UIを実行�
 - メモリsamplerはプロセス内の専用Thread/10msへ変更し、5秒baseline・50ms以下の実観測間隔等を維持。ローカル限定1件が成功し最大間隔14.918ms。CIでの成立はまだ確認していない。
 - Nativeは各入力の論理焦点・選択数・slotを検査するようにした。代表1件はローカル成功、残4件の解消は未確認。診断表示をレイアウト中立のoverlayへ移した最終候補はCIで確認する。製品の焦点意味は変更せず、既存期待を緩めていない。
 - 候補の新commit/push・分割CIの結果はこの時点では未取得。旧771d101の取り消しを新候補の成功に置き換えない。
+
+## 分割CIの確定結果
+
+- 候補`2bd2a1a5f29ca329f615dae7f92f4f1273443ef0`。[実行41936577672](https://github.com/yokochie/hitotsuzuri/actions/runs/41936577672)、native-core job126946432823。
+- 23:48:20〜23:50:14 UTCの1分54秒でfailure。Coreは375ケース成功/1ケース失敗（同ケース内のassertion2つが失敗）。native/native-performanceはneedsにより未起動。Core失敗後にUIが続く問題は停止できた。
+- 失敗は同じtestDisplayMemoryAndCancellationThirtyTrialsの観測間隔。専用Threadでもmax100.192459ms、baselineもmax100.192459msで50msを満たさない。baseline5.009731秒/105samples、measurement90samples、delta3,817,472B、OS peak66,144,448→69,961,920B、directPeak4,194,304B。メモリ上限超過の観測ではないが、測定品質は未成立。
+- 環境はmacOS27.0.1（26A434）、Xcode27.1、arm64、VirtualMac2,1、AC Power。ローカル成功値とは混ぜない。仮想環境が原因だと断定せず、今回のCIで条件が成立しなかった事実を残す。
+- 新候補のNative5件、通常UI、性能UI、全体coverageは未実行。旧候補の成功やローカル代表1件で補完しない。
+
+## 旧対応案（本人指定ed903fa6で下記へ変更）
+
+NFRの「CIの性能値は参考で、本人Mac測定の代替ではない」に沿い、正式な実測の合否とCI参照値の取得を分離する。本人Macでは50ms以下/5秒baseline/256MiB・512MiBの条件をそのまま検証し、CIでは取得値と測定の成立/未成立を明示する。未成立値を性能合格へ使わない。予算・取消・期限等の機能検査と、計測品質の判定ロジックはCIでも必須の決定的テストにする。現時点で条件分岐や試験除外を実装したわけではなく、本人の次の判断を待つ。
+
+計測プロセスの稼働条件も調査した。Appleは[process activityでApp Napや処理の延期を制御できる](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/power_efficiency_guidelines_osx/PrioritizeWorkAtTheAppLevel.html)と説明するが、今回の遅延原因がApp Napだという証拠はない。測定中だけのactivity指定は仮説で、OS全体の設定変更や閾値緩和は行っていない。
+
+## 本人Macだけで性能合否を判定する改訂
+
+本人ed903fa6の指定により、CI参照計測も廃止する。native-coreは実時間/実メモリ5件を除く全Core機能、nativeはsmoke・全機能回帰・全製品加重80%を確認し、native-performance jobは削除した。CIで性能区分/無引数全体/性能UIクラスを指定すると起動前に失敗する。決定論的な予算・取消・期限検証は維持する。本人Mac専用--performanceはU1実測3件+U2実測2件、smoke2件、UI性能4件を要求し、従来閾値を変えない。
+
+runner契約は先に16件中4失敗（3.028秒）を確認し、実装後17件が3.184秒で成功。追加した欠落メソッド検査は同じ性能クラス内の他ケースが成功しても未実行を拒否する。これは代替コマンドでの短い検証で、製品テストの成功ではない。
+
+認証後の軽量UI1件は導入文が画面外のままclickされ失敗した。本人45362ce6の修正承認に基づき、既存のフォームスクロール・viewport内・isHittable確認を適用し、保存前の本文実値も検査。U2-Lightweight-Loading-Reveal-20261105-091200.xcresultは1成功/0失敗/0skip、UI25.109秒、exit0。CIとMac性能の新候補結果はこれから確認する。

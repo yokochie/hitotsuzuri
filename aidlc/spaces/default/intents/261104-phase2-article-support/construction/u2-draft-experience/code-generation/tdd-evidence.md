@@ -316,3 +316,36 @@ xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'plat
 - 全体/通常の主bundleでは先行済みCore性能2件を重複しない。性能ケースを除いたことを製品ソースの除外へ転用せず、既存checkerで全製品加重80%を判定。UI性能3件は別の必須jobで成功が必要。
 - 14件の隔離契約が成功（2.558秒/exit0）。Core失敗・Core0件でUI未起動、Core専用でUIなし、未知引数拒否、smoke停止、通常全source coverage、性能分離、非CI環境で依存フラグだけ設定しても先行を省けないことを確認。実Xcodeや本人データへは接続していない。
 - 新workflowはnative-core成功後にnative/native-performanceを実行するneedsを持つ。単一native-allの30分実行は廃止し、旧U1専用baselineは保持。Ruby標準YAMLで構文/依存関係を読取確認した。新CI成功の証拠はまだない。
+## 性能合否を本人Macへ分離・通常loadingの軽量化（2026-11-05）
+
+- 本人ed903fa6と最新正式briefに従う。問題根拠はCI commit2bd2a1aでの約100msのsample間隔失敗（Core375成功/1失敗、UI両job未起動、約1分54秒停止）。これはCIで性能合否を判定していた実行設計の訂正であり、本人Macの5秒baseline/50ms/256MiB/512MiB/期限/取消の基準は緩めない。専用Thread samplerやOS/hardware対策は今回変更しない。
+- testNativeInputMeasurementUsesCurrentFieldEditorを通常から既存ArticleDraftPerformanceUITestsへメソッド本文そのまま移動。field editor実値、保存/入力描画0.5秒、timeout検知、performance fixture条件は保持した。実ファイルの件数は通常ArticleDraftUITests23件、性能ArticleDraftPerformanceUITests4件。
+- 通常testEntryAndListLoadingCanCompleteはread-delay fixtureを用いる。既存の読込arm/release hooksだけを同fixtureにも注入し、100記事/1000操作や長文の一括準備を行わない。実保存した1記事について入口/一覧各1回のloading表示、明示応答解放、一覧取消、編集復帰、同じ非空ASCII本文/タイトル保持を検査する。awaitMetricと実測timeout/時間性能の判定はこの通常ケースから外し、機能待機の5秒timeoutは維持する。実測loading30回の元条件/閾値はMac性能クラスに保持。
+- CIの機能とMac性能の選択/停止/coverageはroot所有のrunner/workflowで管理する。この変更で架空の計測成功を返したり、製品ソースのcoverage除外を追加していない。新規source pathはなくmanifest43パス内。
+- sourceを凍結し、許可された通常loading1件だけをrequire_escalatedでbuild/testした。
+
+```bash
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriUITests/ArticleDraftUITests/testEntryAndListLoadingCanComplete -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/U2-Lightweight-Loading-20261105-085500.xcresult CODE_SIGN_IDENTITY=- test
+```
+
+- App/Core/全試験targetのビルドは成功。09:03:54JSTにrunner起動後、09:04:54にXCTFuture Code1000「Timed out while enabling automation mode.」で初期化失敗。exit65、testing71.572秒。summaryはpassed0/failed1/total1/skip0だが、その1件はrunner初期化エラーで、**指定loadingの機能ケースは未実行**。この失敗を機能Redや性能未達とは扱わない。
+- 即rootへ報告し、再試験・長時間性能・全体・他UI・CI・OS/TCC/承認/本人アプリ操作をせず停止。本人Macの新しい性能4件suiteも今回は実行していない。先行の機能/実測成功を今回の新候補の成功へ流用しない。
+- 変更4ソース: ArticleDraftUITests/ArticleDraftPerformanceUITests/DebugFixture/ArticleView。diff-checkはexit0。TDD追記後、全writeを凍結してrootへ返却した。
+### 本人のautomation承認後・軽量loading1件の再実行
+
+- 本人21a596a1の承認回答後、同一ソースのtestEntryAndListLoadingCanCompleteだけをrequire_escalatedで一度再実行した。bundleは `.build/U2-Lightweight-Loading-Approved-20261105-091000.xcresult`。性能/他UI/全体は実行しない。
+- automation初期化は成功し、実ケース1件が開始。導入文のreplace（ArticleDraftUITestCase.swift:33のelement.click）で `Unable to find hit point for ScrollView, {{276.0, 1017.5}, {733.0, 140.0}}` が発生した。ケースはbodyのexistsだけを確認して直接クリックしており、本文入力・保存・読込armの前で停止。viewport外かどうかはこの失敗だけで断定しないが、テストの入力到達準備を確認する必要が残る。
+- 確定summaryは1実行/0成功/1失敗/0skip、exit65。UI9.992秒/testing20.866秒、QoS priority inversion warning1件。teardownの所有root回収は成功した。前回のrunner初期化失敗と異なる実ケースの操作失敗である。
+- 即rootへ報告し、反復・source変更・OS/認証操作をせず停止。この追記以外のwriteなし。軽量loadingの機能Greenや新しいMac性能/CI成功とは扱わず、source/記録の凍結を維持して返却する。
+### 軽量loadingの入力到達修正とGreen
+
+- 本人45362ce6により、導入文click不可への最小修正を実施。先行の実ケース失敗は上節の `U2-Lightweight-Loading-Approved-20261105-091000.xcresult` として保持し、同じRedだけは繰り返さない。
+- 原因となるテスト前提は、existsだけではスクロール外のTextEditorも対象になるのに、導入文を直接replaceしていたこと。狭幅では写真がフォームより上に積まれるため、常に本文がviewport内にあるとは限らない。既存field helperを本文TextViewにも対応させ、同じ外側gutterスクロール、入力欄全体がviewport上下3pt内、isHittableの検査を導入文にも適用した。固定sleepやクリック座標の強制、要件/待機timeoutの緩和はしない。
+- 軽量caseはfield("article-introduction",app)を通してから入力し、保存前のASCII本文実値assertionも追加。製品source/fixture/他試験の期待は変更しない。既存helperのタイトル/日付/自由情報の対象分類は保持。
+
+```bash
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriUITests/ArticleDraftUITests/testEntryAndListLoadingCanComplete -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/U2-Lightweight-Loading-Reveal-20261105-091200.xcresult CODE_SIGN_IDENTITY=- test
+```
+
+- require_escalatedの限定1件のみ。確定summaryは1実行/1成功/0失敗/0skip、exit0。UI25.109秒/testing36.087秒。入力欄の表示/操作可能性、保存前本文実値、実保存、入口/一覧各1回のloading表示→response解放→一覧取消/編集復帰、同じ本文/タイトル保持、最後の所有root回収まで通過した。QoS priority inversion warningは1件。
+- 変更はArticleDraftUITestsとArticleDraftUITestCase、および本TDDのみ。既存manifest43パス内、新規pathなし、2ソースdiff-checkはexit0。長い全体/性能/他UI/CIは実行していない。ソースと記録を凍結し、rootの本人Mac性能・CI機能確認へ返却する。

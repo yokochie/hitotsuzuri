@@ -2,6 +2,20 @@ import XCTest
 
 @MainActor final class ArticleDraftPerformanceUITests:ArticleDraftUITestCase {
     override func setUpWithError() throws {continueAfterFailure=false}
+    func testNativeInputMeasurementUsesCurrentFieldEditor() {
+        let app=launch("performance"), title=app.textFields["article-title"]
+        XCTAssertTrue(title.draftExists(timeout:5))
+        app.buttons["article-save"].click(); awaitMetric(app,"saving-draw",count:1)
+        title.click(); title.typeKey(.rightArrow,modifierFlags:.command)
+        title.typeKey(.leftArrow,modifierFlags:.shift); title.typeKey(.leftArrow,modifierFlags:.shift); title.typeText("00")
+        awaitCurrentInputMetric(app)
+        XCTAssertEqual((title.value as? String)?.count,200)
+        app.buttons["draft-release-save"].click()
+        let values=metrics(app)["input-draw"] ?? []
+        XCTAssertFalse(values.isEmpty); XCTAssertLessThanOrEqual(values.max() ?? .infinity,0.5)
+        XCTAssertEqual(metrics(app)["input-draw-timeouts"]?.last ?? 0,0)
+        print("Draft native input diagnostic samples=\(values.count) max=\(values.max() ?? 0) seconds")
+    }
     func testLoadingLabelsThirtyEntryAndListRequests() {
         let app=launch("performance")
         XCTAssertTrue(app.textFields["article-title"].draftExists(timeout:5))

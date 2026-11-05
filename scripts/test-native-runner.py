@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 class RunnerContractTests(unittest.TestCase):
     def setUp(self):
+        (ROOT / ".build").mkdir(exist_ok=True)
         self.directory = tempfile.TemporaryDirectory(prefix="runner-contract-", dir=ROOT / ".build")
         self.base = Path(self.directory.name)
         self.log = self.base / "calls.jsonl"
@@ -27,26 +28,32 @@ elif name=="xcrun":
     result=sys.argv[sys.argv.index("--path")+1]
     args=json.loads(pathlib.Path(result,"selection.json").read_text())
     names=[]
+    methods={}
     import re
     skipped={x.split("/")[-1] for x in args if x.startswith("-skip-testing:")}
     for arg in args:
         if not arg.startswith("-only-testing:"): continue
         selection=arg.split(":",1)[1]
-        if "/" in selection: names.append(selection.split("/")[1])
+        if "/" in selection:
+            parts=selection.split("/")
+            names.append(parts[1])
+            if len(parts)==3: methods.setdefault(parts[1],[]).append(parts[2]+"()")
         else:
             for file in pathlib.Path(selection).glob("*.swift"):
                 text=file.read_text()
                 if re.search(r"func\\s+test\\w+\\s*\\(",text):
                     names.extend(re.findall(r"class\\s+(\\w+)\\s*:\\s*(?:XCTestCase|ArticleDraftUITestCase)\\b",text))
-    names=[n for n in names if n not in skipped]
+    names=list(dict.fromkeys(n for n in names if n not in skipped))
     if os.environ.get("CONTRACT_ZERO")=="1": names=[]
-    print(json.dumps({"testNodes":[{"nodeType":"Test Suite","name":n,"result":"Passed","children":[{"nodeType":"Test Case","name":method,"result":"Passed"} for method in (["testArticleFixtureWindowAndEntryAreReady()","testPickerFixtureWindowAndFolderEntryAreReady()"] if n=="FixtureSmokeUITests" else ["testOne()"])]} for n in names]}))
+    if os.environ.get("CONTRACT_OMIT_PERFORMANCE")=="1":
+        methods.get("ArticleIntegrationTests",[]).remove("testColdOpenTenSamples()")
+    print(json.dumps({"testNodes":[{"nodeType":"Test Suite","name":n,"result":"Passed","children":[{"nodeType":"Test Case","name":method,"result":"Passed"} for method in (["testArticleFixtureWindowAndEntryAreReady()","testPickerFixtureWindowAndFolderEntryAreReady()"] if n=="FixtureSmokeUITests" else methods.get(n,["testOne()"]))]} for n in names]}))
 '''
         for name in ["xcodebuild", "xcrun", "swift"]:
             path = self.base / name
             path.write_text(fake)
             path.chmod(0o700)
-        self.env = dict(os.environ, PATH=str(self.base)+os.pathsep+os.environ["PATH"], CONTRACT_LOG=str(self.log), HZS_RUNNER_RESULT_ROOT=str(self.base), HZS_CORE_PREFLIGHT_DONE="0")
+        self.env = dict(os.environ, PATH=str(self.base)+os.pathsep+os.environ["PATH"], CONTRACT_LOG=str(self.log), HZS_RUNNER_RESULT_ROOT=str(self.base), HZS_CORE_PREFLIGHT_DONE="0", GITHUB_ACTIONS="false")
     def tearDown(self): self.directory.cleanup()
     def run_script(self, *args, script="verify-draft-experience.sh", **env):
         return subprocess.run(["bash", "scripts/"+script, *args], cwd=ROOT, env=dict(self.env, **env), capture_output=True, text=True)
@@ -83,12 +90,12 @@ elif name=="xcrun":
     def test_all_includes_every_draft_class(self):
         self.assertEqual(self.run_script().returncode,0)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
-        self.assertEqual(len(calls),3)
+        self.assertEqual(len(calls),4)
         self.assertIn("-only-testing:HitotsuzuriUITests/ArticleDraftPerformanceUITests",calls[-1])
     def test_native_all_retains_all_targets_and_single_coverage_bundle(self):
         self.assertEqual(self.run_script(script="verify-native.sh").returncode,0)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
-        self.assertEqual(len(calls),3)
+        self.assertEqual(len(calls),4)
         for target in ["HitotsuzuriU1Tests","HitotsuzuriU2Tests","HitotsuzuriU3Tests","HitotsuzuriUITests"]:
             self.assertIn("-only-testing:"+target,calls[-1])
         coverage=[c for c in self.calls() if c[0]=="swift"]
@@ -129,6 +136,20 @@ elif name=="xcrun":
         self.assertFalse(any("HitotsuzuriUITests" in x for x in calls[0]))
     def test_local_environment_cannot_claim_ci_core_dependency(self):
         self.assertNotEqual(self.run_script("--functional",GITHUB_ACTIONS="false",HZS_CORE_PREFLIGHT_DONE="1",CONTRACT_CORE_FAIL="1").returncode,0)
+        self.assertEqual(len([c for c in self.calls() if c[0]=="xcodebuild"]),1)
+    def test_ci_rejects_performance_and_all_before_execution(self):
+        for args in [(), ("--performance",), ("ArticleDraftPerformanceUITests",)]:
+            self.assertNotEqual(self.run_script(*args,GITHUB_ACTIONS="true").returncode,0)
+        self.assertEqual(self.calls(),[])
+    def test_functional_core_excludes_all_real_benchmarks(self):
+        self.assertEqual(self.run_script("--core",script="verify-native.sh").returncode,0)
+        call=next(c for c in self.calls() if c[0]=="xcodebuild")
+        for case in ["HitotsuzuriU1Tests/ArticleIntegrationTests/testLongTextSaveThirtySamples", "HitotsuzuriU1Tests/ArticleIntegrationTests/testColdOpenTenSamples", "HitotsuzuriU1Tests/ArticleIntegrationTests/testImageMemoryAndThirtyConversions", "HitotsuzuriU2Tests/ArticleDraftIntegrationTests/testLongDraftPersistenceAndProjectionPerformance", "HitotsuzuriU2Tests/ArticlePreviewRetryTests/testDisplayMemoryAndCancellationThirtyTrials"]:
+            self.assertIn("-skip-testing:"+case,call)
+    def test_missing_named_benchmark_fails_even_if_class_has_passes(self):
+        result=self.run_script("--performance",script="verify-native.sh",CONTRACT_OMIT_PERFORMANCE="1")
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn("testColdOpenTenSamples",result.stderr)
         self.assertEqual(len([c for c in self.calls() if c[0]=="xcodebuild"]),1)
 
 if __name__ == "__main__": unittest.main()
