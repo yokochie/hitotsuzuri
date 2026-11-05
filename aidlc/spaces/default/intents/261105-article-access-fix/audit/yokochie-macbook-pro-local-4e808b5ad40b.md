@@ -1828,3 +1828,478 @@
 **Context**: construction > code-generation > code-generation-plan.md
 
 ---
+
+## Stage Skip
+**Timestamp**: 2026-11-05T12:39:00Z
+**Event**: STAGE_SKIPPED
+**Stage**: deployment-pipeline
+**Reason**: 本人のMacでXcodeから通常起動する既存macOSアプリの修正であり、自動配布・クラウド配置は承認済み要件の範囲外。既存.github/workflows/verify.ymlはCI検証を満たし変更不要で、CD pipelineの新設または大幅変更が必要となる配置対象はない。起動・本人確認とrollbackの既存手順をDeployment Executionへ引き継ぐ。
+**Skip Kind**: conditional-runtime
+
+---
+
+## Stage Start
+**Timestamp**: 2026-11-05T12:39:00Z
+**Event**: STAGE_STARTED
+**Stage**: deployment-execution
+**Agent**: aidlc-pipeline-deploy-agent
+
+---
+
+## Session Compacted
+**Timestamp**: 2026-11-05T12:40:44Z
+**Event**: SESSION_COMPACTED
+**Current Stage**: deployment-execution
+**State Validity**: valid
+
+---
+
+## Session End
+**Timestamp**: 2026-11-05T12:43:11Z
+**Event**: SESSION_ENDED
+**Reason**: inferred - Codex has no SessionEnd event (D-4); reconciled at next SessionStart. Prior session 01a1abb3-0229-7fd1-b022-ec459e5bdf74 last seen 2026-11-05T12:33:19.320Z.
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-05T12:44:04Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+**Context**: operation > deployment-execution > deployment-log.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-05T12:44:04Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/smoke-test-results.md
+**Context**: operation > deployment-execution > smoke-test-results.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-05T12:44:04Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/health-check-report.md
+**Context**: operation > deployment-execution > health-check-report.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-05T12:44:04Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md
+**Context**: operation > deployment-execution > deployment-execution-questions.md
+
+---
+
+## Decision Recorded
+**Timestamp**: 2026-11-05T12:44:05Z
+**Event**: DECISION_RECORDED
+**Stage**: deployment-execution
+**Decision**: answer-mode
+**Options**: Guide me, I’ll edit the file, Chat, Other
+**Question Id**: 6cebc0c1
+**Question Type**: stage-question
+**Question Chat**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Question Shows**: sha256:0de99449cfaeaea8a744fc705e57eeca6a9d4ff371fe914aa2d05825082659dd
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-05T12:47:35Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: 0b0c5bc2
+**Open Questions**: 6cebc0c1
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md","entries":{"確定済みの前提":"f38e67622dfb0b21","Q1":"2e66d8789e797cad"}}
+
+---
+
+## Question Answered
+**Timestamp**: 2026-11-05T12:47:39Z
+**Event**: QUESTION_ANSWERED
+**Stage**: deployment-execution
+**Details**: Guide me
+**Message Id**: 0b0c5bc2
+**Person Reply**: 1
+**Answer Source**: chosen by the agent, reading their message
+
+---
+
+## Decision Recorded
+**Timestamp**: 2026-11-05T12:47:46Z
+**Event**: DECISION_RECORDED
+**Stage**: deployment-execution
+**Decision**: Q1. [アプリ利用者] 修正ビルドで、写真4枚から記事を開き、本文を保存し、終了・再起動後に同じ記事の本文と写真順序を確認した結果は？
+**Options**: 一連の操作を確認できた,エラーまたはデータ保持の問題が残る（操作とエラー全文を記載）,まだ確認していない,Other（自由に回答・相談する）
+**Question Id**: 472b1c3a
+**Question Type**: stage-question
+**Question Chat**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Question Shows**: sha256:e0a8c3f39f5575ecd392fb47a4d64ced40b6fc3956095e495564e2315dbfbafc
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-05T12:50:08Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: a3e04c90
+**Open Questions**: 6cebc0c1, 472b1c3a
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md","entries":{"確定済みの前提":"f38e67622dfb0b21","Q1":"2e66d8789e797cad"}}
+
+---
+
+## Question Answered
+**Timestamp**: 2026-11-05T12:50:13Z
+**Event**: QUESTION_ANSWERED
+**Stage**: deployment-execution
+**Details**: Q1: 1（一連の操作を確認できた）
+**Message Id**: a3e04c90
+**Person Reply**: 1
+**Answer Source**: chosen by the agent, reading their message
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T12:50:39Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md
+**Context**: operation > deployment-execution > deployment-execution-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T12:50:40Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+**Context**: operation > deployment-execution > deployment-log.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T12:50:40Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/smoke-test-results.md
+**Context**: operation > deployment-execution > smoke-test-results.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-05T12:50:40Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/health-check-report.md
+**Context**: operation > deployment-execution > health-check-report.md
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:40Z
+**Event**: SENSOR_FIRED
+**Fire id**: 3b5fbd2f
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:40Z
+**Event**: SENSOR_PASSED
+**Fire id**: 3b5fbd2f
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+**Duration ms**: 72
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_FIRED
+**Fire id**: 244c0162
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/smoke-test-results.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_PASSED
+**Fire id**: 244c0162
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/smoke-test-results.md
+**Duration ms**: 63
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_FIRED
+**Fire id**: f1d099ee
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/health-check-report.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_PASSED
+**Fire id**: f1d099ee
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/health-check-report.md
+**Duration ms**: 67
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_FIRED
+**Fire id**: 67fa5846
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_PASSED
+**Fire id**: 67fa5846
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md
+**Duration ms**: 61
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_FIRED
+**Fire id**: 4f7811a8
+**Sensor ID**: upstream-coverage
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_PASSED
+**Fire id**: 4f7811a8
+**Sensor ID**: upstream-coverage
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+**Duration ms**: 62
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_FIRED
+**Fire id**: b4fa2954
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_PASSED
+**Fire id**: b4fa2954
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+**Duration ms**: 64
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_FIRED
+**Fire id**: 64428151
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/smoke-test-results.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_PASSED
+**Fire id**: 64428151
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/smoke-test-results.md
+**Duration ms**: 62
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_FIRED
+**Fire id**: a8ee2d89
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/health-check-report.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:41Z
+**Event**: SENSOR_PASSED
+**Fire id**: a8ee2d89
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/health-check-report.md
+**Duration ms**: 63
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:42Z
+**Event**: SENSOR_FIRED
+**Fire id**: 707fad74
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:42Z
+**Event**: SENSOR_PASSED
+**Fire id**: 707fad74
+**Sensor ID**: required-sections
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md
+**Duration ms**: 61
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-05T12:50:42Z
+**Event**: SENSOR_FIRED
+**Fire id**: 2633ff77
+**Sensor ID**: upstream-coverage
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-05T12:50:42Z
+**Event**: SENSOR_PASSED
+**Fire id**: 2633ff77
+**Sensor ID**: upstream-coverage
+**Stage slug**: deployment-execution
+**Output path**: aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md
+**Duration ms**: 61
+
+---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-11-05T12:50:42Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: deployment-execution
+**Next Stage**: none
+**Brief Digest**: none
+**Sensor State**: required-sections@aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md=passed; required-sections@aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/smoke-test-results.md=passed; required-sections@aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/health-check-report.md=passed; required-sections@aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md=passed; upstream-coverage@aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-log.md=passed
+**Open Decisions**: 0
+**Question Id**: 9cf85b3e
+**Question Type**: gate
+**Question Chat**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Question Shows**: sha256:c76dbe031c05cd54c7d5698313ac121d88783038325936628f934fec2ba424a1
+
+---
+
+## Session End
+**Timestamp**: 2026-11-05T12:50:49Z
+**Event**: SESSION_ENDED
+**Reason**: inferred - Codex has no SessionEnd event (D-4); reconciled at next SessionStart. Prior session 01a1a9e0-b456-7d83-bec1-c651818fdeb3 last seen 2026-11-05T12:43:11.981Z.
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-05T12:50:49Z
+**Event**: HUMAN_TURN
+**Session**: 01a1abc3-092c-7aa2-bdfc-c74576f37a42
+**Origin**: person
+**Source**: typed
+**Message Id**: 42bc0634
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md","entries":{"確定済みの前提":"f38e67622dfb0b21","Q1":"2e66d8789e797cad"}}
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-05T12:51:08Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: 17fb052b
+**Open Questions**: 6cebc0c1, 472b1c3a, 9cf85b3e
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261105-article-access-fix/operation/deployment-execution/deployment-execution-questions.md","entries":{"確定済みの前提":"f38e67622dfb0b21","Q1":"2e66d8789e797cad"}}
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-11-05T12:51:13Z
+**Event**: GATE_APPROVED
+**Stage**: deployment-execution
+**User Input**: Approve
+**Person Reply**: 1
+**Message Id**: 17fb052b
+**Brief Digest**: none
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-11-05T12:51:13Z
+**Event**: STAGE_COMPLETED
+**Stage**: deployment-execution
+**Validation Basis**: {"graphContract":"sha256:9324fac9ed5362e892b6f0c448c7cd3701eec134e2e24178d842efc36efe955a","inputs":[{"artifact":"build-test-results","contentHash":"sha256:0bc16aae2e822bf72f6928f002be8e711abe63761c605b8ff3eb9558e043c462","instanceCount":1,"presentCount":1,"producer":"build-and-test","required":true,"structureHash":"sha256:02c65ba186b04d437956ddb422ff87b69738b0ef6bb51c88a3fe1032bdb695d9"},{"artifact":"cd-config","contentHash":"sha256:8b3806970a5120b5dc8dac11d76758971e5e28315ba3aa4de71347a9abdc68dc","instanceCount":1,"presentCount":0,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:3f102b8cc3fda074fc596217baf9b2800b3b82571cfe19f9697f29d5dd1116c7"},{"artifact":"deployment-strategy","contentHash":"sha256:58607cfa4691bc7b3dc6e5adecee060c237f3ebeb3c193dfea2d005199d46f0b","instanceCount":1,"presentCount":0,"producer":"deployment-pipeline","required":true,"structureHash":"sha256:be4e4199625a22de0c5b53799ff34912d78fb2b4d1e8fa63b7384bc29b2dfab9"},{"artifact":"environment-inventory","contentHash":"sha256:66cb007fdb8ea2985dcb3f6a59dd1a4c22c2df522fa7a98d1678e396ce034de3","instanceCount":1,"presentCount":0,"producer":"environment-provisioning","required":true,"structureHash":"sha256:c566098cec3c6f9125fd142b283356c640a7fd562b57f6d47762b49df7135fbe"}],"outputs":[{"artifact":"deployment-execution-questions","contentHash":"sha256:524820cbde8007964b6fa01bedb758a87f118fb549f637e87def9ce51ee33fbf","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:ffcd7b5da5b6a3c357753c74d2b65b6598c603a059e62eba6a875dc247f6308a"},{"artifact":"deployment-log","contentHash":"sha256:f87abb17a157cba49e211025282cfd8f6a3e2c7c42a29362502ba915eaaa5212","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:00c9666b409efc8819730eaabc17991c5099efe4f1f33557dba5db19fe90aa70"},{"artifact":"health-check-report","contentHash":"sha256:50f71dff92dd11eda60d7a184f7b904fcca0a99fe9c26662698a0d27b83b015e","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:4523537769864ea1de14cccb2d29631ffc0cfbaed52630c9b6466cbbc938bff5"},{"artifact":"smoke-test-results","contentHash":"sha256:e588368f532690a5dc3e27dd08462f5d7e875b2465a2435397837fc432c2edd5","instanceCount":1,"presentCount":1,"producer":"deployment-execution","required":true,"structureHash":"sha256:917feb3f2538af37adfa257198ff484b6151f7b6bb2a02ade2c1be99ace41dbf"}],"projectType":"brownfield","schema":3}
+**Details**: Stage Deployment Execution approved by gate
+
+---
+
+## Phase Completion
+**Timestamp**: 2026-11-05T12:51:13Z
+**Event**: PHASE_COMPLETED
+**From phase**: operation
+**To phase**: (end)
+**Stages completed**: 8
+
+---
+
+## Phase Verification
+**Timestamp**: 2026-11-05T12:51:13Z
+**Event**: PHASE_VERIFIED
+**Phase boundary**: operation → end
+
+---
+
+## Workflow Completion
+**Timestamp**: 2026-11-05T12:51:13Z
+**Event**: WORKFLOW_COMPLETED
+**Scope**: bugfix
+**Details**: Scope: bugfix, 8 stages completed
+
+---

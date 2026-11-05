@@ -20,7 +20,7 @@
     "slug": "article-access-fix",
     "dirName": "261105-article-access-fix",
     "scope": "bugfix",
-    "status": "in-flight",
+    "status": "complete",
     "request": "b40a151c"
   }
 ]
