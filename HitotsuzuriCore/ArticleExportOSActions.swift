@@ -1,6 +1,16 @@
 import Foundation
 import AppKit
 
+public struct ArticleExportFailureDetail: Equatable, Sendable {
+    public let failure: ArticleFailure
+    public let photoIndex: Int?
+    public let residualDirectory: URL?
+}
+
+@MainActor public protocol ArticleExportFailureDescribing {
+    var lastFailureDetail: ArticleExportFailureDetail? { get }
+}
+
 public enum ArticleExportOSFailure: String, Error, LocalizedError {
     case clipboardFailure, finderFailure
     public var errorDescription: String? {
