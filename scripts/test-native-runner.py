@@ -179,4 +179,39 @@ elif name=="xcrun":
         self.assertTrue(all(x.startswith("-only-testing:HitotsuzuriUITests/NativeInputTests/test") for x in cases))
         self.assertFalse(any(c[0]=="swift" for c in self.calls()))
 
+    def test_export_contract_selects_only_export_contract_class(self):
+        result=self.run_script("ArticleExportContractTests",script="verify-article-export.sh")
+        self.assertEqual(result.returncode,0,result.stderr)
+        calls=[c for c in self.calls() if c[0]=="xcodebuild"]
+        self.assertEqual(len(calls),1)
+        self.assertEqual([x for x in calls[0] if x.startswith("-only-testing:")],
+                         ["-only-testing:HitotsuzuriU3Tests/ArticleExportContractTests"])
+
+    def test_export_performance_selects_exact_two_cases_without_ui(self):
+        result=self.run_script("--performance",script="verify-article-export.sh")
+        self.assertEqual(result.returncode,0,result.stderr)
+        calls=[c for c in self.calls() if c[0]=="xcodebuild"]
+        self.assertEqual(len(calls),1)
+        self.assertEqual(len([x for x in calls[0] if x.startswith("-only-testing:")]),2)
+        self.assertFalse(any("HitotsuzuriUITests" in x for x in calls[0]))
+
+    def test_export_ci_rejects_performance_before_execution(self):
+        result=self.run_script("--performance",script="verify-article-export.sh",GITHUB_ACTIONS="true")
+        self.assertNotEqual(result.returncode,0)
+        self.assertEqual(self.calls(),[])
+
+    def test_export_selected_functional_excludes_real_benchmarks(self):
+        result=self.run_script("ArticleExportIntegrationTests",script="verify-article-export.sh",GITHUB_ACTIONS="true")
+        self.assertEqual(result.returncode,0,result.stderr)
+        call=next(c for c in self.calls() if c[0]=="xcodebuild")
+        self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testFourImageExportThirtyTrialsPerformance",call)
+        self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testExportMemoryAndCancellationThirtyTrials",call)
+
+    def test_export_local_class_diagnostic_does_not_repeat_performance(self):
+        result=self.run_script("ArticleExportIntegrationTests",script="verify-article-export.sh",GITHUB_ACTIONS="false")
+        self.assertEqual(result.returncode,0,result.stderr)
+        call=next(c for c in self.calls() if c[0]=="xcodebuild")
+        self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testFourImageExportThirtyTrialsPerformance",call)
+        self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testExportMemoryAndCancellationThirtyTrials",call)
+
 if __name__ == "__main__": unittest.main()

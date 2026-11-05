@@ -33,6 +33,8 @@ public typealias ArticleProjector = @Sendable (ArticleProjectionContext, Article
     public private(set) var message: String?
     public private(set) var failure: ArticleFailure?
     public private(set) var pendingNavigation: ArticleNavigationDestination?
+    public private(set) var exportIsActive = false
+    public func setExportLock(_ active: Bool) { exportIsActive = active }
     private let workspace: ArticleWorkspace
     private let store: any ArticleStoring
     private let output: (any ArticleOutputActions)?
@@ -72,6 +74,7 @@ public typealias ArticleProjector = @Sendable (ArticleProjectionContext, Article
         } catch {allowsNew=false; report(error)}
     }
     public func adopt(_ session: ArticleEditSession) {
+        guard !exportIsActive else { return }
         previewIntent=UUID()
         self.session=session; mode = .editing; rendered=nil; message=nil; failure=nil; approvedDepartureSessionID=nil
     }
@@ -169,7 +172,7 @@ public typealias ArticleProjector = @Sendable (ArticleProjectionContext, Article
         candidates=nil; entrySource=nil; allowsNew=false; approvedDepartureSessionID=nil
     }
     public func requestNavigation(_ destination: ArticleNavigationDestination) async -> Bool {
-        guard pendingNavigation == nil, !isLoading else { return false }
+        guard pendingNavigation == nil, !isLoading, !exportIsActive else { return false }
         if let session, session.isDirty || session.isSaving || session.hasUncertainSave {
             pendingNavigation=destination; return false
         }
@@ -228,10 +231,18 @@ public typealias ArticleProjector = @Sendable (ArticleProjectionContext, Article
         do {
             let content=try session.validatedContent()
             let result=try await projectFixed(projectID:session.projectID,source:session.source,content:content)
+            guard self.session?.sessionID == id, let current = try? session.validatedContent(),
+                  ArticleFingerprint.content(source: session.source, content: current) == result.sourceFingerprint else { throw ArticleFailure.invalidInput }
             try await output.copyPlainText(result.plainText,context:.editor(projectID:session.projectID,fingerprint:result.sourceFingerprint))
             if self.session?.sessionID == id { message="操作時点の本文をコピーしました。" }
             return true
-        } catch { if self.session?.sessionID == id { report(error) }; return false }
+        } catch {
+            if self.session?.sessionID == id {
+                if error is ArticleFailure { report(error) }
+                else { failure = nil; message = "本文をコピーできませんでした。入力は保持しています。" }
+            }
+            return false
+        }
     }
     public func prepareSavedExport(_ choice: ArticleLeaveChoice) async throws -> SavedExportInput? {
         guard let session, !session.isSaving else { throw ArticleFailure.busy }
@@ -258,6 +269,7 @@ public typealias ArticleProjector = @Sendable (ArticleProjectionContext, Article
         return result
     }
     private func canReplace(_ old:ArticleEditSession?,content:ArticleContent?,metadata:ArticleMetadataInput?)->Bool {
+        guard !exportIsActive else { return false }
         let bytesMatch:Bool
         if let old, let content {bytesMatch=ArticleFingerprint.content(source:old.source,content:old.content) == ArticleFingerprint.content(source:old.source,content:content)}
         else {bytesMatch=old == nil && content == nil}

@@ -12,6 +12,11 @@ CORE = ["ArticleInitialContentTests", "ArticleMetadataInputTests", "ArticleProje
         "ArticleAssociationTests", "ArticleEntryTests", "ArticleNavigationTests",
         "ArticleDraftSessionTests", "ArticleOutputPreparationTests", "ArticlePreviewRetryTests",
         "ArticleDraftIntegrationTests"]
+EXPORT_CORE = ["ArticleExportContractTests", "ArticleExportModelTests", "ArticleExportJournalTests",
+               "ArticleExportWriterTests", "ArticleExportDeliveryTests", "ArticleExportSessionTests",
+               "ArticleExportOSActionTests", "ArticleExportIntegrationTests"]
+EXPORT_PERFORMANCE = ["HitotsuzuriU3Tests/ArticleExportIntegrationTests/"+name for name in [
+    "testFourImageExportThirtyTrialsPerformance", "testExportMemoryAndCancellationThirtyTrials"]]
 SMOKE = "FixtureSmokeUITests"
 PERFORMANCE = "ArticleDraftPerformanceUITests"
 INPUT_FOCUS = [
@@ -34,6 +39,7 @@ CORE_PERFORMANCE = [
     "HitotsuzuriU2Tests/ArticleDraftIntegrationTests/testLongDraftPersistenceAndProjectionPerformance",
     "HitotsuzuriU2Tests/ArticlePreviewRetryTests/testDisplayMemoryAndCancellationThirtyTrials",
 ]
+CORE_PERFORMANCE += EXPORT_PERFORMANCE
 
 def native_classes():
     values = {}
@@ -101,6 +107,9 @@ def main():
     allowed.update({name:"HitotsuzuriUITests" for name in [SMOKE, "ArticleDraftUITests", PERFORMANCE]})
     if scope == "native":
         allowed = all_classes
+    elif scope == "export":
+        allowed = {name:"HitotsuzuriU3Tests" for name in EXPORT_CORE}
+        allowed.update({SMOKE:"HitotsuzuriUITests", "ArticleExportUITests":"HitotsuzuriUITests"})
     mode = "all"
     selected = None
     if args:
@@ -119,6 +128,8 @@ def main():
         raise ValueError("性能測定は本人Mac専用です。CIでは --core / --functional を指定してください。")
     performance_cases = [case for case in CORE_PERFORMANCE
                          if scope == "native" or case.startswith("HitotsuzuriU2Tests/")]
+    if scope == "export":
+        performance_cases = EXPORT_PERFORMANCE
     def core_group(performance_only=False):
         if performance_only:
             filters = ["-only-testing:"+case for case in performance_cases]
@@ -133,6 +144,10 @@ def main():
     if mode == "core":
         core_group()
         print("Core専用: UIと製品全体のカバレッジは判定していません。", flush=True)
+        return
+    if scope == "export" and mode == "performance":
+        core_group(performance_only=True)
+        print("U3性能2件のみ: 全機能/製品全体カバレッジは判定していません。", flush=True)
         return
     # CIの同一commitのCore成功依存を使う。主bundleのCore機能試験は省かない。
     upstream_core = (mode != "all" and os.environ.get("GITHUB_ACTIONS") == "true"
@@ -173,7 +188,7 @@ def main():
             filters.append("-skip-testing:HitotsuzuriUITests/"+PERFORMANCE)
     else:
         filters = ["-only-testing:"+allowed[name]+"/"+name for name in selected]
-    if mode in ["all", "functional"] or in_ci:
+    if mode in ["all", "functional"] or in_ci or scope == "export":
         # 実時間・実メモリの合否はMacの専用groupで確認する。
         filters.extend("-skip-testing:"+case for case in CORE_PERFORMANCE)
     result = run_group(("Native" if scope == "native" else "Draft")+"-"+mode, filters, selected)

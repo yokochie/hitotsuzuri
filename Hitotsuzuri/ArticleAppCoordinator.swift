@@ -8,7 +8,19 @@ import HitotsuzuriCore
     private(set) var canOpenCurrentSelection=false
     private(set) var previews:ArticlePhotoPreviews?
     var message = ""
-    var working = false
+    private var operationWorking = false
+    private var preparingExport = false
+    var working: Bool { operationWorking || preparingExport || articleExport.isBusy }
+    var isProbeRunning: Bool { requestID != nil }
+    let articleExport: ArticleExportSession
+    private let articleOutput: ArticleExportOSActions
+    private let exportDelivery: ArticleExportDelivery
+    private(set) var pendingExportRecovery: ArticleExportRecoveryRecord?
+    private(set) var exportRecoveryNeedsCleanup = false
+    var exportOSMessage = ""
+    #if DEBUG
+    private(set) var fixtureCopiedExportText = ""
+    #endif
     private let workspace: ArticleWorkspace
     private let store: any ArticleStoring
     private let images: ArticleImageAccess
@@ -123,9 +135,31 @@ import HitotsuzuriCore
     init(selections: any SelectionStoring, directory: URL, reader: any ArticleImageReading = PhotoKitArticleImageReader(), fixtureDestination: URL? = nil,previewImages:any ImageAccessing = LocalImageAccess(),articleStore:(any ArticleStoring)? = nil) {
         let store:any ArticleStoring = articleStore ?? ArticlePersistence(directory: directory.appendingPathComponent("Articles", isDirectory: true))
         self.store = store; workspace = ArticleWorkspace(selections: selections, articles: store)
-        presentation=ArticlePresentation(workspace:workspace,store:store)
+        let imageAccess = ArticleImageAccess(reader: reader)
+        let exportJournal = ArticleExportJournal(directory: directory.appendingPathComponent("ExportJobs", isDirectory: true))
+        let output: ArticleExportOSActions
+        #if DEBUG
+        let isFixture = ProcessInfo.processInfo.arguments.contains("--article-test-fixture")
+        let mode = isFixture ? ProcessInfo.processInfo.environment["HZS_DRAFT_CASE"] : nil
+        exportDelivery = ArticleExportDelivery(images: imageAccess, journal: exportJournal, writerFactory: { url, record in
+            ArticleExportWriter(destination: url, record: record, checkpoint: { point in
+                if mode == "export-cleanup", point == .beforeCleanup { throw ArticleFailure.cleanupFailure }
+            })
+        })
+        if isFixture {
+            let board = NSPasteboard(name: NSPasteboard.Name("hitotsuzuri-fixture-" + directory.lastPathComponent))
+            output = ArticleExportOSActions(delivery: exportDelivery, pasteboard: board, open: { _ in mode != "export-finder-failure" })
+        } else { output = ArticleExportOSActions(delivery: exportDelivery) }
+        #else
+        exportDelivery = ArticleExportDelivery(images: imageAccess, journal: exportJournal)
+        output = ArticleExportOSActions(delivery: exportDelivery)
+        #endif
+        articleOutput = output
+        let presentation = ArticlePresentation(workspace: workspace, store: store, output: output)
+        self.presentation = presentation
+        articleExport = ArticleExportSession(presentation: presentation, actions: output)
         journal=ArticleProbeJournal(directory:directory.appendingPathComponent("ProbeRecovery",isDirectory:true))
-        images = ArticleImageAccess(reader: reader); self.fixtureDestination = fixtureDestination
+        images = imageAccess; self.fixtureDestination = fixtureDestination
         self.previewImages=previewImages
     }
     private func synchronizeSession() {
@@ -136,6 +170,7 @@ import HitotsuzuriCore
         #endif
         previewTask?.cancel(); previews?.cancel()
         previewSessionID=draft.sessionID
+        exportOSMessage = ""
         attach(NSApp.keyWindow ?? NSApp.mainWindow)
         let previews=ArticlePhotoPreviews(assetIDs:draft.source.orderedAssetIDs,images:previewImages)
         self.previews=previews
@@ -153,6 +188,8 @@ import HitotsuzuriCore
             recovery=try await journal.pending()
             if recovery != nil {message="前回の画像出力に確認待ちの記録があります。同じ保存先を選び直して照合してください。"}
         } catch {message=(error as? ArticleFailure ?? .ioFailure).message}
+        do { pendingExportRecovery = try await exportDelivery.pending() }
+        catch { exportOSMessage = (error as? ArticleFailure ?? .ioFailure).message }
     }
     func openSavedArticle() async {
         await awaitFixture()
@@ -189,6 +226,10 @@ import HitotsuzuriCore
     }
     func createDraft() async {await presentation.createNew(); synchronizeSession()}
     func leave(to destination:ArticleNavigationDestination = .back) async -> Bool {
+        if articleExport.isBusy {
+            articleExport.cancel()
+            while articleExport.isBusy { try? await Task.sleep(for: .milliseconds(25)) }
+        }
         guard !working, !leaving else { return false }
         leaving=true; defer {leaving=false}
         if await presentation.requestNavigation(destination) {synchronizeSession(); return true}
@@ -249,10 +290,10 @@ import HitotsuzuriCore
         }
         let grant=ArticleDestinationGrant(url:url)
         destinationState = .selected(grant)
-        working = true; message = "画像1枚を準備しています…"
+        operationWorking = true; message = "画像1枚を準備しています…"
         let id = UUID(); requestID = id
         exportTask = Task {
-            defer { grant.release(); destinationState = .finished; working = false; requestID = nil; exportTask = nil }
+            defer { grant.release(); destinationState = .finished; operationWorking = false; requestID = nil; exportTask = nil }
             do {
                 try await journal.begin(jobID:id,article:article,destination:url)
                 recovery=try await journal.pending()
@@ -281,8 +322,8 @@ import HitotsuzuriCore
         let panel=NSOpenPanel(); panel.canChooseFiles=false; panel.canChooseDirectories=true
         panel.message="前回の保存先を選択してください：\(record.destinationPath)"
         guard panel.runModal() == .OK, let url=panel.url else {destinationState = .finished; return}
-        let grant=ArticleDestinationGrant(url:url); destinationState = .selected(grant); working=true
-        defer {grant.release(); destinationState = .finished; working=false}
+        let grant=ArticleDestinationGrant(url:url); destinationState = .selected(grant); operationWorking=true
+        defer {grant.release(); destinationState = .finished; operationWorking=false}
         guard url.standardizedFileURL.path == record.destinationPath else {message="前回と同じ保存先を選んでください。"; return}
         do {
             let result=try await delivery.reconcile(jobID:record.jobID,projectID:record.projectID,fingerprint:record.fingerprint,destination:url)
@@ -292,6 +333,90 @@ import HitotsuzuriCore
         } catch {message=(error as? ArticleFailure ?? .ioFailure).message+" 保存先："+record.destinationPath}
     }
     func cancelProbe() { if let id = requestID { images.cancel(id) }; exportTask?.cancel() }
+    func exportArticle() async {
+        guard !working, let session else { return }
+        guard pendingExportRecovery == nil else { exportOSMessage = "前回の未完出力を照合してから、新しい出力を始めてください。"; return }
+        preparingExport = true
+        var choice: ArticleLeaveChoice = .save
+        if session.isDirty || session.hasUncertainSave {
+            let alert = NSAlert(); alert.messageText = "出力の前に記事を保存しますか？"
+            alert.informativeText = "保存に成功した内容と写真の順序を固定して、記事と4枚を出力します。"
+            alert.addButton(withTitle: "保存して出力"); alert.addButton(withTitle: "取り消す")
+            alert.buttons[1].keyEquivalent = "\u{1b}"
+            if await show(alert) != .alertFirstButtonReturn { choice = .keepEditing }
+        }
+        preparingExport = false
+        if case .keepEditing = choice { return }
+        exportOSMessage = ""
+        // 表示画像と出力用変換を同時保持しない。出力中の再取得も画面で抑止する。
+        previewTask?.cancel(); previews?.cancel(); previews = nil
+        if let resources = previewImages.resources {
+            let conversionReservation = 2560 * 2560 * 4 * 3 + 32 * 1024 * 1024
+            guard resources.retainedBytes + resources.reservedBytes <= 256 * 1024 * 1024 - conversionReservation else {
+                exportOSMessage = ArticleFailure.capacity.message; return
+            }
+        }
+        await articleExport.start(choice: choice) { [weak self] in try await self?.chooseExportDestination() }
+        do { pendingExportRecovery = try await exportDelivery.pending() }
+        catch { exportOSMessage = (error as? ArticleFailure ?? .ioFailure).message }
+    }
+    private func chooseExportDestination() async throws -> ArticleExportDestination? {
+        let url: URL
+        if let fixtureDestination {
+            url = fixtureDestination
+            try await Task.detached { try FileManager.default.createDirectory(at: fixtureDestination, withIntermediateDirectories: true) }.value
+        } else {
+            let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
+            panel.canCreateDirectories = true; panel.allowsMultipleSelection = false
+            panel.message = "記事と画像4枚を出力する親フォルダを選択してください。"
+            let response: NSApplication.ModalResponse
+            if let window = attachedWindow {
+                response = await withCheckedContinuation { continuation in panel.beginSheetModal(for: window) { continuation.resume(returning: $0) } }
+            } else { response = panel.runModal() }
+            guard response == .OK, let selected = panel.url else { return nil }; url = selected
+        }
+        return articleOutput.register(ArticleExportDestinationAccess(url: url))
+    }
+    func copyCompletedExport() async {
+        guard let result = articleExport.result, result.projectID == session?.projectID, !working else { return }
+        do {
+            try await articleOutput.copyPlainText(result.fixedPlainText, context: .exported(jobID: result.jobID, projectID: result.projectID))
+            exportOSMessage = "出力時点の本文をコピーしました。"
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--article-test-fixture") { fixtureCopiedExportText = result.fixedPlainText }
+            #endif
+        } catch { exportOSMessage = (error as? LocalizedError)?.errorDescription ?? "本文をコピーできませんでした。" }
+    }
+    func revealCompletedExport() async {
+        guard let result = articleExport.result, result.projectID == session?.projectID, !working else { return }
+        do { try await articleOutput.revealExport(result); exportOSMessage = "出力フォルダをFinderで開きました。" }
+        catch { exportOSMessage = "出力先をFinderで開けませんでした。移動・削除やアクセスを確認してください。" }
+    }
+    func recoverExport(cleanup: Bool = false) async {
+        guard !working, pendingExportRecovery != nil else { return }
+        if cleanup {
+            let alert = NSAlert(); alert.messageText = "未完の一時出力を片付けますか？"
+            alert.informativeText = "選択先と所有が一致する、この出力の一時物だけを片付けます。完成物は削除しません。"
+            alert.addButton(withTitle: "片付ける"); alert.addButton(withTitle: "取り消す")
+            guard await show(alert) == .alertFirstButtonReturn else { return }
+        }
+        operationWorking = true
+        defer { operationWorking = false }
+        do {
+            guard let destination = try await chooseExportDestination() else { return }
+            if let result = try await articleOutput.recover(destination: destination, cleanupConfirmed: cleanup) {
+                articleExport.adoptRecoveredResult(result); exportRecoveryNeedsCleanup = false
+            } else { exportRecoveryNeedsCleanup = !cleanup }
+            pendingExportRecovery = try await exportDelivery.pending()
+            exportOSMessage = pendingExportRecovery == nil ? "前回の出力の確認が完了しました。" : "完成した一式はありません。所有を確認できる一時物を片付けられます。"
+        } catch { exportOSMessage = (error as? ArticleFailure ?? .ioFailure).message }
+    }
+    private func show(_ alert: NSAlert) async -> NSApplication.ModalResponse {
+        if let window = attachedWindow {
+            return await withCheckedContinuation { continuation in alert.beginSheetModal(for: window) { continuation.resume(returning: $0) } }
+        }
+        return alert.runModal()
+    }
 }
 
 /// SwiftUI のアプリdelegateを直接差し替えず、標準Adaptorから終了調整を受ける。

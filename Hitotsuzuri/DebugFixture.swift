@@ -47,7 +47,7 @@ import UniformTypeIdentifiers
         let draftStore=ArticleFixtureDraftStore(directory:root.appendingPathComponent("Articles"),mode:draftCase ?? "default")
         let previewDriver=ArticleFixturePreviews(unavailableAll:draftCase == "photos-missing",delayMilliseconds:draftCase == "performance" ? 100000 : (draftCase == "slow-photos" ? 300 : 0))
         let images=LocalImageAccess(driver:previewDriver)
-        let coordinator=ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root),fixtureDestination:root.appendingPathComponent("Output"),previewImages:images,articleStore:draftStore)
+        let coordinator=ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root, mode: fixtureCase),fixtureDestination:root.appendingPathComponent("Output"),previewImages:images,articleStore:draftStore)
         let previewIDs=current.orderedAssetIDs
         coordinator.fixturePreviewRequestCounts={previewIDs.map {previewDriver.requestCounts[$0] ?? 0}}
         if ProcessInfo.processInfo.environment["HZS_FIXTURE_CLEANUP"] == "1" {
@@ -146,8 +146,27 @@ private actor FixtureStore:SelectionStoring {
 }
 @MainActor private final class ArticleFixtureReader: ArticleImageReading {
     let root: URL
-    init(root:URL) {self.root=root}
+    private let mode: String
+    private var sequence = 0
+    private var jobs: [Int: Task<Void, Never>] = [:]
+    init(root:URL, mode: String = "default") {self.root=root; self.mode=mode}
     func request(_ id:String,networkAllowed:Bool,completion:@escaping @MainActor (Result<ArticleImageInput,ArticleFailure>)->Void)->Int {
+        sequence += 1; let token = sequence
+        if ["export-failure", "export-cleanup"].contains(mode), id.hasSuffix("photo-2") {
+            completion(.failure(.assetUnavailable)); return token
+        }
+        if mode == "export-slow" {
+            jobs[token] = Task { [weak self] in
+                defer { self?.jobs[token] = nil }
+                do { try await Task.sleep(for: .seconds(2)); self?.complete(completion) }
+                catch { completion(.failure(.cancelled)) }
+            }
+            return token
+        }
+        complete(completion)
+        return token
+    }
+    private func complete(_ completion: @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) {
         do {
             try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true)
             let url=root.appendingPathComponent("synthetic.png")
@@ -159,9 +178,8 @@ private actor FixtureStore:SelectionStoring {
             guard CGImageDestinationFinalize(destination) else {throw ArticleFailure.ioFailure}
             completion(.success(ArticleImageInput(url:url,orientation:1)))
         } catch {completion(.failure(.ioFailure))}
-        return 1
     }
-    func cancel(_ request:Int) {}
+    func cancel(_ request:Int) { jobs[request]?.cancel() }
 }
 @MainActor @Observable private final class ArticleFixturePreviews:ImageDriving {
     private(set) var requestCounts:[String:Int]=[:]

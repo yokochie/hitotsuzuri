@@ -184,7 +184,7 @@ import XCTest
         app.typeKey("s",modifierFlags:.command)
         XCTAssertTrue(app.staticTexts["下書きを保存しました。"].draftExists(timeout:5))
         XCTAssertTrue((body.value as? String)?.contains("\n二行目") == true)
-        XCTAssertFalse(app.buttons["article-copy"].isEnabled)
+        XCTAssertTrue(app.buttons["article-copy"].isEnabled)
     }
     func testDirtyDraftSelectionDismissesBeforeSingleLeaveConfirmation() {
         let app=launch("multiple")

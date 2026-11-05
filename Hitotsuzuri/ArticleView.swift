@@ -42,6 +42,14 @@ struct ArticleView: View {
                         if mode == .editing {Task {await Task.yield(); focusedField=lastField; scroll.scrollTo(lastField,anchor:.center)}}
                         else {scroll.scrollTo("article-preview-top",anchor:.top)}
                     }
+                    .onChange(of:coordinator.articleExport.isBusy) { _, busy in
+                        if busy {
+                            Task { await Task.yield(); focusedField = "article-export-cancel"; scroll.scrollTo("article-export-cancel", anchor: .center) }
+                        }
+                    }
+                    .onChange(of:coordinator.articleExport.focusReturn) { _, _ in
+                        Task { await Task.yield(); focusedField = "article-export"; scroll.scrollTo("article-export", anchor: .center) }
+                    }
                 }
             }.onAppear {focusedField="article-title"}
             .overlay(alignment:.topLeading) {
@@ -150,7 +158,7 @@ struct ArticleView: View {
                     }
                     Text(state.message).font(.callout).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("article-preview-state-\(index+1)")
                     Button("写真 \(index+1) を再試行") {retryPhoto(index)}
-                        .disabled(coordinator.previews?.isLoading == true)
+                        .disabled(coordinator.previews?.isLoading == true || coordinator.working)
                         .focusable().focused($focusedField,equals:"article-retry-\(index+1)")
                         .accessibilityIdentifier("article-retry-\(index+1)").id("article-retry-\(index+1)")
                 }.frame(maxWidth:.infinity,alignment:.leading)
@@ -161,7 +169,6 @@ struct ArticleView: View {
         VStack(alignment:.leading,spacing:12) {
             Text("写真を取得できない場合も文章を保存・再開できます。").foregroundStyle(.secondary)
             VStack(alignment:.leading,spacing:8) {outputActions}
-            Text("本文コピー・4枚一式の出力は現在利用できません。画像1枚の検証出力とは別の操作です。").font(.caption).foregroundStyle(.secondary)
             if let message=presentation.message {Text(message).textSelection(.enabled).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("article-action-message")}
             Text(coordinator.message).textSelection(.enabled).fixedSize(horizontal:false,vertical:true)
             if !coordinator.outputPath.isEmpty {Text(coordinator.outputPath).textSelection(.enabled).fixedSize(horizontal:false,vertical:true)}
@@ -169,11 +176,10 @@ struct ArticleView: View {
         }.frame(maxWidth:.infinity,alignment:.leading)
     }
     @ViewBuilder private var outputActions:some View {
-        Button("本文をコピー") {Task {_=await presentation.copyCurrent()}}.disabled(!presentation.capabilities.copy || coordinator.working).accessibilityIdentifier("article-copy")
-        Text("記事と4枚を出力（現在利用できません）").foregroundStyle(.secondary).accessibilityIdentifier("article-export-unavailable")
+        ArticleExportView(coordinator: coordinator, focus: $focusedField)
         Button("画像1枚の検証出力") {coordinator.probe()}.keyboardShortcut("e",modifiers:[.command,.shift])
             .disabled(coordinator.working || session.isSaving).focusable().focused($focusedField,equals:"article-probe").accessibilityIdentifier("article-probe").id("article-probe")
-        if coordinator.working {ProgressView().controlSize(.small); Button("取り消す") {coordinator.cancelProbe()}}
+        if coordinator.isProbeRunning {ProgressView().controlSize(.small); Button("検証出力を取り消す") {coordinator.cancelProbe()}}
     }
     private var inputOrder:[String] {
         ["article-title","article-introduction","article-photo-1","article-photo-2","article-photo-3","article-photo-4","article-closing","article-year","article-month","article-day","article-date-confirm","article-date-remove","article-location","article-equipment","article-film","article-people"]
@@ -182,10 +188,15 @@ struct ArticleView: View {
         session.source.orderedAssetIDs.indices.map {"article-retry-\($0+1)"}
     }
     private func moveFocus(backward:Bool)->KeyPress.Result {
+        if coordinator.articleExport.isBusy { focusedField = "article-export-cancel"; keyboardFocusRequest += 1; return .handled }
         guard !coordinator.working, !presentation.isLoading else {return .ignored}
         var order=presentation.mode == .editing ? inputOrder : []
         if session.metadataInput.validationMessage != nil || session.metadataInput.year.isEmpty {order.removeAll {$0 == "article-date-confirm"}}
-        order += ["article-probe","article-back","article-mode-edit","article-mode-preview","article-save"]
+        order += ["article-probe","article-back","article-mode-edit","article-mode-preview","article-copy","article-export"]
+        if coordinator.articleExport.result?.projectID == session.projectID { order += ["article-export-copy-fixed","article-export-reveal"] }
+        if coordinator.pendingExportRecovery != nil { order += ["article-export-recover"] }
+        if coordinator.exportRecoveryNeedsCleanup { order += ["article-export-cleanup"] }
+        order += ["article-save"]
         if presentation.mode == .editing, coordinator.previews?.isLoading == false {order += photoRetryOrder}
         guard let current=focusedField, let index=order.firstIndex(of:current) else {return .ignored}
         focusedField=order[(index+(backward ? order.count-1 : 1)) % order.count]
@@ -193,6 +204,7 @@ struct ArticleView: View {
         return .handled
     }
     private func activateFocusedButton()->KeyPress.Result {
+        if coordinator.articleExport.isBusy, focusedField == "article-export-cancel" { coordinator.articleExport.cancel(); return .handled }
         guard !coordinator.working, !presentation.isLoading else {return .ignored}
         switch focusedField {
         case "article-mode-preview":showPreview()
@@ -202,6 +214,12 @@ struct ArticleView: View {
         case "article-date-confirm":try? session.metadataInput.confirm()
         case "article-date-remove":session.metadataInput.remove()
         case "article-probe":coordinator.probe()
+        case "article-copy": Task { _ = await presentation.copyCurrent() }
+        case "article-export": Task { await coordinator.exportArticle() }
+        case "article-export-copy-fixed": Task { await coordinator.copyCompletedExport() }
+        case "article-export-reveal": Task { await coordinator.revealCompletedExport() }
+        case "article-export-recover": Task { await coordinator.recoverExport() }
+        case "article-export-cleanup": Task { await coordinator.recoverExport(cleanup: true) }
         default:
             guard presentation.mode == .editing, let focusedField,
                   let index=photoRetryOrder.firstIndex(of:focusedField) else {return .ignored}
