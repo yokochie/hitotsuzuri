@@ -433,3 +433,10 @@ xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'plat
 - 両例でクリック直後にmouse-album-focus→observed-albumsを確認。wideは1Tabでalbum-key-tab→photo1接続/適用となり、Space選択/逆Tab往復も成功。compactも最新のalbums接続要求が適用され、元の写真4→8→12枚追随が成功した。
 - ローカルは先行版でも非再現だったため、根本解消の最終判断はCIの再現環境で行う。rootは代表2件を重複して別実行せず、それらを含む失敗8件だけの `--input-regression` / [input-regression]限定CIへ進める。現時点で修正後CI8件は未確認。成功済みCore/UI性能と長い全体suiteは再実行していない。
 - 変更sourceはPickerContent/NativeInputTestsのみで既存manifest43内、新規pathなし。2ソースdiff-checkはexit0。TDD追記後に全writeを凍結してrootへ返却し、CI/git/最終記録はrootが担当する。
+## 最終機能CIと品質条件の確定（2026-11-05）
+
+- rootが確定したcommit2337dd6b0f2abcc4233e75b9e904814cf53a0bc0 / run41945323042のnative-core（job126975986587）とnative（job126976799446）は成功。主bundleのCore371件＋UI55件＝426件と別smoke2件がすべてPassed、未成功/skipなし。先行Coreと主bundleの同じCoreを新規ケースとして重複合算しない。
+- 最終UIはArticleDraft23件575.496秒、Foundation6件89.965秒、Native26件394.531秒、合計55件1059.996秒。旧Native8失敗を除外せず、マウス選択とfocus所有の修正後に26件すべて成功した。CIの根拠/実行リンクはroot所有ci-evidence.mdの最終確定欄を正本とする。
+- 既存checkerの製品全体加重coverageは4207/4673＝90.03%。全機能の単一主bundleで80%以上を確認し、製品source除外追加や性能bundleとの率平均は行っていない。NFR5.20/21を現在のTDD/CI実証へ対応するOK/実在targetへ更新した。
+- 本人MacのCore性能5＋UI性能4成功は別の上記証拠を保持。Mac性能測定時から最終候補までの記事保存/投影/描画/計測sourceは不変で、製品差分はPickerContentのクリック焦点/DEBUG診断のみとrootが確認済み。本人指定に従い性能の反復は行わず、CI機能成功を性能合格へ流用しない。
+- 追加コード変更・試験実行は行っていない。計画Step15–17を実績に合わせチェックし、記録作成済みのStep18は独立レビューがまだなので未チェックを維持。本人実写真/最小高さ/通常アプリcold/OS短peak帰属等の未確認は残す。独立レビュー・Unit承認・main統合・配布はこのCI結果だけで完了としない。

@@ -117,3 +117,17 @@ Macは修正したsmoke2件とUI性能4件がすべて成功、exit0。Core5件�
 - commit60f28abcc8e8af7882c60cf56d682b087f0c6a5e、[実行](https://github.com/yokochie/hitotsuzuri/actions/runs/41944668158)、job126973779158は成功。smoke2件と、既知失敗8件の各メソッドすべてが成功した。8件134.705秒、指定8メソッドの成功もrunnerが検査した。
 - mouse-album-focus→observed-albums→album-key-tab→connect-photo:1適用→observed-photo:1をCIでも確認できた。狭幅復元も最新要求が適用され、旧要求のsuperseded棄却は正常に機能している。元の選択/保存/逆Tab等の期待を保持したまま、既知8件がRedからGreenへ変わった。
 - 原因切り分け用の一時CI job/印分岐と旧U1比較jobは役目を終えて削除し、通常2jobに戻して全機能回帰/全製品80%を確認する。Mac性能は再実行しない。限定Greenだけで全体coverageを合格にはしない。
+
+## 最終機能候補 2337dd6
+
+[実行41945323042](https://github.com/yokochie/hitotsuzuri/actions/runs/41945323042)、commit2337dd6b0f2abcc4233e75b9e904814cf53a0bc0。native-core job126975986587は成功、native job126976799446の結果を確認中。性能jobや診断印による省略はない。
+
+Mac性能成功時9d8fc2aからこの候補までの製品source差分はHitotsuzuriCore/PickerContent.swiftだけ（DEBUG焦点履歴とアルバムのクリック焦点処理）。記事の描画/計測・保存/投影・メモリ計測実装は不変であることをgit diffで確認した。本人が成功済み性能の反復を望んでいないため、記録済みのMac性能5+4件は保持し、今回のPicker修正は機能回帰で検証する。
+
+### 最終確定: 全機能とcoverage成功
+
+native-coreとnativeの両jobが成功。主bundleのCore371件とUI55件（記事23・基盤6・Native26）の計426件が全成功、別bundleのsmoke2件も全成功。runnerは指定クラス/メソッドの実行とPassed以外がないことを検査した。UIは1059.996秒、うち記事575.496秒、基盤89.965秒、Native394.531秒。以前のNative8失敗を除外せず、26件すべて成功した。
+
+既存checkerによる製品全体の行カバレッジは **4207/4673 = 90.03%**。80%を超え、性能bundleの率を平均/合算していない。Core機能と全機能UIの単一主bundleで判定し、製品sourceの除外追加もない。性能は既存の本人Mac5+4件と区別して成功を記録する。
+
+CIの2job成功は統合前条件の検証であり、独立レビュー/Unit完了確認や本人の実写真・Sandbox・note受渡し・最小高さ実機確認の完了ではない。未確認項目はuser-verification.mdを維持する。

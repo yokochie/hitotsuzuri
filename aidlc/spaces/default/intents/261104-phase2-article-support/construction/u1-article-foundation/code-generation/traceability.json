@@ -67,13 +67,13 @@
       "id": "AC1.1.1",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleWorkspace.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.1.2",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleWorkspace.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.1.3",
@@ -91,73 +91,73 @@
       "id": "AC1.1.5",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleWorkspace.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.2.1",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.2.2",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.2.3",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.2.4",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.2.5",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.3.1",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleEditSession.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.3.2",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleEditSession.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.3.3",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleEditSession.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.3.4",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleEditSession.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.4.1",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleImageAccess.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.4.2",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleImageAccess.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.4.3",
@@ -169,19 +169,19 @@
       "id": "AC1.4.4",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleImageAccess.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.7.1",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleProbeDelivery.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.7.2",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleProbeDelivery.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.7.3",
@@ -199,79 +199,79 @@
       "id": "AC1.7.5",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleProbeDelivery.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "AC1.7.6",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleProbeDelivery.swift",
-      "note": "U1実装対応。Core83件成功。UI/実写真/Sandboxは未確認で全体AC完成を意味しない。"
+      "note": "U1実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/Sandbox/本人実機の全経路は未確認で全体AC完成を意味しない。"
     },
     {
       "id": "BR1.1",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleWorkspace.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.2",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleModels.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.3",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.4",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.5",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleEditSession.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.6",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleImageAccess.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.7",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleImageAccess.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.8",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleProbeDelivery.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.9",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleProbeDelivery.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.10",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePorts.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "BR1.11",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticleFingerprint.swift",
-      "note": "実装対応。Article試験のCore検証とUI/実機未確認を区別。"
+      "note": "実装対応。a108134のCIでArticle Core94件・Article UI6件成功。実写真/本人実機の未確認を区別。"
     },
     {
       "id": "NFR1.1",
@@ -313,13 +313,13 @@
       "id": "NFR2.5",
       "status": "OK",
       "target": "HitotsuzuriCore/ArticlePersistence.swift",
-      "note": "ArticlePersistenceTests旧ID/異入力/旧保存版/再試行"
+      "note": "元ID/固定本文/基準値を結果不明状態として保持し、作成/保存それぞれの2回連続照合I/O失敗を跨いで再保存できる。照合中編集dirty維持と、照合成功後の新payload capacity確定失敗からの縮小保存も16件で確認。"
     },
     {
       "id": "NFR2.6",
       "status": "GAP",
       "target": "HitotsuzuriCore/ArticleEditSession.swift",
-      "note": "Workspace/SessionTests; 写真なし文章。終了UIはOS認証障害"
+      "note": "a108134のCIでCore273件・Article UI6件成功。全体CIは既存Native8件で失敗。画像待ち/不能でも本文保存するCore試験と、記事開始/保存/再起動再開/未保存継続のArticle UI6件成功。本人Macの保存失敗時閉じる/終了など全経路は未確認。"
     },
     {
       "id": "NFR2.7",
@@ -367,25 +367,25 @@
       "id": "NFR4.1",
       "status": "GAP",
       "target": "Hitotsuzuri/ArticleAppCoordinator.swift",
-      "note": "actor I/O、detached変換。UI非同期入力はOS認証障害で未確認"
+      "note": "a108134のCIでCore273件・Article UI6件成功。全体CIは既存Native8件で失敗。actor I/O/detached変換と表示待ち本文保存を検証、通常のArticle UI6件成功。実OS処理停止中のUI操作/全時刻測定は未確認。"
     },
     {
       "id": "NFR4.2",
       "status": "GAP",
       "target": "Hitotsuzuri/ArticleView.swift",
-      "note": "ArticleView状態文字/keyboard/3択を実装、UI runner起動不能"
+      "note": "a108134のCIでCore273件・Article UI6件成功。全体CIは既存Native8件で失敗。Article UI6件成功。既存Native8失敗は旧製品baselineの26件中8失敗と完全一致。本人実機の狭幅/焦点/閉じる/終了の全経路は未確認。"
     },
     {
       "id": "NFR5.1",
       "status": "GAP",
       "target": "scripts/verify-native.sh",
-      "note": "全製品2232/3006=74.25%で80%未達。UI runner障害、公開push承認レビュー拒否によりCI未実行。"
+      "note": "a108134のCIで2752/3050=90.23%、Core273件/Article UI6件成功。既存Native8件が失敗し、同じrunの旧製品baselineも同じ8件が失敗。CI全体はfailureのためGAPを維持。ローカルUIはXCTFuture1000で起動不能、本人はローカル環境へしばらくアクセス不可。"
     },
     {
       "id": "NFR5.2",
-      "status": "GAP",
+      "status": "OK",
       "target": ".github/workflows/verify.yml",
-      "note": "Swift6/標準macOS、第三者/有料依存なし。CI clean checkout未確認"
+      "note": "a108134の標準xcode-27 clean checkoutでCore273件/Article UI6件成功、製品90.23%。追加依存なし。CI greenはNFR5.1で別判定。"
     },
     {
       "id": "NFR6.1",
@@ -397,13 +397,13 @@
       "id": "NFR6.2",
       "status": "OK",
       "target": ".github/workflows/verify.yml",
-      "note": "workflow contents:read/credentials非保持/合成fixture/アップロードなし。CI未実行"
+      "note": "a108134のCIでCore273件・Article UI6件成功。全体CIは既存Native8件で失敗。contents:read/資格情報非保持/合成fixtureのみ/アップロードなし。最終候補CI実行済み、既存失敗も維持して記録。"
     },
     {
       "id": "NFR6.3",
       "status": "GAP",
       "target": "HitotsuzuriCore/ArticlePorts.swift",
-      "note": "型付き段階/失敗分類・計測fixture; UI/OS時刻全区間の確認は未完"
+      "note": "a108134のCIでCore273件・Article UI6件成功。全体CIは既存Native8件で失敗。型付き段階/失敗分類と計測fixture、Article UI6件を検証。UI取消/OS処理残存を含む時刻全区間の本人実機測定は未完。"
     },
     {
       "id": "NFR7.1",

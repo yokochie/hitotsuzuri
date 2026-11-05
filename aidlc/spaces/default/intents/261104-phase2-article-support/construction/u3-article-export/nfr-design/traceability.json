@@ -1,0 +1,88 @@
+{
+  "stage": "nfr-design",
+  "unit": "u3-article-export",
+  "upstream_ids": [
+    "NFR3.30",
+    "NFR3.31",
+    "NFR3.32",
+    "NFR3.33",
+    "NFR1.30",
+    "NFR1.31",
+    "NFR2.30",
+    "NFR2.31",
+    "NFR2.32",
+    "NFR2.33",
+    "NFR4.30",
+    "NFR4.31",
+    "NFR5.30",
+    "NFR6.30",
+    "NFR6.31",
+    "NFR7.30"
+  ],
+  "coverage": [
+    {
+      "id": "NFR3.30",
+      "status": "OK", "target": "security-design.md D5 共有予算と一件変換"
+    },
+    {
+      "id": "NFR3.31",
+      "status": "OK", "target": "security-design.md D5 単調期限と確定許可"
+    },
+    {
+      "id": "NFR3.32",
+      "status": "OK", "target": "security-design.md D5 取消受付と実処理の収束"
+    },
+    {
+      "id": "NFR3.33",
+      "status": "OK", "target": "security-design.md D7 本人Macの30試行"
+    },
+    {
+      "id": "NFR1.30",
+      "status": "OK", "target": "security-design.md D1 C2の画像用途と通信禁止、D7境界検査"
+    },
+    {
+      "id": "NFR1.31",
+      "status": "OK", "target": "security-design.md D1 JPEG設定検証、D7実写真確認"
+    },
+    {
+      "id": "NFR2.30",
+      "status": "OK", "target": "security-design.md D1 固定入力、D3登録と照合"
+    },
+    {
+      "id": "NFR2.31",
+      "status": "OK", "target": "security-design.md D2 公開前後の実体/一式照合と非置換公開、D7差替え障害注入"
+    },
+    {
+      "id": "NFR2.32",
+      "status": "OK", "target": "security-design.md D3 回復と所有識別"
+    },
+    {
+      "id": "NFR2.33",
+      "status": "OK", "target": "security-design.md D2 親descriptorと公開対象の実体照合、D4権限寿命"
+    },
+    {
+      "id": "NFR4.30",
+      "status": "OK", "target": "security-design.md D6 幅とキー到達"
+    },
+    {
+      "id": "NFR4.31",
+      "status": "OK", "target": "security-design.md D4 OS結果、D6焦点と状態"
+    },
+    {
+      "id": "NFR5.30",
+      "status": "OK", "target": "security-design.md D7 層別TDDと全製品coverage/CI"
+    },
+    {
+      "id": "NFR6.30",
+      "status": "OK", "target": "security-design.md D3 ローカル記録、D6診断"
+    },
+    {
+      "id": "NFR6.31",
+      "status": "OK", "target": "security-design.md D1 本文投影、D4コピー"
+    },
+    {
+      "id": "NFR7.30",
+      "status": "OK", "target": "security-design.md D7 日本語の本人確認"
+    }
+  ]
+}

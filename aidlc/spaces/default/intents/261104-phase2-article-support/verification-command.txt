@@ -1,1 +1,1 @@
-bash scripts/verify-native.sh --functional
+test "$(git rev-parse HEAD)" = 4a3b71d1e15795fedcba4e8a808addfff3ef2308 && git diff --quiet HEAD -- Hitotsuzuri HitotsuzuriCore HitotsuzuriU1Tests HitotsuzuriU2Tests HitotsuzuriU3Tests HitotsuzuriUITests scripts .github && gh run watch 41994393925 --repo yokochie/hitotsuzuri --exit-status

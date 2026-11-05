@@ -29,11 +29,12 @@ U2では本文コピーと4枚一式のOS出力は未接続であり、利用で
 
 ## 自動試験と確認状況
 
-- U2限定: `bash scripts/verify-draft-experience.sh`。
+- U2機能限定: `bash scripts/verify-draft-experience.sh --functional`。
 - UI限定: `bash scripts/verify-draft-experience.sh ArticleDraftUITests`。
-- 製品全体: `bash scripts/verify-native.sh`。全製品の加重行カバレッジ80%以上を判定する。
+- 製品全体の正式機能確認: `bash scripts/verify-native.sh --functional`。全製品の加重行カバレッジ80%以上を判定する。
+- 性能を再現する場合のみ、本人Macで `bash scripts/verify-native.sh --performance`。CIでは実行しない。成功済みの今回の測定を本人確認のためだけに繰り返す必要はない。
 
-この手順の本人確認は未実施。U2の正式な全体検証・性能計測・CIも未完である。実行結果と停止理由は`tdd-evidence.md`、完了時の集計は`code-summary.md`へ記録する。過去の部分成功やU1の成功をU2全体の成功へ置き換えない。
+この手順の本人確認は未実施。自動確認は、本人MacでCore性能5件とUI性能4件が成功し、最終CI41945323042では主機能426件と別smoke2件が成功、全製品行カバレッジ4207/4673=90.03%を確認した。実行結果は`tdd-evidence.md`と`ci-evidence.md`、集計は`code-summary.md`を参照する。独立レビューとUnit完了確認は別に行い、自動成功を実写真・Sandbox・note・最小高さ等の本人確認へ置き換えない。
 
 ## 戻し方
 

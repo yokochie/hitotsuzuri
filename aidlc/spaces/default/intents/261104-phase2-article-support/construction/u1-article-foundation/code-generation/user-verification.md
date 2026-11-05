@@ -18,10 +18,12 @@
 7. 中断後に確認待ち記録が出たら「前回の出力を照合」で同じ保存先を選び直す。確定済みは内容digestを照合、一時物はjob識別できたものだけ片付ける。識別不能/片付け失敗は表示先を記録し、別jobや既存成果物を削除しない。
 
 ## 自動試験と未確認
-- 全体: `bash scripts/verify-native.sh`。全製品80%以上とUIを含む。未計測製品ソースの除外なし。
+- 全体: `bash scripts/verify-native.sh`。全製品80%以上とUIを含む。未計測製品ソースの除外なし。最新CI候補a108134は2752/3050=90.23%。
 - U1限定: `bash scripts/verify-article-foundation.sh`。各Articleクラスが実行済みでなければ失敗。
 - 本人環境macOS27.2/Xcode27.2。現在UI runnerはLocalAuthentication Code=-4「System authentication is running」で初期化不能。OS認証画面の解消後にUIを含む全体を再実行する。実機起動/狭幅/焦点/現在編集と色/Sandbox/アプリcold起動10回は未確認。
-- CI workflowは標準xcode-27、読取権限、合成fixtureのみ。公開pushは自動承認レビューで拒否され、CIは未実行。ローカル試験をCI成功とは扱わない。
+- CI workflowは標準xcode-27、読取権限、合成fixtureのみ。最新候補a108134はCore273件とArticle UI6件が全成功。既存Native26件中8件失敗は同じrunの変更前baselineと完全一致するが、全体CIはfailureを維持。詳細commit/実行URL/結果は`ci-evidence.md`を参照。既存期待値は弱めず、本人のKeyboard navigation等の設定も無断変更していない。
+- 本人はローカル環境へしばらくアクセスできないと回答。本人MacでのUI起動・実写真/Sandboxの確認は未実施として残す。最新ローカルUI試験はautomation mode開始待ち（XCTFuture Code=1000）で失敗。開発者モードは読取診断で無効だが原因と断定せず、認証方針を変更していない。
+- 記事保存で不確定結果が出た後も、追加入力を保持したまま元の操作を先に照合して再保存する。符号化された保存ファイルが64MiBを超える場合は容量失敗として入力と旧保存を保持し、入力を縮めて保存し直せる。
 - OSメモリは5秒基線/25ms観測を実装。lifetime peakが事前fixture由来のrunでは短いピークの帰属が未確認で、完全合格とは扱わない。
 - VoiceOver追加確認は本人指定により対象外。
 

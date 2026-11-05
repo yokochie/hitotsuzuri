@@ -334,11 +334,13 @@
     },
     {
       "id": "NFR5.20",
-      "status": "GAP"
+      "status": "OK",
+      "target": "aidlc/spaces/default/intents/261104-phase2-article-support/construction/u2-draft-experience/code-generation/tdd-evidence.md"
     },
     {
       "id": "NFR5.21",
-      "status": "GAP"
+      "status": "OK",
+      "target": "aidlc/spaces/default/intents/261104-phase2-article-support/construction/u2-draft-experience/code-generation/ci-evidence.md"
     },
     {
       "id": "NFR7.20",

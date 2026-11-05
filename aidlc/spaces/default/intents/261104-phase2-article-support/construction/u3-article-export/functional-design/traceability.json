@@ -1,0 +1,98 @@
+{
+  "stage": "functional-design",
+  "unit": "u3-article-export",
+  "upstream_ids": [
+    "AC1.4.1",
+    "AC1.4.2",
+    "AC1.4.3",
+    "AC1.4.4",
+    "AC1.6.1",
+    "AC1.6.2",
+    "AC1.6.3",
+    "AC1.6.4",
+    "AC1.7.1",
+    "AC1.7.2",
+    "AC1.7.3",
+    "AC1.7.4",
+    "AC1.7.5",
+    "AC1.7.6",
+    "AC1.8.1",
+    "AC1.8.2",
+    "AC1.8.3",
+    "AC1.8.4"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.4.1",
+      "status": "OK", "target": "BR3.1 BR3.11"
+    },
+    {
+      "id": "AC1.4.2",
+      "status": "OK", "target": "BR3.3"
+    },
+    {
+      "id": "AC1.4.3",
+      "status": "OK", "target": "BR3.5 BR3.7"
+    },
+    {
+      "id": "AC1.4.4",
+      "status": "OK", "target": "BR3.3 BR3.6 BR3.7"
+    },
+    {
+      "id": "AC1.6.1",
+      "status": "N/A", "target": "画面配置と入力保持はu2-draft-experience。U3の薄い出力操作接続はBR3.11で扱う。"
+    },
+    {
+      "id": "AC1.6.2",
+      "status": "N/A", "target": "プレビューはu2-draft-experienceの責務を再利用し、U3で複製しない。"
+    },
+    {
+      "id": "AC1.6.3",
+      "status": "OK", "target": "BR3.1 BR3.9"
+    },
+    {
+      "id": "AC1.6.4",
+      "status": "OK", "target": "BR3.9 BR3.11"
+    },
+    {
+      "id": "AC1.7.1",
+      "status": "OK", "target": "BR3.2"
+    },
+    {
+      "id": "AC1.7.2",
+      "status": "OK", "target": "BR3.3"
+    },
+    {
+      "id": "AC1.7.3",
+      "status": "OK", "target": "BR3.4 BR3.5"
+    },
+    {
+      "id": "AC1.7.4",
+      "status": "OK", "target": "BR3.5 BR3.9"
+    },
+    {
+      "id": "AC1.7.5",
+      "status": "OK", "target": "BR3.6 BR3.7"
+    },
+    {
+      "id": "AC1.7.6",
+      "status": "OK", "target": "BR3.7 BR3.8"
+    },
+    {
+      "id": "AC1.8.1",
+      "status": "OK", "target": "BR3.10"
+    },
+    {
+      "id": "AC1.8.2",
+      "status": "OK", "target": "BR3.10"
+    },
+    {
+      "id": "AC1.8.3",
+      "status": "OK", "target": "BR3.1 BR3.10 BR3.12"
+    },
+    {
+      "id": "AC1.8.4",
+      "status": "OK", "target": "BR3.12"
+    }
+  ]
+}

@@ -59,9 +59,9 @@ Xcodeの既存同期フォルダ/試験targetを用いる。pbxprojやshared sch
 - [x] Step 12 — 同層 Green。Coordinator/Workspace/EditSession/Projectionの実接続と依存注入を完成。閉鎖/終了は一つの保留先と一回のreplyを持つbridgeへ。切替先準備失敗時は旧作業を残す。（US1.1〜US1.7）
 - [x] Step 13 — 同層 Refactor。状態採用/失敗表示と匿名診断を整理し、統合Greenと既存Article回帰を確認。（US1.2/1.3/1.4）
 - [x] Step 14 — Frontend Red。ArticleDraftUITests約12件とDEBUG fixtureを先に追加し、入口2か所、候補/再確定、全欄保存/再起動、raw不正/離脱、取得不能、幅/長文/キーボード、プレビュー切替、閉じる/終了の保留を失敗で確認。（US1.1〜US1.6）
-- [ ] Step 15 — 同層 Green。ArticleView/MetadataFields/PreviewViewを実装してアプリへ接続。640/959/960/961/1200pt、見えるラベル・状態文字・焦点復帰を満たす。記事用UI識別子を付け、既存PickerのTab/Shift-Tab回帰を維持。（US1.1〜US1.6）
-- [ ] Step 16 — 同層 Refactor。画面部品とOS bridgeを整理し、同じUI試験をGreenで再確認。U1画像1枚検証は別操作名のまま保持。（US1.3/1.4/1.6）
-- [ ] Step 17 — 全体検証/性能/安全性。専用試験、既存Article回帰、正式な全体検証を実行。保存/再開2秒p95・投影100ms p95・文字切替0.5秒、表示15秒/取消2秒、256MiB直接保持/512MiB増分、ログcanaryを定めた条件で計測。全製品80%以上を確認。承認済み公開ブランチへコード/試験をpushして同じCIを実行し、未達/失敗は隠さず停止・報告する。（NFR1〜NFR7）
+- [x] Step 15 — 同層 Green。ArticleView/MetadataFields/PreviewViewを実装してアプリへ接続。640/959/960/961/1200pt、見えるラベル・状態文字・焦点復帰を満たす。記事用UI識別子を付け、既存PickerのTab/Shift-Tab回帰を維持。（US1.1〜US1.6）
+- [x] Step 16 — 同層 Refactor。画面部品とOS bridgeを整理し、同じUI試験をGreenで再確認。U1画像1枚検証は別操作名のまま保持。（US1.3/1.4/1.6）
+- [x] Step 17 — 全体検証/性能/安全性。専用試験、既存Article回帰、正式な全体検証を実行。保存/再開2秒p95・投影100ms p95・文字切替0.5秒、表示15秒/取消2秒、256MiB直接保持/512MiB増分、ログcanaryを定めた条件で計測。全製品80%以上を確認。承認済み公開ブランチへコード/試験をpushして同じCIを実行し、未達/失敗は隠さず停止・報告する。（NFR1〜NFR7）
 - [ ] Step 18 — 記録/対応表。作成変更削除の全パスをsource-manifestへ、全AC/NFRと対象外U3をtraceabilityへ、Red/Green/整理と未実行理由・本人未確認項目をcode-summary等へ記録する。Xcode起動/戻し方を日本語で用意し、その後に独立レビューを受ける。（US1.1〜US1.7、NFR5/6/7）
 
 API/HTTPエンドポイント・DB移行・コンテナ/IaC・公開デプロイは適用外。C3の操作ポートは業務/境界統合層で試験する。各層のRedは対象機能のアサーション失敗を確認し、runner未設定・未実行・認証待ちをRedの証拠にしない。

@@ -33,15 +33,13 @@ UI fixtureはFixtureLaunchで生成したuitest-UUID rootを追跡し、同一�
 
 ### CI
 
-最終構成はnative-core→nativeの2jobだけで、すべてのpush/PRで全機能とcoverageを検証する。下記のブランチ印による2件/8件jobは原因切り分け中だけの一時構成で、8件Green後に削除した。旧U1比較baseline-nativeも終了し削除した。限定実行のCLIは再現用に残すが、現在のpush印による省略はない。
+最終構成はnative-core→nativeの2jobだけ。push/PRでnative-coreが実測5件を除く全Core機能を実行し、成功後にnative（--functional・全製品加重80%）が動く。決定論的な予算/期限/取消は残す。性能jobと旧U1比較jobは削除した。GITHUB_ACTIONS=trueでは無引数全体、--performance、性能UIクラス指定を起動前に拒否し、他のクラス指定でもCore実測5件を除く。全体CIの最新結果はci-evidence.mdで確認する。
 
 Native入力の原因切り分け専用に、`bash scripts/verify-native.sh --input-focus` を追加した。smoke2件の後、testSingleTabFromAlbumOperatesPhotoAndShiftTabReturnsとtestAlbumArrowsInCompactAfterMouseSelectionFollowPhotosの両メソッドを要求し、成功以外/片方未実行を失敗にする。全体coverageや全体成功は判定しない。専用draftコマンドにはこの区分を追加しない。隔離runner契約は追加前19件中1失敗（3.181秒）、実装後20件成功（3.364秒）。
 
-このU2ブランチのpushに`[input-focus]`印がある場合だけ、限定診断jobが起動し、全体jobを診断目的で重複実行しない。PRと通常pushは従来どおり全体機能検証を実行する。限定jobの成功を統合条件の達成には使わず、根本原因の確認後に全体検証とcoverageを別途満たす。
+原因切り分け中はブランチ印による限定CIを使ったが、8件Green後にその分岐を削除した。現在のpush印による省略はない。限定CLIの成功を統合条件の達成には使わない。
 
-原因修正後は `bash scripts/verify-native.sh --input-regression` でsmoke2件→CI41939982311の失敗8メソッドだけを実行する。同じブランチの`[input-regression]`印pushはこの8件の限定jobを実行する。各メソッドの成功を要求し、全体coverageは判定しない。追加前21契約中1失敗（3.436秒）、実装後21件成功（3.155秒）。成功済みCoreや記事UI/性能を診断目的で反復しない。
-
-push/PRではnative-coreが全Core機能（実測5件を除く）を実行し、その成功後にnative（--functional・全製品加重80%）が動く。性能jobは削除。GITHUB_ACTIONS=trueでは無引数全体、--performance、性能UIクラス指定を起動前に拒否し、その他のクラス指定でもCore実測5件を除く。決定論的な予算/期限/取消の機能検査は残す。U1ブランチの旧版比較baseline-nativeは保持するが現ブランチでは起動しない。新構成のCI実行はまだ成功確認していない。
+`bash scripts/verify-native.sh --input-regression` はsmoke2件→CI41939982311の失敗8メソッドだけを実行する再現用コマンド。各メソッドの成功を要求し、全体coverageは判定しない。追加前21契約中1失敗（3.436秒）、実装後21件成功（3.155秒）。成功済みCoreや記事UI/性能を診断目的で反復しない。
 
 ## 設定と最初の実行
 

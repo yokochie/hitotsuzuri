@@ -46,13 +46,13 @@
 - [x] Step 11: 操作調整Refactor。正本と作業コピー・session/operation/generationを整理し全該当試験を再実行。
 - [ ] Step 12: 画像/出力境界Red。ArticleImageTests/ArticleResourceTests/ArticleProbeTestsで現在編集/向き/縮小/JPEG/不要メタデータ、network=false、30秒、取消受理/終端、バッファ所有、保存先選択前grantなし、確定/片付け失敗を先に試験。
 - [x] Step 13: 画像/出力境界Green。PhotoKit入力URLからImage I/O変換・sRGB新規JPEG、実処理単一ゲート・予約256MiB、期限/取消状態を実装。完了採用直前にも絶対期限比較、同時は期限優先。先頭1枚を別フォルダへ非上書き確定。OS処理残存と論理終端を分離。
-- [ ] Step 14: 画像/出力Refactor。権限寿命/遅延応答/回復記録を整理、容量とOSメモリの測定/非対応分類を再確認。未達を閾値変更で隠さない。
-- [ ] Step 15: フロントエンドRed。ArticleFoundationUITestsの開始/日本語編集/保存再起動/画像なし/未保存離脱/1枚出力を先に実行し失敗を記録。合成fixtureの必要配線をrunner準備として分離。
-- [ ] Step 16: フロントエンドGreen。ArticleView/CoordinatorとApp/Picker入口を接続。識別子・文字状態・キーボード・狭幅・閉じる/終了確認、フォルダ選択を実装。写真取得不能でもフォームを開く。
-- [ ] Step 17: フロントエンドRefactor。既存選択操作/焦点/保存の回帰を確認し、入力と表示を失わないよう整理。
-- [ ] Step 18: 統合試験。ArticleIntegrationTestsで実ファイル保存/再起動照合と実Image I/O合成画像→1枚出力を通す。成功/失敗/取消・旧成果物非変更、ログ捕捉、100記事/1000操作/長文とメモリ/時間を計測。新規統合経路もRed→Greenで追加。
-- [ ] Step 19: 環境/CI。権限・Xcode参照・標準xcode-27 workflowを完成し、承認済み全体検証と80%以上を実行。CIを同commitで実行してURL/結果を記録。外部pushに必要な具体差分と未実機確認を提示し、未実行CIを成功にしない。
-- [ ] Step 20: 記録/本人手順。code-summary、全AC/BR/詳細NFRのtraceability、source-manifest、TDD証拠を作成。日本語の実機起動/写真/Sandbox/1枚デモ/戻し方を記録し、本人確認が必要な点を分ける。未確認/未達は明示。
+- [x] Step 14: 画像/出力Refactor。権限寿命/遅延応答/回復記録を整理、容量とOSメモリの測定/非対応分類を再確認。未達を閾値変更で隠さない。
+- [x] Step 15: フロントエンドRed。ArticleFoundationUITestsの開始/日本語編集/保存再起動/画像なし/未保存離脱/1枚出力を先に実行し失敗を記録。合成fixtureの必要配線をrunner準備として分離。
+- [x] Step 16: フロントエンドGreen。ArticleView/CoordinatorとApp/Picker入口を接続。識別子・文字状態・キーボード・狭幅・閉じる/終了確認、フォルダ選択を実装。写真取得不能でもフォームを開く。
+- [x] Step 17: フロントエンドRefactor。既存選択操作/焦点/保存の回帰を確認し、入力と表示を失わないよう整理。
+- [x] Step 18: 統合試験。ArticleIntegrationTestsで実ファイル保存/再起動照合と実Image I/O合成画像→1枚出力を通す。成功/失敗/取消・旧成果物非変更、ログ捕捉、100記事/1000操作/長文とメモリ/時間を計測。新規統合経路もRed→Greenで追加。
+- [x] Step 19: 環境/CI。権限・Xcode参照・標準xcode-27 workflowを完成し、承認済み全体検証と80%以上を実行。CIを同commitで実行してURL/結果を記録。外部pushに必要な具体差分と未実機確認を提示し、未実行CIを成功にしない。
+- [x] Step 20: 記録/本人手順。code-summary、全AC/BR/詳細NFRのtraceability、source-manifest、TDD証拠を作成。日本語の実機起動/写真/Sandbox/1枚デモ/戻し方を記録し、本人確認が必要な点を分ける。未確認/未達は明示。
 
 ## レビュー所見の実装条件
 機能設計の保存版確認先行はStep7の操作ID先行照合で解消する。出力先未選択のgrantはStep12/13の状態別型で表現。品質設計の期限同時競合はStep12/13で完了採用直前の絶対比較と逆順配送を試験する。上流契約の投影projectIDは後続U2、共通指紋基礎は本Unit。仕様と実装の差分は記録し、上流レビュー後の成果物を黙って編集しない。
