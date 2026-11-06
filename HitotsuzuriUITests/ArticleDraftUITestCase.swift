@@ -21,8 +21,14 @@ import XCTest
             let frame=element.frame, viewport=app.scrollViews.firstMatch.frame
             return element.isHittable && frame.minY >= viewport.minY+3 && frame.maxY <= viewport.maxY-3
         }
-        if !visible() {scrollForm(app,delta:10000)}
-        for _ in 0..<30 {if visible() {break}; scrollForm(app,delta:-250)}
+        // 出力完了時にもForm自身が移動するため、固定方向ではなく毎回位置を取り直す。
+        // 大きな一括スクロールを避け、上側・下側のどちらにはみ出した欄も追従する。
+        for _ in 0..<30 {
+            if visible() {break}
+            let frame=element.frame, viewport=app.scrollViews.firstMatch.frame
+            let distance=viewport.midY-frame.midY
+            scrollForm(app,delta:max(-250,min(250,distance)))
+        }
         XCTAssertTrue(visible(),"入力欄全体がスクロール領域に見える: \(id), field=\(element.frame), viewport=\(app.scrollViews.firstMatch.frame)")
         return element
     }
