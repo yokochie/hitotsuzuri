@@ -975,3 +975,30 @@
 **Message**: Core Green候補を固定しました。新規17件で、長期待機・進捗・取消・旧通知・失敗後再試行・書込期限を検証します。\n\nUIは未変更です。`git diff --check`成功、ローカル試験は実行していません。CI結果を待ちます。
 
 ---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T11:49:54Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-icloud-image-export/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T11:51:35Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-icloud-image-export/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T11:51:47Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1b0a5-0a9b-7d12-806d-01cd1c6d47c2
+**Message**: 画面回帰3件のRed準備を完了しました。通常の出力画面は未変更で、実readerの進捗・取消・失敗を通す合成fixtureだけ追加しています。\n\n`bash scripts/verify-native.sh ArticleCloudExportUITests`\n\nCI結果待ちです。
+
+---

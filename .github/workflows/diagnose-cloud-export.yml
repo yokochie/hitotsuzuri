@@ -17,8 +17,8 @@ jobs:
         run: |
           sw_vers
           xcodebuild -version
-      - name: Verify cloud image Core regressions
-        run: bash scripts/verify-native.sh ArticleCloudImageTests ArticleCloudExportTests
+      - name: Verify cloud image UI regressions
+        run: bash scripts/verify-native.sh ArticleCloudExportUITests
       - name: Preserve synthetic regression diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

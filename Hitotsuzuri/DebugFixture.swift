@@ -90,7 +90,7 @@ import UniformTypeIdentifiers
         }
         let store = FixtureStore(selection:draftCase == "empty" ? nil : current,settings:TargetFolderSettings(folderIDs:["root-a"]))
         let draftStore=ArticleFixtureDraftStore(directory:root.appendingPathComponent("Articles"),mode:draftCase ?? "default")
-        let photoControl = fixtureCase.hasPrefix("restore-") ? ArticleFixturePhotoControl(mode:fixtureCase) : nil
+        let photoControl = fixtureCase.hasPrefix("restore-") || fixtureCase.hasPrefix("cloud-") ? ArticleFixturePhotoControl(mode:fixtureCase) : nil
         let previewDriver=ArticleFixturePreviews(unavailableAll:draftCase == "photos-missing",delayMilliseconds:draftCase == "performance" ? 100000 : (draftCase == "slow-photos" ? 300 : 0),control:photoControl)
         let images=LocalImageAccess(driver:previewDriver)
         // restore-* の要求/保留は記事側だけを観測する。Picker起動時の4枚validationが
@@ -208,8 +208,29 @@ private actor FixtureStore:SelectionStoring {
     private let mode: String
     private var sequence = 0
     private var jobs: [Int: Task<Void, Never>] = [:]
+    private var cloudCancelled: Set<Int> = []
+    private var cloudFailureDelivered = false
     private let control: ArticleFixturePhotoControl?
     init(root:URL, mode: String = "default",control:ArticleFixturePhotoControl?=nil) {self.root=root; self.mode=mode; self.control=control}
+    func request(_ id:String,networkAllowed:Bool,progress:@escaping @MainActor (Double)->Void,completion:@escaping @MainActor (Result<ArticleImageInput,ArticleFailure>)->Void)->Int {
+        guard mode.hasPrefix("cloud-"), let control else {return request(id,networkAllowed:networkAllowed,completion:completion)}
+        sequence += 1; let token=sequence
+        control.cloudNetworkFlags.append(networkAllowed)
+        if mode == "cloud-retry", id.hasSuffix("photo-2"), !cloudFailureDelivered {
+            cloudFailureDelivered=true; completion(.failure(.assetUnavailable)); return token
+        }
+        guard networkAllowed else {completion(.failure(.assetUnavailable)); return token}
+        if control.cloudAutomatic {complete(completion); return token}
+        control.outputPending += 1
+        control.cloudProgress[token]=progress
+        control.cloudOutputReplies[token] = { [weak self] in
+            control.outputPending -= 1
+            control.cloudProgress[token]=nil
+            if self?.cloudCancelled.contains(token) == true {completion(.failure(.cancelled))}
+            else {self?.complete(completion)}
+        }
+        return token
+    }
     func request(_ id:String,networkAllowed:Bool,completion:@escaping @MainActor (Result<ArticleImageInput,ArticleFailure>)->Void)->Int {
         sequence += 1; let token = sequence
         if let control, control.holdOutput {
@@ -248,6 +269,9 @@ private actor FixtureStore:SelectionStoring {
         } catch {completion(.failure(.ioFailure))}
     }
     func cancel(_ request:Int) {
+        if mode.hasPrefix("cloud-"), control?.cloudOutputReplies[request] != nil, cloudCancelled.insert(request).inserted {
+            control?.outputCancelRequests += 1
+        }
         if let control, control.holdOutput, control.outputPending > 0 {control.outputCancelRequests += 1}
         jobs[request]?.cancel()
     }
@@ -335,12 +359,17 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
     private var postQueryReplies:[CheckedContinuation<Void,Never>]=[]
     var displayReplies:[@MainActor () -> Void]=[]
     var outputReplies:[@MainActor () -> Void]=[]
+    var cloudNetworkFlags:[Bool]=[]
+    var cloudAutomatic:Bool
+    var cloudProgress:[Int:@MainActor (Double)->Void]=[:]
+    var cloudOutputReplies:[Int:@MainActor ()->Void]=[:]
     init(mode:String) {
         self.mode=mode
         photosAvailable=mode != "restore-retry"
         holdDisplay=mode == "restore-late"
         holdOutput=mode == "restore-cancel"
         holdsPostQuery=mode == "restore-reentry"
+        cloudAutomatic=mode == "cloud-retry"
     }
     // pending() actor照会と同じ位置で呼出元だけを保留。busy/表示ownerは変更しない。
     func waitForPostExportQuery() async {
@@ -357,5 +386,11 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
     }
     func releaseDisplay() {holdDisplay=false; let replies=displayReplies; displayReplies=[]; for reply in replies {reply()}}
     func releaseOutput() {holdOutput=false; let replies=outputReplies; outputReplies=[]; for reply in replies {reply()}}
+    func sendCloudProgress() {for progress in cloudProgress.values {progress(0.5)}}
+    func releaseCloudOutput() {
+        cloudAutomatic=true
+        let replies=cloudOutputReplies; cloudOutputReplies=[:]
+        for reply in replies.values {reply()}
+    }
 }
 #endif

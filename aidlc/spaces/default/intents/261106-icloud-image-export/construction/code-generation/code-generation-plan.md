@@ -43,8 +43,8 @@ Xcode synchronized groupと既存runnerで新classを発見する。通常workfl
 
 - [x] Step 1: runner準備と基準確認。既存CI42179866652の機能535件/smoke2/91.49%と、現在の対象ソース同一性を確認する。新classの発見規則とunit-test-instructionsのコマンドを確認し、同じローカルbuild/UIを再実行しない。（NFR3）
 - [x] Step 2: Core境界 Red。既存interfaceで再現可能なネットワーク許可・進捗未接続・旧30/40/180秒超過の回帰を先に追加しCIで意図した失敗を観測する。新しいadapter境界が必要なら、通常方針を変更しない最小の試験用注入を先に整え、compile失敗をRedに数えない。（FR1–FR4、NFR1–NFR3）
-- [ ] Step 3: Core Green。readerから出力まで明示的な取得許可/進捗を接続し、待機/変換/書込の期限を分ける。要求ID確定前取消、実終端待ち、旧応答、写真ごとの通知所有を保護し、対象Core回帰を成功させる。（FR1–FR4、NFR1–NFR2）
-- [ ] Step 4: Core Refactor。成功を保ちながら期限方針とprogress/取消の責務を整理する。PhotoKitの所有とUIの状態を混在させず、不要な抽象化を追加しない。（NFR2–NFR3）
+- [x] Step 3: Core Green。readerから出力まで明示的な取得許可/進捗を接続し、待機/変換/書込の期限を分ける。要求ID確定前取消、実終端待ち、旧応答、写真ごとの通知所有を保護し、対象Core回帰を成功させる。（FR1–FR4、NFR1–NFR2）
+- [x] Step 4: Core Refactor。成功を保ちながら期限方針とprogress/取消の責務を整理する。PhotoKitの所有とUIの状態を混在させず、不要な抽象化を追加しない。（NFR2–NFR3）
 - [ ] Step 5: 接続/画面 Red。合成readerの実進捗を実Coordinator/Deliveryへ流し、番号/百分率/待機、取消後の表示復帰、失敗後の新規再出力を3画面回帰で確認する。文言だけをfakeが直接書き込むfixtureを使わず、通常UI未対応の意図した失敗をCIで記録する。（FR2–FR4、NFR2–NFR3）
 - [ ] Step 6: 接続/画面 GreenとRefactor。ExportSession/Viewの状態と失敗案内を実装し、旧通知・取消文言・次写真の進捗を検証する。対象3画面と既存写真復帰回帰をCIで確認して成功を保つ。（FR1–FR4、NFR1–NFR2）
 - [ ] Step 7: 通常全機能CI。対象限定の一時診断workflowを使った場合は削除し、Core→smoke→全機能/全製品80%の既存CIを通す。ソースSHA/実行件数/coverageを記録し、同じ試験をローカルで繰り返さない。（全要件）

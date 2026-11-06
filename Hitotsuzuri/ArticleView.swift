@@ -83,7 +83,7 @@ struct ArticleView: View {
             #if DEBUG
             if let control=coordinator.fixturePhotoControl {
                 Text("試験：画像復帰診断").font(.caption2).accessibilityIdentifier("restoration-diagnostic")
-                    .accessibilityValue(coordinator.fixturePhotoDiagnostic+";entered=\(control.exportEntered);accepted=\(control.exportAccepted);reentryAttempts=\(control.reentryAttempts);reentryCompleted=\(control.reentryCompleted);postQueryWaiters=\(control.postQueryWaiters);postQueryCalls=\(control.postQueryCalls);outputPending=\(control.outputPending);outputCancelled=\(control.outputCancelRequests);displayPending=\(control.displayReplies.count)")
+                    .accessibilityValue(coordinator.fixturePhotoDiagnostic+";entered=\(control.exportEntered);accepted=\(control.exportAccepted);reentryAttempts=\(control.reentryAttempts);reentryCompleted=\(control.reentryCompleted);postQueryWaiters=\(control.postQueryWaiters);postQueryCalls=\(control.postQueryCalls);outputPending=\(control.outputPending);outputCancelled=\(control.outputCancelRequests);displayPending=\(control.displayReplies.count);cloudNetwork=\(control.cloudNetworkFlags.map { $0 ? "1" : "0" }.joined(separator:","));")
                 HStack {
                     Button("試験：画像を利用可能にする") {control.photosAvailable=true}.accessibilityIdentifier("restoration-available")
                     Button("試験：表示応答を返す") {control.releaseDisplay()}.accessibilityIdentifier("restoration-release-display")
@@ -97,6 +97,12 @@ struct ArticleView: View {
                         }.accessibilityIdentifier("restoration-request-export")
                         Button("試験：出力後照会を返す") {control.releasePostExportQuery()}
                             .accessibilityIdentifier("restoration-release-query")
+                    }
+                }
+                if control.mode.hasPrefix("cloud-") {
+                    HStack {
+                        Button("試験：取得進捗を返す") {control.sendCloudProgress()}.accessibilityIdentifier("cloud-progress")
+                        Button("試験：取得終端を返す") {control.releaseCloudOutput()}.accessibilityIdentifier("cloud-release")
                     }
                 }
             }

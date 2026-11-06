@@ -16,3 +16,12 @@ PR CI42179866652、f272e3d4fb9783f38acc7745a1d3bcd8ac2b60b9のCore460/UI75＝機
 - 重複する通常full push42211810466、PR42211818940は取消要求済み、成功証拠に数えない。一時marker限定workflowは最終全機能CI前に削除する。
 
 Core Green、UI Red/Green、最終通常全機能の結果はこれから記録する。上記基準を変更後成功へ代用しない。
+
+## Core Green
+
+- head6a389a1f102e52f1c4e0f7cf6f2c8c3973eb61f9。
+- [対象限定CI42212786801](https://github.com/yokochie/hitotsuzuri/actions/runs/42212786801)、job127875272187、TEST SUCCEEDED。
+- 同じ対象指定でImage12件（0.079秒）とExport5件（0.849秒）、計17件が全成功。先の意図Red6件も成功へ転じた。
+- reader内部の一意ticket、options許可/進捗、取得待ちと変換30秒の分離、Deliveryで取得待ちを期限へ算入しない処理、取消後実終端/旧通知拒否、失敗再試行・書込期限を検証した。
+- UI/Sessionの進捗表示はまだ未変更で、画面接続の成功を主張しない。全機能/全体coverageは最終通常CIで別途確認する。
+- 重複通常full42212790791（PR）/42212786896（push）は取消要求済み。これらを成功証拠に数えない。
