@@ -194,6 +194,9 @@ import XCTest
         app.menuBars.menuBarItems["記事"].click(); app.menuItems["保存した下書きを開く"].click()
         XCTAssertTrue(app.buttons["draft-open"].draftExists(timeout:5))
         app.radioButtons.element(boundBy:1).click(); app.buttons["draft-open"].click()
+        // 閉じる途中の候補シートを確認ダイアログと取り違えない。
+        XCTAssertTrue(app.buttons["draft-open"].draftAbsent(timeout:5))
+        XCTAssertTrue(app.buttons["編集を続ける"].draftExists(timeout:5))
         let dialog=confirmation(app)
         XCTAssertFalse(app.buttons["draft-open"].exists)
         app.typeKey(.escape,modifierFlags:[])
