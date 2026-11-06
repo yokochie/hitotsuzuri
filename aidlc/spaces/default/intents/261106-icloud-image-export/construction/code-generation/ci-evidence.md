@@ -76,3 +76,7 @@ e52f64703d01073f74afaa7ec37de4f2edf3236c、PR CI42217045109。native-core1278895
 ## 実行枠修正後の全機能結果
 
 d69e427b38ab635866fa8ab162c4b298a9503b8b、PR CI42221440072。native-core127904201361は1分55秒で成功。native127905032976は31分27秒で最後まで実行したが、UI78件中1件失敗（1719.534秒）。新cloud UI3件は成功（95.971秒）。唯一の失敗は既存 `ArticlePhotoRestorationUITests.testInputValidationFailureRestoresImagesAndKeepsInvalidInput` の70行「写真4の実Image要素」。先行するモデル4枚readyの待機は通過しており、AX画像要素の観測を調査する。Core480件の成功とUI77成功を、全機能成功や全体coverageへ代用しない。coverage検査には未到達。重複push42221429333は取消要求済み。
+
+### 画像要素の反映待ち修復
+
+3da6cce2503c8295b76de6a71f161504239ca28d、CI42226340926/job127920690758、3分0秒、success。失敗した入力検証後の画像復帰1件だけを、同じXcode project/schemeのonly-testing指定で実行し成功した。通常製品は変更せず、モデルready後のLazyVGridの画像AX要素を各スクロール位置でbounded待機する。実画像4枚・状態・要求数・順序のassertは維持し、失敗時の実診断を追加した。一時workflowを再度削除し、通常全機能で最終確認する。重複full42226351035（PR）/42226340794（push）は取消要求済み。
