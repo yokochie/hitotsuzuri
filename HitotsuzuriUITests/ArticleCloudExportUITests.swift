@@ -13,7 +13,9 @@ import XCTest
         let predicate=NSPredicate {_,_ in MainActor.assumeIsolated {condition()}}
         let result=XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:predicate,object:nil)],timeout:8)
         if result != .completed {
-            let attachment=XCTAttachment(string:"\(reason)\n\(diagnostic(app))\n\(app.windows.firstMatch.debugDescription)")
+            let snapshot=observations(app)
+            print("cloud-export wait failure: \(reason); \(snapshot)")
+            let attachment=XCTAttachment(string:"\(reason)\n\(snapshot)\n\(app.windows.firstMatch.debugDescription)")
             attachment.name="cloud-export-wait"; attachment.lifetime = .keepAlways; add(attachment)
         }
         XCTAssertEqual(result,.completed,reason)
@@ -43,11 +45,31 @@ import XCTest
         }
         XCTAssertFalse(app.buttons["article-export"].isEnabled)
     }
-    private func message(_ app:XCUIApplication)->String {value(app.staticTexts["article-export-message"])}
+    private func message(_ app:XCUIApplication)->String {
+        let element=app.staticTexts["article-export-message"]
+        guard element.exists else {return "<missing>"}
+        // 選択可能Textのvalueはfield-editor由来の旧値を残す場合がある。
+        // 画面Text自身のlabelを優先し、実Session/ProgressViewも独立観測する。
+        return element.label.isEmpty ? value(element) : element.label
+    }
+    private func observations(_ app:XCUIApplication)->String {
+        let element=app.staticTexts["article-export-message"], progress=app.progressIndicators["article-export-progress"]
+        return "\(diagnostic(app));message.exists=\(element.exists);message.label=\(element.exists ? element.label : "missing");message.value=\(element.exists ? String(describing:element.value) : "missing");progress.exists=\(progress.exists);progress.value=\(progress.exists ? String(describing:progress.value) : "missing")"
+    }
+    private func progressVisible(_ app:XCUIApplication) {
+        // Formのscroll位置を整えてから現在の文字と実progressbarを照合する。
+        _=action("article-export-cancel",app)
+        wait("実readerのfractionと画面文字/ProgressViewの50%が一致",app) {
+            let progress=app.progressIndicators["article-export-progress"]
+            return self.diagnostic(app).contains("exportFraction=0.5;") && self.message(app).contains("50%") && progress.exists && String(describing:progress.value).contains("50")
+        }
+    }
     private func finished(_ app:XCUIApplication) {
         wait("一式出力の完了",app) {app.staticTexts["article-export-result"].exists && app.buttons["article-export"].isEnabled}
         ready(app)
-        XCTAssertTrue(message(app).contains("完了しました"))
+        wait("現在の画面文字と実Sessionの一式完了",app) {
+            self.message(app).contains("完了しました") && self.diagnostic(app).contains("exportMessage=記事と4枚の出力が完了しました。;")
+        }
         XCTAssertEqual(field("article-title",app).value as? String,"合成")
     }
 
@@ -58,7 +80,7 @@ import XCTest
         XCTAssertTrue(message(app).contains("写真 1/4"),"取得対象は完了枚数0ではなく写真番号1で示す: \(message(app))")
         XCTAssertFalse(app.staticTexts["article-export-result"].exists)
         app.buttons["cloud-progress"].click()
-        wait("実readerの50%が画面へ届く",app) {self.message(app).contains("50%")}
+        progressVisible(app)
         XCTAssertFalse(app.staticTexts["article-export-result"].exists,"1枚の進捗は一式成功ではない")
         app.buttons["cloud-release"].click()
         finished(app)
@@ -69,7 +91,7 @@ import XCTest
         let app=launch("cloud-cancel")
         beginHeld(app)
         app.buttons["cloud-progress"].click()
-        wait("取消前の進捗接続",app) {self.message(app).contains("50%")}
+        progressVisible(app)
         action("article-export-cancel",app).click()
         wait("取消が実readerへ到達",app) {self.diagnostic(app).contains("outputCancelled=1;")}
         XCTAssertFalse(app.buttons["article-export"].isEnabled)

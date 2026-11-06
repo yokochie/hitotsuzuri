@@ -363,6 +363,7 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
     var cloudAutomatic:Bool
     var cloudProgress:[Int:@MainActor (Double)->Void]=[:]
     var cloudOutputReplies:[Int:@MainActor ()->Void]=[:]
+    var cloudProgressEmitted=0
     init(mode:String) {
         self.mode=mode
         photosAvailable=mode != "restore-retry"
@@ -386,7 +387,7 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
     }
     func releaseDisplay() {holdDisplay=false; let replies=displayReplies; displayReplies=[]; for reply in replies {reply()}}
     func releaseOutput() {holdOutput=false; let replies=outputReplies; outputReplies=[]; for reply in replies {reply()}}
-    func sendCloudProgress() {for progress in cloudProgress.values {progress(0.5)}}
+    func sendCloudProgress() {for progress in cloudProgress.values {cloudProgressEmitted += 1; progress(0.5)}}
     func releaseCloudOutput() {
         cloudAutomatic=true
         let replies=cloudOutputReplies; cloudOutputReplies=[:]
