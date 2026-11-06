@@ -64,10 +64,19 @@ import XCTest
         for number in 1...4 {
             let image=app.images["article-preview-\(number)"]
             for _ in 0..<12 {
-                if image.exists {break}
+                // LazyVGridのscroll後にAXへ実Imageが載るまで待つ。
+                // 即existsだけで次へscrollすると、対象を通過してしまう。
+                if image.draftExists(timeout:0.5) {break}
                 scrollForm(app,delta:-220)
             }
-            XCTAssertTrue(image.exists,"写真\(number)の実Image要素")
+            let appeared=image.draftExists(timeout:3)
+            if !appeared {
+                let details="写真\(number)の実Image未反映; \(diagnostic(app)); \(app.windows.firstMatch.debugDescription)"
+                print(details)
+                let attachment=XCTAttachment(string:details)
+                attachment.name="photo-restoration-image-missing"; attachment.lifetime = .keepAlways; add(attachment)
+            }
+            XCTAssertTrue(appeared,"写真\(number)の実Image要素")
             let state=app.staticTexts["article-preview-state-\(number)"]
             XCTAssertTrue([state.label,(state.value as? String) ?? ""].contains("画像を取得しました"),"写真\(number)の実状態。label=\(state.label), value=\(String(describing:state.value))")
         }

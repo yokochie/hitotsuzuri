@@ -2,7 +2,7 @@
 
 ## 現在の検証状態
 
-Coreの6件の有効Redは、6a389a1の対象CI42212786801で新17件が全成功へ転じた。画面の3件は7561c21のCI42213371286で意図した失敗を確認し、その対応を5d20d82へ実装した。対象CI42214062065ではCore20件と既存写真復帰11件が成功したが、新UI3件は進捗と完了文字の観測で失敗した。観測方法と診断を修復して再確認する段階で、新UI3件の取消実終端・復帰・再出力成功まで通ったとはまだ記録しない。通常全機能CI/全製品80%検証と本人の実iCloud確認も未完。
+Coreの6件の有効Redは、6a389a1の対象CI42212786801で新17件が全成功へ転じた。5d20d82のCI42214062065では追加分を含むCore20件と既存写真復帰11件が成功。画面の3件は7561c21のCI42213371286で意図した失敗を確認し、通常UI対応と観測修復、選択可能Textの更新修正を経て、78be69aの対象CI42216526269で全成功（75.878秒）となった。新UI3件の取消実終端・復帰・再出力成功まで確認できた。通常全機能の初回CI42217045109は30分のjob上限で中断。native上限だけ45分へ変更したd69e427のCI42221440072では、新UI3件は成功したが既存画像復帰1件の写真4のAX存在assertが失敗した。通常全機能/全製品80%検証と本人の実iCloud確認は未完。
 
 SHA/job/各assertの詳細正本は同じ場所の[ci-evidence.md](ci-evidence.md)。変更前f272e3dの機能535件・smoke2・91.49%は基準であり、今回の変更後の最終成功へ代用しない。
 
@@ -13,11 +13,15 @@ SHA/job/各assertの詳細正本は同じ場所の[ci-evidence.md](ci-evidence.m
 - `HitotsuzuriCore/ArticleExportDelivery.swift`: 出力時だけnetwork=trueを指定し、取得待ち時間を1枚30秒/書込込み40秒/全体180秒の経過から控除する。変換と書込/確定の保護まで無制限にはしない。進捗をjob/request/写真番号と単調fractionで検証し、取消・終端後の古い通知を捨てる。固定保存入力、4枚直列化、所有cleanup/不確定公開照合は既存契約のまま。
 - `HitotsuzuriCore/ArticleModels.swift`: 判別できる通信失敗の型networkUnavailableを追加した。共通assetUnavailableを一括で書き換えず、表示と出力の文脈を分ける。PhotoKitの取消キー/ネットワークNSError/詳細不明を分類し、不明なinput欠落をiCloud未取得と断定しない。
 - `HitotsuzuriCore/ArticleExportSession.swift`: 写真1〜4の対象番号と進捗を表示する。百分率は1枚の取得状況で、一式成功は実ExportResultを得てから。phase順位・完了枚数・fraction単調性で旧job/前写真/不正値・取消後通知を拒否する。出力の画像取得失敗にはアプリ内での再出力を案内し、要照合/cleanup失敗を盲目的な再試行へ誘導しない。
-- `Hitotsuzuri/ArticleExportView.swift`: 進捗なしは不定spinner、利用可能なfractionは確定progressbarと文字/AX値へ反映する。既存の取消操作とfocusを維持した。
+- `Hitotsuzuri/ArticleExportView.swift`: 進捗なしは不定spinner、利用可能なfractionは確定progressbarと文字/AX値へ反映する。選択可能Textが旧field-editor値を保持しないよう、状態メッセージごとにidentityを更新する。既存の取消操作とfocusを維持した。
 - `Hitotsuzuri/DebugFixture.swift`、`Hitotsuzuri/ArticleView.swift`のDEBUG箇所: 合成cloud readerの進捗・終端・単発写真2失敗を制御する。実Coordinator→Session→Delivery→ImageAccessを通し、fixtureがmessage/busyや表示復帰を代行しない。
 - 新規 `HitotsuzuriU2Tests/ArticleCloudImageTests.swift`（12件）、`HitotsuzuriU3Tests/ArticleCloudExportTests.swift`（8件）、`HitotsuzuriUITests/ArticleCloudExportUITests.swift`（3件）。初期Core17件に、画面Green時のSession否定回帰3件を追加した。`ArticleExportIntegrationTests.swift`の既存性能用合成readerは新しい出力のnetwork許可を受理し、期待許可回数を0から120へ修正した。これは実通信の実行や性能測定成功を意味しない。
 
 Core/画面の呼出境界を調整したが、保存schema、manifest、entitlements、共有scheme、Xcode設定、通常CIの選択/除外/80%閾値は変更していない。新しい外部依存や独自HTTP/backend、写真変更APIは追加していない。Zero Unitなのでsource-manifestや架空のUnitは作らない。
+
+## 計画からの変更
+
+最初の計画は通常workflowを変更しない方針だった。通常全機能の初回実行で既存native jobの30分上限に到達し、assert失敗ではなくjob取消で全体検証が終わらなかったため、`.github/workflows/verify.yml` のnative timeout-minutesだけ30から45へ変更した（d69e427b38ab635866fa8ab162c4b298a9503b8b）。テストの削減や閾値緩和で回避せず、全対象を完走させるための実行枠調整である。native-coreの条件、実行コマンド、試験選択/除外、80%条件、製品/試験ソースは変更していない。この延長を画像ダウンロードのアプリ内待機期限と混同しない。
 
 ## 要件と回帰の対応
 
@@ -39,9 +43,12 @@ Core/画面の呼出境界を調整したが、保存schema、manifest、entitle
 - 6a389a1、CI42212786801/job127875272187: 新Core17件成功（Image12件0.079秒、Export5件0.849秒）。旧Red6件が成功へ転じ、追加の不正/旧進捗、ID確定前取消、変換/書込期限、失敗後再試行も確認した。
 - 7561c21、CI42213371286/job127877241459: smoke2件成功、新UI3件は全失敗（54.103秒）。実要求保留後に番号が「画像0/4」、50%が未表示、写真2失敗時に旧写真アプリ案内が残るという目的のRed。後続の取消/復帰/再試行assertは到達前なので、このRedだけで検証済みとはしない。
 - 5d20d82、CI42214062065/job127879569109: Core20件とsmoke2件、既存写真復帰11件（290.986秒）が成功。新UI3件は65.160秒で全失敗。U1は新しい写真1/4表示を通過した後の50%待ち、U2も50%待ちで失敗。U3は旧案内が消えて再出力の実result・操作復帰・画像readyまで進んだ後、完了文字のassertだけが失敗した。完了した部分と未到達の後続assertを区別する。
-- 新UIhelperは選択可能TextのAX valueを優先していたため、現在のlabelを優先し、実Sessionのfraction/messageと実ProgressViewのAX値を独立照合する観測へ修復した。必要なscroll位置を整え、失敗時はlabel/value/model/progressを記録する。通常出力動作の原因とは未断定で、新UI3件の再CI結果を待つ。assertの目的や期待値は弱めていない。
+- 新UIhelperは選択可能TextのAX valueを優先していたため、現在のlabelを優先し、実Sessionのfraction/messageと実ProgressViewのAX値を独立照合する観測へ修復した。必要なscroll位置を整え、失敗時はlabel/value/model/progressを記録した。この時点では原因未断定だったが、後続caac75bの診断でTextの旧値保持を確認し、78be69aで修正後の成功を確認した。assertの目的や期待値は弱めていない。
 - b6fd9a8、CI42215343404/job127883831537: smoke2成功、新UI3件は初期readyで失敗（48.893秒）。追加診断のexportStage=none/exportFraction=noneを、全診断文字列へのnone検索が画像なしと誤判定した。実owner=true・pixels4値・要求1,1,1,1であり、製品の表示失敗ではない。readyをpixelsフィールドだけの4値/非none照合へ修復し、元の50%/完了文字の再検証は未到達として区別する。
-- caac75b、CI42215899010/job127885705780: 新UI3件が失敗（77.493秒）。進捗は実Sessionでfraction=0.5、messageに50%、実ProgressViewのAXValueも0.5へ更新済みだったが、選択可能TextのAX valueは初期文言のままだった。再出力成功後も実Session.messageは完了、実result/4枚表示は成功なのにTextは前の写真2失敗文言を保持した。通常UIの選択可能Textにmessageのidentityを付け、状態変更時にnative値を再生成する最小修正を加えた。テストもProgressViewのnative数値0.5と百分率50%を同じ進捗値として正確に扱う。Textの現在文言・実Session・実ProgressViewの独立照合は維持し、モデルだけの成功へ緩めていない。修正後の新UI3件の再CIは未確認。
+- caac75b、CI42215899010/job127885705780: 新UI3件が失敗（77.493秒）。進捗は実Sessionでfraction=0.5、messageに50%、実ProgressViewのAXValueも0.5へ更新済みだったが、選択可能TextのAX valueは初期文言のままだった。再出力成功後も実Session.messageは完了、実result/4枚表示は成功なのにTextは前の写真2失敗文言を保持した。通常UIの選択可能Textにmessageのidentityを付け、状態変更時にnative値を再生成する最小修正を加えた。テストもProgressViewのnative数値0.5と百分率50%を同じ進捗値として正確に扱う。Textの現在文言・実Session・実ProgressViewの独立照合は維持し、モデルだけの成功へ緩めていない。修正直後は未確認だったが、次の78be69aの再CIで3件成功を確認した。
+- 78be69a01da29f993110637ce98a1c4b54951c3d、CI42216526269/job127887810479: smoke2件、新UI3件全成功（75.878秒）。取消27.059秒、番号/進捗24.727秒、写真2失敗後の再出力24.092秒。実Session/Text/ProgressViewの独立照合と、取消の実終端・本文/4枚復帰、再出力成功までの後続assertも成功した。部分実行のため最新全機能成功や全体coverageへ代用しない。
+- e52f647、通常CI42217045109: native-coreの480件は成功。nativeでは新UI3件（101.979秒）と写真復帰11件（377.491秒）が成功したが、既存NativeInputTestsの途中でjob上限に達した（30分27秒）。確認したログにassert失敗はなく、全体coverageは未集計なので、通常全機能の成功とは扱わない。実行枠を45分へ延長したd69e427のPR CI42221440072で再確認中。重複push42221429333は取消し、成功証拠へ数えない。
+- d69e427、通常CI42221440072: Core480件成功、UI78件中77成功・1失敗（1719.534秒）。新UI3件は95.971秒で全成功。唯一の失敗は既存の入力検証失敗後の画像復帰ケースで、model ready/要求数/写真1〜3の実Imageと状態を通過した後、写真4の実Image存在assertが失敗した。ログではLazyVGridの次の項目を探して即existsとscrollを12回重ねている。各位置でAX反映を待つ短いwaitForExistenceと最後のbounded待機を追加し、実4画像/状態のassertは残した。通常の画像生成や表示stateは変更しておらず、対象再CIで切り分ける。全体coverageは成功証拠としてまだ利用できない。
 
 ## 試験とデータの限界
 
@@ -53,4 +60,4 @@ Core/画面の呼出境界を調整したが、保存schema、manifest、entitle
 
 通常Xcode Runで、写真アプリの事前操作なしに未取得画像を含む4枚出力を開始し、取得中の文字/進捗/取消と再出力、成功後の4枚/本文/写真順保持を最終段階で確認する。実写真や記事データ、認可を削除して試験条件を作らない。
 
-残作業は観測修復後の新UI3件の再CI、通常全機能CIと全製品80%以上の確認、一時診断workflowの削除、Build and Testへの記録引継ぎ、本人の実機確認。5d20d82以降の変更は新UIhelperとDEBUG診断だけで、通常の取得/出力動作は維持している。対象CI成功だけを全体成功や実機解消へ代用しない。
+残作業は既存画像復帰の観測修復後の対象再CI、通常全機能CIと全製品80%以上の確認、Build and Testへの記録引継ぎ、本人の実機確認。78be69a以降の製品ソースは固定し、変更は既存UIのAX待機と診断に限る。対象CI成功だけを全体成功や実機解消へ代用しない。
