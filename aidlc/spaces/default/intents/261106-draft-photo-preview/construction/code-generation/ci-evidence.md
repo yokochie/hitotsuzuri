@@ -58,3 +58,18 @@
 - 重複push run42173038631は取消要求済みで、証拠は上記PR runのみ。
 
 両jobログとrunのhead SHA/conclusionを読み取って確認した。新しいローカルbuild/native/UI/性能試験を実行していない。本人Macでの今回の表示解消確認は未取得。
+
+## 出力後照会を含む所有期間の回帰
+
+本人の変更依頼に従い、出力Sessionの終了後も記録照会が終わるまで再要求を受理しないことをT11へ追加した。既存の全機能成功534件はこの追加条件の成功証拠へ代用しない。
+
+### 追加回帰のRed
+
+- コミットf160e52da263f0e131676e8febb73dad4b86654f。
+- CI https://github.com/yokochie/hitotsuzuri/actions/runs/42178316595 、job127761830583、1分42秒、exit65。
+- 対象は `testPostExportQueryKeepsOwnershipUntilNextExportCanStart` の1件のみ。1件実行・1件失敗（27.553秒）。
+- 225行、後照会中の受理回数は期待1に対して実際2。診断は `working=false;exportSessionBusy=false;entered=2;accepted=2;reentryAttempts=1;postQueryWaiters=2;postQueryCalls=2;requests=1,1,1,1`。
+- 通常のbusy/入口guard/復帰は未修正で、記録照会相当のDEBUG gateにより既存awaitの割込み順を制御した。実Coordinator入口が再要求を受理するという目的の失敗を確認し、compile/fixture失敗とは区別する。
+- 重複full runs42178316585/42178324015は取消要求済み。新回帰のRedは上記の対象1件で確認し、既存10件の無駄な再実行を省いた。
+
+通常制御を修正し、既存runnerのclass11件でGreenを確認した後、通常の全機能CIへ戻す。

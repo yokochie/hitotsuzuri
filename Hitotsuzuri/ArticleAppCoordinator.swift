@@ -428,6 +428,12 @@ import HitotsuzuriCore
         fixturePhotoControl?.exportAccepted += 1
         #endif
         preparingExport = true
+        var photoSessionID:UUID?
+        // 保存確認から出力後照会まで同じ呼出しが所有する。解除と復帰の準備の間にawaitを置かない。
+        defer {
+            preparingExport = false
+            if let photoSessionID {resumePhotoPreviews(for:photoSessionID)}
+        }
         var choice: ArticleLeaveChoice = .save
         if session.isDirty || session.hasUncertainSave {
             let alert = NSAlert(); alert.messageText = "出力の前に記事を保存しますか？"
@@ -436,13 +442,11 @@ import HitotsuzuriCore
             alert.buttons[1].keyEquivalent = "\u{1b}"
             if await show(alert) != .alertFirstButtonReturn { choice = .keepEditing }
         }
-        preparingExport = false
         if case .keepEditing = choice { return }
         exportOSMessage = ""
         // 表示画像と出力用変換を同時保持しない。出力中の再取得も画面で抑止する。
         stopPhotoPreviews()
-        let photoSessionID=session.sessionID
-        defer {resumePhotoPreviews(for:photoSessionID)}
+        photoSessionID=session.sessionID
         #if DEBUG
         // 合成fixtureだけで、解放後の既存早期終了を決定的に通す。復帰処理は注入しない。
         if let control = fixturePhotoControl {

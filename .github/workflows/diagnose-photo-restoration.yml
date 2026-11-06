@@ -17,8 +17,8 @@ jobs:
         run: |
           sw_vers
           xcodebuild -version
-      - name: Reproduce exactly the post-export ownership regression
-        run: xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination platform=macOS -only-testing:HitotsuzuriUITests/ArticlePhotoRestorationUITests/testPostExportQueryKeepsOwnershipUntilNextExportCanStart -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/PhotoRestoration-reentry-red.xcresult CODE_SIGN_IDENTITY=- test
+      - name: Verify all synthetic photo restoration regressions
+        run: bash scripts/verify-native.sh ArticlePhotoRestorationUITests
       - name: Preserve synthetic regression diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
