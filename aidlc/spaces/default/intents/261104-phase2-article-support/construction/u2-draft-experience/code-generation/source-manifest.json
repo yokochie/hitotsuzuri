@@ -1,0 +1,136 @@
+{
+  "stage": "code-generation",
+  "unit": "u2-draft-experience",
+  "version": 1,
+  "writes": [
+    {
+      "path": "Hitotsuzuri/ArticleAppCoordinator.swift"
+    },
+    {
+      "path": "Hitotsuzuri/ArticleView.swift"
+    },
+    {
+      "path": "Hitotsuzuri/ArticleMetadataFields.swift"
+    },
+    {
+      "path": "Hitotsuzuri/ArticlePreviewView.swift"
+    },
+    {
+      "path": "Hitotsuzuri/DebugFixture.swift"
+    },
+    {
+      "path": "Hitotsuzuri/HitotsuzuriApp.swift"
+    },
+    {
+      "path": "Hitotsuzuri/PickerView.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleInitialContent.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleMetadataInput.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleProjection.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleOutputPorts.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticlePresentation.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleWorkspace.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticlePorts.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticlePersistence.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleFingerprint.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleEditSession.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/ArticleImageAccess.swift"
+    },
+    {
+      "path": "HitotsuzuriCore/PickerContent.swift"
+    },
+    {
+      "path": "HitotsuzuriU1Tests/ArticleSessionTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleDraftTestDoubles.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleInitialContentTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleMetadataInputTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleProjectionTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleAssociationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleEntryTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleNavigationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleDraftSessionTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleOutputPreparationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticlePreviewRetryTests.swift"
+    },
+    {
+      "path": "HitotsuzuriU2Tests/ArticleDraftIntegrationTests.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/ArticleDraftUITests.swift"
+    },
+    {
+      "path": "scripts/verify-draft-experience.sh"
+    },
+    {
+      "path": "HitotsuzuriUITests/ArticleDraftUITestCase.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/ArticleDraftPerformanceUITests.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/FixtureLaunch.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/FixtureSmokeUITests.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/ArticleFoundationUITests.swift"
+    },
+    {
+      "path": "HitotsuzuriUITests/NativeInputTests.swift"
+    },
+    {
+      "path": "scripts/native-test-runner.py"
+    },
+    {
+      "path": "scripts/test-native-runner.py"
+    },
+    {
+      "path": "scripts/verify-native.sh"
+    },
+    {
+      "path": ".github/workflows/verify.yml"
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "stage": "functional-design",
+  "unit": "u2-draft-experience",
+  "upstream_ids": [
+    "AC1.1.1",
+    "AC1.1.2",
+    "AC1.1.3",
+    "AC1.1.4",
+    "AC1.1.5",
+    "AC1.2.1",
+    "AC1.2.2",
+    "AC1.2.3",
+    "AC1.2.4",
+    "AC1.2.5",
+    "AC1.3.1",
+    "AC1.3.2",
+    "AC1.3.3",
+    "AC1.3.4",
+    "AC1.4.1",
+    "AC1.4.2",
+    "AC1.4.3",
+    "AC1.4.4",
+    "AC1.5.1",
+    "AC1.5.2",
+    "AC1.5.3",
+    "AC1.5.4",
+    "AC1.5.5",
+    "AC1.6.1",
+    "AC1.6.2",
+    "AC1.6.3",
+    "AC1.6.4",
+    "AC1.7.1",
+    "AC1.7.2",
+    "AC1.7.3",
+    "AC1.7.4",
+    "AC1.7.5",
+    "AC1.7.6"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.1.1",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-01; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.1.2",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-01; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.1.3",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-01; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.1.4",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-01; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.1.5",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-01; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.2.1",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-02; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.2.2",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-02; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.2.3",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-02; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.2.4",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-02; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.2.5",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-02; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.3.1",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-04; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.3.2",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-04; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.3.3",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-04; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.3.4",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-04; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.4.1",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-05; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.4.2",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-05; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.4.3",
+      "status": "N/A",
+      "target": "delivered by u1-article-foundation / u3-output-delivery; functional-spec.md#F2-10 defines U2 boundary"
+    },
+    {
+      "id": "AC1.4.4",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-05; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.5.1",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-03; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.5.2",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-03; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.5.3",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-03; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.5.4",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-03; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.5.5",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-03; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.6.1",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-07; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.6.2",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-06; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.6.3",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-06; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.6.4",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-06; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.7.1",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-06; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.7.2",
+      "status": "N/A",
+      "target": "delivered by u1-article-foundation / u3-output-delivery; functional-spec.md#F2-10 defines U2 boundary"
+    },
+    {
+      "id": "AC1.7.3",
+      "status": "N/A",
+      "target": "delivered by u1-article-foundation / u3-output-delivery; functional-spec.md#F2-10 defines U2 boundary"
+    },
+    {
+      "id": "AC1.7.4",
+      "status": "N/A",
+      "target": "delivered by u1-article-foundation / u3-output-delivery; functional-spec.md#F2-10 defines U2 boundary"
+    },
+    {
+      "id": "AC1.7.5",
+      "status": "Deferred",
+      "target": "u2-draft-experience code-generation/build-and-test: implement and verify functional-spec.md#F2-06; UI-only design has no rules.md BR target"
+    },
+    {
+      "id": "AC1.7.6",
+      "status": "N/A",
+      "target": "delivered by u1-article-foundation / u3-output-delivery; functional-spec.md#F2-10 defines U2 boundary"
+    }
+  ]
+}

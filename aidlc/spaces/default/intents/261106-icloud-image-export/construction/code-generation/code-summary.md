@@ -1,0 +1,65 @@
+# 出力画像のアプリ内取得の実装記録
+
+## 現在の検証状態
+
+Coreの6件の有効Redは、6a389a1の対象CI42212786801で新17件が全成功へ転じた。5d20d82のCI42214062065では追加分を含むCore20件と既存写真復帰11件が成功。画面の3件は7561c21のCI42213371286で意図した失敗を確認し、通常UI対応と観測修復、選択可能Textの更新修正を経て、78be69aの対象CI42216526269で全成功（75.878秒）となった。新UI3件の取消実終端・復帰・再出力成功まで確認できた。通常CI初回のjob時間上限と、次回の既存画像復帰のAX観測失敗を修復した後、983c60bの最終通常PR CI42226898333で全機能558件（Core480＋UI78）とsmoke2件が成功した。全手書きApp/Core行カバレッジ5750/6264＝91.79%で80%条件を満たした。本人の実iCloud確認は未完。
+
+SHA/job/各assertの詳細正本は同じ場所の[ci-evidence.md](ci-evidence.md)。変更前f272e3dの機能535件・smoke2・91.49%は基準であり、今回の変更後の最終成功へ代用しない。
+
+## 変更したファイルと判断
+
+- `HitotsuzuriCore/ArticleImageAccess.swift`: PhotoKit readerはnetworkAllowedを実optionsへ反映し、progressHandlerをMainActorへ渡す。内部の単調ticketでassetとnative tokenを所有し、要求ID確定前の取消を発行後へ引き継ぐ。完了でentryを解放し、取消後の旧通知は現在の要求へ届かない。SDK optionsを写真ライブラリへ触れず検証する最小注入境界を追加した。
+- 同ImageAccessは明示的にnetwork許可した取得待ちに独自の総経過期限を置かず、PhotoKit成功/失敗/本人取消を待つ。待機時間を記録し、変換開始後の30秒期限、256MiB予算、同期変換の実終端までのbusyを維持する。既定のlocal/probe要求は従来のnetwork=false・30秒期限のまま。表示用512px経路と15秒期限は変更しない。
+- `HitotsuzuriCore/ArticleExportDelivery.swift`: 出力時だけnetwork=trueを指定し、取得待ち時間を1枚30秒/書込込み40秒/全体180秒の経過から控除する。変換と書込/確定の保護まで無制限にはしない。進捗をjob/request/写真番号と単調fractionで検証し、取消・終端後の古い通知を捨てる。固定保存入力、4枚直列化、所有cleanup/不確定公開照合は既存契約のまま。
+- `HitotsuzuriCore/ArticleModels.swift`: 判別できる通信失敗の型networkUnavailableを追加した。共通assetUnavailableを一括で書き換えず、表示と出力の文脈を分ける。PhotoKitの取消キー/ネットワークNSError/詳細不明を分類し、不明なinput欠落をiCloud未取得と断定しない。
+- `HitotsuzuriCore/ArticleExportSession.swift`: 写真1〜4の対象番号と進捗を表示する。百分率は1枚の取得状況で、一式成功は実ExportResultを得てから。phase順位・完了枚数・fraction単調性で旧job/前写真/不正値・取消後通知を拒否する。出力の画像取得失敗にはアプリ内での再出力を案内し、要照合/cleanup失敗を盲目的な再試行へ誘導しない。
+- `Hitotsuzuri/ArticleExportView.swift`: 進捗なしは不定spinner、利用可能なfractionは確定progressbarと文字/AX値へ反映する。選択可能Textが旧field-editor値を保持しないよう、状態メッセージごとにidentityを更新する。既存の取消操作とfocusを維持した。
+- `Hitotsuzuri/DebugFixture.swift`、`Hitotsuzuri/ArticleView.swift`のDEBUG箇所: 合成cloud readerの進捗・終端・単発写真2失敗を制御する。実Coordinator→Session→Delivery→ImageAccessを通し、fixtureがmessage/busyや表示復帰を代行しない。
+- 新規 `HitotsuzuriU2Tests/ArticleCloudImageTests.swift`（12件）、`HitotsuzuriU3Tests/ArticleCloudExportTests.swift`（8件）、`HitotsuzuriUITests/ArticleCloudExportUITests.swift`（3件）。初期Core17件に、画面Green時のSession否定回帰3件を追加した。`ArticleExportIntegrationTests.swift`の既存性能用合成readerは新しい出力のnetwork許可を受理し、期待許可回数を0から120へ修正した。これは実通信の実行や性能測定成功を意味しない。
+
+Core/画面の呼出境界を調整したが、保存schema、manifest、entitlements、共有scheme、Xcode設定、通常CIの選択/除外/80%閾値は変更していない。新しい外部依存や独自HTTP/backend、写真変更APIは追加していない。Zero Unitなのでsource-manifestや架空のUnitは作らない。
+
+## 計画からの変更
+
+最初の計画は通常workflowを変更しない方針だった。通常全機能の初回実行で既存native jobの30分上限に到達し、assert失敗ではなくjob取消で全体検証が終わらなかったため、`.github/workflows/verify.yml` のnative timeout-minutesだけ30から45へ変更した（d69e427b38ab635866fa8ab162c4b298a9503b8b）。テストの削減や閾値緩和で回避せず、全対象を完走させるための実行枠調整である。native-coreの条件、実行コマンド、試験選択/除外、80%条件、製品/試験ソースは変更していない。この延長を画像ダウンロードのアプリ内待機期限と混同しない。
+
+## 要件と回帰の対応
+
+| 要件 | 実装と検証 |
+|---|---|
+| FR1 | 実PhotoKit optionsのnetwork許可、出力の明示policy、Core T1/T2とUI U1/U3 |
+| FR2 | reader→ImageAccess→Delivery→Session→Viewのfraction、写真番号、Core T3/T4とU1 |
+| FR3 | 要求ID前/進捗なし/中の取消、native tokenへ配信、実終端gate、Core T7/T8/T12とU2 |
+| FR4 | 写真2失敗、型付き通信/権限/不明失敗、所有cleanup、新job再出力、Core T9/T10とU3 |
+| NFR1 | cloud取得待ち301秒後の成功、待機と変換/書込期限の分離、Core T5/T6/T12 |
+| NFR2 | 世代/phase/fraction排除、本文/順序と旧成果物保持、256MiB・owner/grant・直列化、T1/T4/T6–T11、既存資源/出力回帰 |
+| NFR3 | 下記TDD、CI優先、全機能/80%の最終確認と実機の区別 |
+
+機械可読の対応は[traceability.json](traceability.json)の7要件。対応のOKは最終CIや実機完了を意味しない。
+
+## TDDの証拠
+
+- 2a40f34、CI42211810710/job127872011876: Core8件中6失敗。実optionsとAccessのfalse/false対true/false、進捗空配列、301秒取得timedOut、Deliveryのfalse4個対true4個・301秒待機timedOutという目的のRed。local timeoutと取消gateの対照2件は成功。compile/fixture失敗ではない。
+- 6a389a1、CI42212786801/job127875272187: 新Core17件成功（Image12件0.079秒、Export5件0.849秒）。旧Red6件が成功へ転じ、追加の不正/旧進捗、ID確定前取消、変換/書込期限、失敗後再試行も確認した。
+- 7561c21、CI42213371286/job127877241459: smoke2件成功、新UI3件は全失敗（54.103秒）。実要求保留後に番号が「画像0/4」、50%が未表示、写真2失敗時に旧写真アプリ案内が残るという目的のRed。後続の取消/復帰/再試行assertは到達前なので、このRedだけで検証済みとはしない。
+- 5d20d82、CI42214062065/job127879569109: Core20件とsmoke2件、既存写真復帰11件（290.986秒）が成功。新UI3件は65.160秒で全失敗。U1は新しい写真1/4表示を通過した後の50%待ち、U2も50%待ちで失敗。U3は旧案内が消えて再出力の実result・操作復帰・画像readyまで進んだ後、完了文字のassertだけが失敗した。完了した部分と未到達の後続assertを区別する。
+- 新UIhelperは選択可能TextのAX valueを優先していたため、現在のlabelを優先し、実Sessionのfraction/messageと実ProgressViewのAX値を独立照合する観測へ修復した。必要なscroll位置を整え、失敗時はlabel/value/model/progressを記録した。この時点では原因未断定だったが、後続caac75bの診断でTextの旧値保持を確認し、78be69aで修正後の成功を確認した。assertの目的や期待値は弱めていない。
+- b6fd9a8、CI42215343404/job127883831537: smoke2成功、新UI3件は初期readyで失敗（48.893秒）。追加診断のexportStage=none/exportFraction=noneを、全診断文字列へのnone検索が画像なしと誤判定した。実owner=true・pixels4値・要求1,1,1,1であり、製品の表示失敗ではない。readyをpixelsフィールドだけの4値/非none照合へ修復し、元の50%/完了文字の再検証は未到達として区別する。
+- caac75b、CI42215899010/job127885705780: 新UI3件が失敗（77.493秒）。進捗は実Sessionでfraction=0.5、messageに50%、実ProgressViewのAXValueも0.5へ更新済みだったが、選択可能TextのAX valueは初期文言のままだった。再出力成功後も実Session.messageは完了、実result/4枚表示は成功なのにTextは前の写真2失敗文言を保持した。通常UIの選択可能Textにmessageのidentityを付け、状態変更時にnative値を再生成する最小修正を加えた。テストもProgressViewのnative数値0.5と百分率50%を同じ進捗値として正確に扱う。Textの現在文言・実Session・実ProgressViewの独立照合は維持し、モデルだけの成功へ緩めていない。修正直後は未確認だったが、次の78be69aの再CIで3件成功を確認した。
+- 78be69a01da29f993110637ce98a1c4b54951c3d、CI42216526269/job127887810479: smoke2件、新UI3件全成功（75.878秒）。取消27.059秒、番号/進捗24.727秒、写真2失敗後の再出力24.092秒。実Session/Text/ProgressViewの独立照合と、取消の実終端・本文/4枚復帰、再出力成功までの後続assertも成功した。部分実行のため最新全機能成功や全体coverageへ代用しない。
+- e52f647、通常CI42217045109: native-coreの480件は成功。nativeでは新UI3件（101.979秒）と写真復帰11件（377.491秒）が成功したが、既存NativeInputTestsの途中でjob上限に達した（30分27秒）。確認したログにassert失敗はなく、全体coverageは未集計なので、このrunを通常全機能の成功とは扱わない。後続のd69e427で実行枠を45分へ延長した。重複push42221429333は取消し、成功証拠へ数えない。
+- d69e427、通常CI42221440072: Core480件成功、UI78件中77成功・1失敗（1719.534秒）。新UI3件は95.971秒で全成功。唯一の失敗は既存の入力検証失敗後の画像復帰ケースで、model ready/要求数/写真1〜3の実Imageと状態を通過した後、写真4の実Image存在assertが失敗した。ログではLazyVGridの次の項目を探して即existsとscrollを12回重ねている。各位置でAX反映を待つ短いwaitForExistenceと最後のbounded待機を追加し、実4画像/状態のassertは残した。通常の画像生成や表示stateは変更せず、後続対象CIと最終全機能CIで成功を確認した。この失敗runのcoverageを成功証拠へ代用しない。
+- 3da6cce2503c8295b76de6a71f161504239ca28d、対象CI42226340926/job127920690758: 入力検証失敗後の画像復帰1件が54.284秒で成功。4枚実Image・状態・要求数・不正入力保持のassertを維持したまま通過した。対象1件の成功であり、全機能/coverageへ代用しない。
+- 一時診断workflowを削除した983c60b64f413034259bc7d2498f0c47cbde3e15は3da6cceと製品/試験が同一。通常PR CI42226898333は成功。native-core job127922551662は1分45秒でrunner28件（4.142秒）/Core480件成功、native job127923376367は32分11秒でsmoke2件と全機能558件（Core480＋UI78）成功。新UI3件105.209秒、写真復帰11件351.385秒で全成功。全製品5750/6264行＝91.79%。主bundleはCI内の`Native-functional-20261106-134055-8cdbd2bc965c4e53ae887a46b6160574.xcresult`。重複push42226893738は取消し、成功証拠へ数えない。
+
+## 試験とデータの限界
+
+合成画像、専用UUID rootと試験pasteboardだけを使用し、FixtureLaunchのapp内所有cleanupを確認する。cloud-*は記事側readerの観測を独立させるためPicker表示adapterを分ける。通常アプリの共有構成そのものの実iCloud動作やPhotosの通知頻度を、新しい合成試験だけで証明しない。
+
+今回ローカルbuild/native/UI/performance、実Photos/iCloud、OS設定、一般clipboardを操作していない。静的runner/差分確認とgit diff --checkを実施した。既存performance試験の期待許可方針の修正はあるが、新たな実時間/実メモリ測定は未実行。
+
+## 本人確認と引継ぎ
+
+通常Xcode Runで、写真アプリの事前操作なしに未取得画像を含む4枚出力を開始し、取得中の文字/進捗/取消と再出力、成功後の4枚/本文/写真順保持を最終段階で確認する。実写真や記事データ、認可を削除して試験条件を作らない。
+
+通常全機能CIと全製品80%以上の確認、7要件の対応資料作成は完了。一時診断workflowは削除済み。製品/試験は3da6cce以降固定しており、Build and Testへの引継ぎ資料を用意した。本人の実機確認は残り、自動試験の成功を実iCloud取得の成功へ代用しない。

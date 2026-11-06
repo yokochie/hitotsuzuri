@@ -1,0 +1,43 @@
+{
+  "stage": "code-generation",
+  "upstream_ids": [
+    "FR1",
+    "FR2",
+    "FR3",
+    "NFR1",
+    "NFR2",
+    "NFR3"
+  ],
+  "coverage": [
+    {
+      "id": "FR1",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/ArticlePhotoRestorationUITests.swift"
+    },
+    {
+      "id": "FR2",
+      "status": "OK",
+      "target": "Hitotsuzuri/ArticleAppCoordinator.swift"
+    },
+    {
+      "id": "FR3",
+      "status": "OK",
+      "target": "Hitotsuzuri/ArticleView.swift"
+    },
+    {
+      "id": "NFR1",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/ArticlePhotoRestorationUITests.swift"
+    },
+    {
+      "id": "NFR2",
+      "status": "OK",
+      "target": "Hitotsuzuri/ArticleAppCoordinator.swift"
+    },
+    {
+      "id": "NFR3",
+      "status": "OK",
+      "target": ".github/workflows/verify.yml"
+    }
+  ]
+}

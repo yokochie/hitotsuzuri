@@ -6,5 +6,37 @@
     "scope": "mvp",
     "status": "complete",
     "request": "7be11570"
+  },
+  {
+    "uuid": "01a1a419-f24a-77b0-b3db-6966851d4990",
+    "slug": "phase2-article-support",
+    "dirName": "261104-phase2-article-support",
+    "scope": "mvp",
+    "status": "complete",
+    "request": "82f0d304"
+  },
+  {
+    "uuid": "01a1ab59-7de5-7700-a1bb-ac1fb56c37c2",
+    "slug": "article-access-fix",
+    "dirName": "261105-article-access-fix",
+    "scope": "bugfix",
+    "status": "complete",
+    "request": "b40a151c"
+  },
+  {
+    "uuid": "01a1af33-c002-7f7b-9bc4-b1da44b69ab1",
+    "slug": "draft-photo-preview",
+    "dirName": "261106-draft-photo-preview",
+    "scope": "bugfix",
+    "status": "complete",
+    "request": "6a7651c2"
+  },
+  {
+    "uuid": "01a1b096-d708-75f3-947f-3b0469071f57",
+    "slug": "icloud-image-export",
+    "dirName": "261106-icloud-image-export",
+    "scope": "bugfix",
+    "status": "in-flight",
+    "request": "3b6bff90"
   }
 ]

@@ -1,0 +1,284 @@
+{
+  "stage": "code-generation",
+  "unit": "u3-article-export",
+  "upstream_ids": [
+    "AC1.4.1",
+    "AC1.4.2",
+    "AC1.4.3",
+    "AC1.4.4",
+    "AC1.6.1",
+    "AC1.6.2",
+    "AC1.6.3",
+    "AC1.6.4",
+    "AC1.7.1",
+    "AC1.7.2",
+    "AC1.7.3",
+    "AC1.7.4",
+    "AC1.7.5",
+    "AC1.7.6",
+    "AC1.8.1",
+    "AC1.8.2",
+    "AC1.8.3",
+    "AC1.8.4",
+    "NFR3.30",
+    "NFR3.31",
+    "NFR3.32",
+    "NFR3.33",
+    "NFR1.30",
+    "NFR1.31",
+    "NFR2.30",
+    "NFR2.31",
+    "NFR2.32",
+    "NFR2.33",
+    "NFR4.30",
+    "NFR4.31",
+    "NFR5.30",
+    "NFR6.30",
+    "NFR6.31",
+    "NFR7.30",
+    "BR3.1",
+    "BR3.2",
+    "BR3.3",
+    "BR3.4",
+    "BR3.5",
+    "BR3.6",
+    "BR3.7",
+    "BR3.8",
+    "BR3.9",
+    "BR3.10",
+    "BR3.11",
+    "BR3.12"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.4.1",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/ArticleExportUITests.swift"
+    },
+    {
+      "id": "AC1.4.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportDeliveryTests.swift"
+    },
+    {
+      "id": "AC1.4.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "AC1.4.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportSessionTests.swift"
+    },
+    {
+      "id": "AC1.6.1",
+      "status": "N/A",
+      "target": "画面配置・入力保持・プレビューはu2-draft-experience所有。U3の追加操作はHitotsuzuriUITests/ArticleExportUITests.swiftで検証。"
+    },
+    {
+      "id": "AC1.6.2",
+      "status": "N/A",
+      "target": "画面配置・入力保持・プレビューはu2-draft-experience所有。U3の追加操作はHitotsuzuriUITests/ArticleExportUITests.swiftで検証。"
+    },
+    {
+      "id": "AC1.6.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportOSActionTests.swift"
+    },
+    {
+      "id": "AC1.6.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportOSActionTests.swift"
+    },
+    {
+      "id": "AC1.7.1",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportSessionTests.swift"
+    },
+    {
+      "id": "AC1.7.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportDeliveryTests.swift"
+    },
+    {
+      "id": "AC1.7.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportWriterTests.swift"
+    },
+    {
+      "id": "AC1.7.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportModelTests.swift"
+    },
+    {
+      "id": "AC1.7.5",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportWriterTests.swift"
+    },
+    {
+      "id": "AC1.7.6",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "AC1.8.1",
+      "status": "OK",
+      "target": "HitotsuzuriCore/ArticleExportOSActions.swift"
+    },
+    {
+      "id": "AC1.8.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportOSActionTests.swift"
+    },
+    {
+      "id": "AC1.8.3",
+      "status": "OK",
+      "target": "HitotsuzuriCore/ArticleExportOSActions.swift"
+    },
+    {
+      "id": "AC1.8.4",
+      "status": "GAP",
+      "target": "本人の実写真・Sandbox・Finder・note受渡しは未確認。code-generation/user-verification.mdへ未確認と手順を記録し、自動/Fake成功で代替していない。"
+    },
+    {
+      "id": "NFR3.30",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "NFR3.31",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportDeliveryTests.swift"
+    },
+    {
+      "id": "NFR3.32",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "NFR3.33",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "NFR1.30",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "NFR1.31",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "NFR2.30",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportJournalTests.swift"
+    },
+    {
+      "id": "NFR2.31",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportWriterTests.swift"
+    },
+    {
+      "id": "NFR2.32",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportWriterTests.swift"
+    },
+    {
+      "id": "NFR2.33",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportWriterTests.swift"
+    },
+    {
+      "id": "NFR4.30",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/ArticleExportUITests.swift"
+    },
+    {
+      "id": "NFR4.31",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportSessionTests.swift"
+    },
+    {
+      "id": "NFR5.30",
+      "status": "OK",
+      "target": "scripts/native-test-runner.py"
+    },
+    {
+      "id": "NFR6.30",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "NFR6.31",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportOSActionTests.swift"
+    },
+    {
+      "id": "NFR7.30",
+      "status": "GAP",
+      "target": "本人の実写真・Sandbox・Finder・note受渡しは未確認。code-generation/user-verification.mdへ未確認と手順を記録し、自動/Fake成功で代替していない。"
+    },
+    {
+      "id": "BR3.1",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportOSActionTests.swift"
+    },
+    {
+      "id": "BR3.2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportSessionTests.swift"
+    },
+    {
+      "id": "BR3.3",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "BR3.4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportWriterTests.swift"
+    },
+    {
+      "id": "BR3.5",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportWriterTests.swift"
+    },
+    {
+      "id": "BR3.6",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportSessionTests.swift"
+    },
+    {
+      "id": "BR3.7",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportDeliveryTests.swift"
+    },
+    {
+      "id": "BR3.8",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "BR3.9",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportOSActionTests.swift"
+    },
+    {
+      "id": "BR3.10",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportOSActionTests.swift"
+    },
+    {
+      "id": "BR3.11",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/ArticleExportUITests.swift"
+    },
+    {
+      "id": "BR3.12",
+      "status": "GAP",
+      "target": "本人の実写真・Sandbox・Finder・note受渡しは未確認。code-generation/user-verification.mdへ未確認と手順を記録し、自動/Fake成功で代替していない。"
+    }
+  ]
+}

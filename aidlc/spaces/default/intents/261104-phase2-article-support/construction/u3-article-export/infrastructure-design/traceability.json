@@ -1,0 +1,88 @@
+{
+  "stage": "infrastructure-design",
+  "unit": "u3-article-export",
+  "upstream_ids": [
+    "NFR1.30",
+    "NFR1.31",
+    "NFR2.30",
+    "NFR2.31",
+    "NFR2.32",
+    "NFR2.33",
+    "NFR3.30",
+    "NFR3.31",
+    "NFR3.32",
+    "NFR3.33",
+    "NFR4.30",
+    "NFR4.31",
+    "NFR5.30",
+    "NFR6.30",
+    "NFR6.31",
+    "NFR7.30"
+  ],
+  "coverage": [
+    {
+      "id": "NFR1.30",
+      "status": "OK", "target": "cicd-pipeline.md Deploymentの既存Sandboxアプリと非通信境界"
+    },
+    {
+      "id": "NFR1.31",
+      "status": "N/A", "target": "既存C2画像変換の実装/試験で扱う。追加の基盤や画像サービスは作らない。"
+    },
+    {
+      "id": "NFR2.30",
+      "status": "OK", "target": "cicd-pipeline.md Shared ResourcesのExportJobsとC1/C2/C3境界"
+    },
+    {
+      "id": "NFR2.31",
+      "status": "OK", "target": "cicd-pipeline.md Deploymentの同volume一時/完成物、Local Safetyの実体照合"
+    },
+    {
+      "id": "NFR2.32",
+      "status": "OK", "target": "cicd-pipeline.md ExportJobs専用記録と都度選択grant"
+    },
+    {
+      "id": "NFR2.33",
+      "status": "OK", "target": "cicd-pipeline.md Shared Resourcesの親実体と権限寿命"
+    },
+    {
+      "id": "NFR3.30",
+      "status": "OK", "target": "cicd-pipeline.md Deploymentの一件並行と既存共有画像予算"
+    },
+    {
+      "id": "NFR3.31",
+      "status": "N/A", "target": "アプリ内の単調時計/期限判定で実装する。新しい外部基盤は不要。機能CIで境界を確認する。"
+    },
+    {
+      "id": "NFR3.32",
+      "status": "OK", "target": "cicd-pipeline.md Local Safetyの直列I/Oと取消/実収束の分離"
+    },
+    {
+      "id": "NFR3.33",
+      "status": "OK", "target": "cicd-pipeline.md Verification Pipelineの本人Mac限定U3性能"
+    },
+    {
+      "id": "NFR4.30",
+      "status": "OK", "target": "cicd-pipeline.md 本人MacとGUI試験の薄い操作接続"
+    },
+    {
+      "id": "NFR4.31",
+      "status": "OK", "target": "cicd-pipeline.md Clipboard/FolderActionsのOS境界"
+    },
+    {
+      "id": "NFR5.30",
+      "status": "OK", "target": "cicd-pipeline.md native-core依存nativeと正式--functionalの全製品80%"
+    },
+    {
+      "id": "NFR6.30",
+      "status": "OK", "target": "cicd-pipeline.md ローカルExportJobs、合成CI、アップロード非追加"
+    },
+    {
+      "id": "NFR6.31",
+      "status": "N/A", "target": "U2投影とU3コピー操作のコード/契約試験で扱う。追加基盤は不要。"
+    },
+    {
+      "id": "NFR7.30",
+      "status": "OK", "target": "cicd-pipeline.md 本人Macの実写真/保存先/note確認と戻し方"
+    }
+  ]
+}

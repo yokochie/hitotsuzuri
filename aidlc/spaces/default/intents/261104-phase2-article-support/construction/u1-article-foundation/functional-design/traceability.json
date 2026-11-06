@@ -1,0 +1,32 @@
+{
+  "stage": "functional-design",
+  "unit": "u1-article-foundation",
+  "upstream_ids": ["AC1.1.1", "AC1.1.2", "AC1.1.3", "AC1.1.4", "AC1.1.5", "AC1.2.1", "AC1.2.2", "AC1.2.3", "AC1.2.4", "AC1.2.5", "AC1.3.1", "AC1.3.2", "AC1.3.3", "AC1.3.4", "AC1.4.1", "AC1.4.2", "AC1.4.3", "AC1.4.4", "AC1.7.1", "AC1.7.2", "AC1.7.3", "AC1.7.4", "AC1.7.5", "AC1.7.6"],
+  "coverage": [
+    {"id":"AC1.1.1","status":"OK","target":"BR1.1, BR1.2"},
+    {"id":"AC1.1.2","status":"OK","target":"BR1.1, BR1.4"},
+    {"id":"AC1.1.3","status":"N/A","target":"候補選択の完成はu2-draft-experience。U1はBR1.1で無断変更を防ぐ"},
+    {"id":"AC1.1.4","status":"N/A","target":"複数候補UIはu2-draft-experience。U1照合はBR1.1"},
+    {"id":"AC1.1.5","status":"OK","target":"BR1.1, BR1.4"},
+    {"id":"AC1.2.1","status":"OK","target":"BR1.2, BR1.3"},
+    {"id":"AC1.2.2","status":"OK","target":"BR1.3"},
+    {"id":"AC1.2.3","status":"OK","target":"BR1.2, BR1.3, BR1.4"},
+    {"id":"AC1.2.4","status":"OK","target":"BR1.3, BR1.4"},
+    {"id":"AC1.2.5","status":"OK","target":"BR1.4, BR1.10"},
+    {"id":"AC1.3.1","status":"OK","target":"BR1.5"},
+    {"id":"AC1.3.2","status":"OK","target":"BR1.3, BR1.5"},
+    {"id":"AC1.3.3","status":"OK","target":"BR1.5"},
+    {"id":"AC1.3.4","status":"OK","target":"BR1.5"},
+    {"id":"AC1.4.1","status":"OK","target":"BR1.6","note":"U1は文章再開/編集/保存の基礎。写真不能UI完成U2、OSコピーU3"},
+    {"id":"AC1.4.2","status":"OK","target":"BR1.6, BR1.7"},
+    {"id":"AC1.4.3","status":"N/A","target":"4枚一式はu3-article-export。U1の1枚保護BR1.8/BR1.9"},
+    {"id":"AC1.4.4","status":"OK","target":"BR1.6, BR1.9"},
+    {"id":"AC1.7.1","status":"OK","target":"BR1.3, BR1.8","note":"1枚検証への固定入力、4枚接続U3"},
+    {"id":"AC1.7.2","status":"OK","target":"BR1.7"},
+    {"id":"AC1.7.3","status":"N/A","target":"4枚/article.md/manifestはu3-article-export。U1は別フォルダの1枚"},
+    {"id":"AC1.7.4","status":"N/A","target":"manifestはu3-article-export。共通指紋BR1.11"},
+    {"id":"AC1.7.5","status":"OK","target":"BR1.8, BR1.9","note":"1枚の固定入力/終端。数値はU1 nfr-requirements、4枚ジョブU3"},
+    {"id":"AC1.7.6","status":"OK","target":"BR1.8, BR1.9","note":"1枚の失敗/取消/復旧。4枚完成条件U3"}
+  ],
+  "reverse":[{"id":"BR1.11","status":"N/A","target":"FR13/FR16とC2の共有値整合基礎、manifest完成AC1.7.4はU3"}]
+}
