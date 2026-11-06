@@ -80,3 +80,15 @@ d69e427b38ab635866fa8ab162c4b298a9503b8b、PR CI42221440072。native-core1279042
 ### 画像要素の反映待ち修復
 
 3da6cce2503c8295b76de6a71f161504239ca28d、CI42226340926/job127920690758、3分0秒、success。失敗した入力検証後の画像復帰1件だけを、同じXcode project/schemeのonly-testing指定で実行し成功した。通常製品は変更せず、モデルready後のLazyVGridの画像AX要素を各スクロール位置でbounded待機する。実画像4枚・状態・要求数・順序のassertは維持し、失敗時の実診断を追加した。一時workflowを再度削除し、通常全機能で最終確認する。重複full42226351035（PR）/42226340794（push）は取消要求済み。
+
+## 最終通常全機能Green
+
+- head983c60b64f413034259bc7d2498f0c47cbde3e15（製品/試験は3da6cceと同一、一時診断workflow削除済み）。
+- [PR CI42226898333](https://github.com/yokochie/hitotsuzuri/actions/runs/42226898333)、success。
+- native-core127922551662: 1分45秒、runner契約28件/4.142秒、Core480件成功。
+- native127923376367: 32分11秒、smoke2件、機能558件（Core480＋UI78）成功。新cloud UI3件/105.209秒、写真復帰11件/351.385秒も全成功。
+- 全手書きApp/Core Swiftの行カバレッジ5750/6264＝91.79%。通常80%条件を維持。性能は既存の別区分で、新たな実機性能測定を意味しない。
+- 主bundleはCI内 `.build/Native-functional-20261106-134055-8cdbd2bc965c4e53ae887a46b6160574.xcresult`。ローカルへ取得していない。
+- 重複push42226893738は取消要求済み。上記PR実行のみを最終成功証拠とする。
+
+現在の対象ソースとheadの一致を確認して利用し、ローカルの同じbuild/native/UI/性能は実行していない。本人の実iCloud取得確認はまだ未実施。

@@ -47,7 +47,7 @@ Xcode synchronized groupと既存runnerで新classを発見する。通常workfl
 - [x] Step 4: Core Refactor。成功を保ちながら期限方針とprogress/取消の責務を整理する。PhotoKitの所有とUIの状態を混在させず、不要な抽象化を追加しない。（NFR2–NFR3）
 - [x] Step 5: 接続/画面 Red。合成readerの実進捗を実Coordinator/Deliveryへ流し、番号/百分率/待機、取消後の表示復帰、失敗後の新規再出力を3画面回帰で確認する。文言だけをfakeが直接書き込むfixtureを使わず、通常UI未対応の意図した失敗をCIで記録する。（FR2–FR4、NFR2–NFR3）
 - [x] Step 6: 接続/画面 GreenとRefactor。ExportSession/Viewの状態と失敗案内を実装し、旧通知・取消文言・次写真の進捗を検証する。対象3画面と既存写真復帰回帰をCIで確認して成功を保つ。（FR1–FR4、NFR1–NFR2）
-- [ ] Step 7: 通常全機能CI。対象限定の一時診断workflowを使った場合は削除し、Core→smoke→全機能/全製品80%の既存CIを通す。ソースSHA/実行件数/coverageを記録し、同じ試験をローカルで繰り返さない。（全要件）
+- [x] Step 7: 通常全機能CI。対象限定の一時診断workflowを使った場合は削除し、Core→smoke→全機能/全製品80%の既存CIを通す。ソースSHA/実行件数/coverageを記録し、同じ試験をローカルで繰り返さない。（全要件）
 - [ ] Step 8: code-summary/7要件traceability/Red-Green証拠と本人確認手順を作成し、独立レビュー、Build and Testへ引き継ぐ。フェーズ記録をcommitし既存Draft PRへ反映する。実iCloud取得は自動試験だけで確認済みとせず、最終段階に本人確認をまとめる。（NFR3）
 
 テスト対象のないDB/repository/HTTP API層を作らず、該当するCore業務/API境界と画面でRed→Green→Refactorを行う。実装前の計画承認後にだけ製品/試験変更を開始する。
