@@ -41,7 +41,7 @@ Xcode synchronized groupと既存runnerで新classを発見する。通常workfl
 
 ## 実行順
 
-- [ ] Step 1: runner準備と基準確認。既存CI42179866652の機能535件/smoke2/91.49%と、現在の対象ソース同一性を確認する。新classの発見規則とunit-test-instructionsのコマンドを確認し、同じローカルbuild/UIを再実行しない。（NFR3）
+- [x] Step 1: runner準備と基準確認。既存CI42179866652の機能535件/smoke2/91.49%と、現在の対象ソース同一性を確認する。新classの発見規則とunit-test-instructionsのコマンドを確認し、同じローカルbuild/UIを再実行しない。（NFR3）
 - [ ] Step 2: Core境界 Red。既存interfaceで再現可能なネットワーク許可・進捗未接続・旧30/40/180秒超過の回帰を先に追加しCIで意図した失敗を観測する。新しいadapter境界が必要なら、通常方針を変更しない最小の試験用注入を先に整え、compile失敗をRedに数えない。（FR1–FR4、NFR1–NFR3）
 - [ ] Step 3: Core Green。readerから出力まで明示的な取得許可/進捗を接続し、待機/変換/書込の期限を分ける。要求ID確定前取消、実終端待ち、旧応答、写真ごとの通知所有を保護し、対象Core回帰を成功させる。（FR1–FR4、NFR1–NFR2）
 - [ ] Step 4: Core Refactor。成功を保ちながら期限方針とprogress/取消の責務を整理する。PhotoKitの所有とUIの状態を混在させず、不要な抽象化を追加しない。（NFR2–NFR3）

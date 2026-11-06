@@ -5,9 +5,15 @@ import Foundation
     var reservedImageBytes: Int { get }
     var peakReservedImageBytes: Int { get }
     func image(_ assetID: String, requestID: UUID) async throws -> ArticleJPEG
+    func image(_ assetID: String, requestID: UUID, networkAllowed: Bool, progress: @escaping @MainActor (Double) -> Void) async throws -> ArticleJPEG
     func cancel(_ requestID: UUID)
 }
 extension ArticleImageAccess: ArticleExportImageProviding { }
+extension ArticleExportImageProviding {
+    public func image(_ assetID: String, requestID: UUID, networkAllowed: Bool, progress: @escaping @MainActor (Double) -> Void) async throws -> ArticleJPEG {
+        try await image(assetID, requestID: requestID)
+    }
+}
 
 public typealias ArticleExportProgressSink = @Sendable (ExportProgress) async -> Void
 public typealias ArticleExportWriterFactory = @Sendable (URL, ArticleExportRecoveryRecord) -> ArticleExportWriter

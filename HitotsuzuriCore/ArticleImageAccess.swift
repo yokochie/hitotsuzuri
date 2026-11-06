@@ -70,16 +70,27 @@ public enum ArticlePhotoPreviewState:Sendable {
 
 @MainActor public protocol ArticleImageReading {
     func request(_ id: String, networkAllowed: Bool, completion: @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) -> Int
+    func request(_ id: String, networkAllowed: Bool, progress: @escaping @MainActor (Double) -> Void, completion: @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) -> Int
     func cancel(_ request: Int)
+}
+extension ArticleImageReading {
+    public func request(_ id: String, networkAllowed: Bool, progress: @escaping @MainActor (Double) -> Void, completion: @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) -> Int {
+        request(id, networkAllowed: networkAllowed, completion: completion)
+    }
 }
 
 @MainActor public final class PhotoKitArticleImageReader: ArticleImageReading {
+    typealias RequestInput = @MainActor (String, PHContentEditingInputRequestOptions, @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) -> Int
+    private var requestInput: RequestInput?
     public init() {}
+    // optionsを含む実adapter境界を、写真ライブラリへ触れずに観測する。
+    init(requestInput: @escaping RequestInput) { self.requestInput = requestInput }
     public func request(_ id: String, networkAllowed: Bool, completion: @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) -> Int {
-        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject else { completion(.failure(.assetUnavailable)); return 0 }
         let options = PHContentEditingInputRequestOptions()
         options.isNetworkAccessAllowed = false
         options.canHandleAdjustmentData = { _ in false }
+        if let requestInput { return requestInput(id, options, completion) }
+        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject else { completion(.failure(.assetUnavailable)); return 0 }
         let token = Int(asset.requestContentEditingInput(with: options) { input, _ in
             Task { @MainActor in
                 guard let input, let url = input.fullSizeImageURL else { completion(.failure(.assetUnavailable)); return }
@@ -111,6 +122,9 @@ public enum ArticlePhotoPreviewState:Sendable {
     public var isBusy:Bool {current != nil}
     public var reservedImageBytes:Int {budget.reservedBytes}
     public var peakReservedImageBytes:Int {budget.peakReservedBytes}
+    public func image(_ assetID: String, requestID: UUID = UUID(), networkAllowed: Bool, progress: @escaping @MainActor (Double) -> Void = { _ in }) async throws -> ArticleJPEG {
+        try await image(assetID, requestID: requestID)
+    }
     public func image(_ assetID: String, requestID: UUID = UUID()) async throws -> ArticleJPEG {
         guard current == nil else { throw ArticleFailure.busy }
         diagnostics.record(.imageRequested)
