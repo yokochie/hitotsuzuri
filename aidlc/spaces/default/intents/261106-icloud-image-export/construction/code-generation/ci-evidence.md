@@ -25,3 +25,12 @@ Core Green、UI Red/Green、最終通常全機能の結果はこれから記録�
 - reader内部の一意ticket、options許可/進捗、取得待ちと変換30秒の分離、Deliveryで取得待ちを期限へ算入しない処理、取消後実終端/旧通知拒否、失敗再試行・書込期限を検証した。
 - UI/Sessionの進捗表示はまだ未変更で、画面接続の成功を主張しない。全機能/全体coverageは最終通常CIで別途確認する。
 - 重複通常full42212790791（PR）/42212786896（push）は取消要求済み。これらを成功証拠に数えない。
+
+## UI Red
+
+- head7561c21717f252fbff79b4e8cc9543fbe1bc65f3。
+- [対象限定CI42213371286](https://github.com/yokochie/hitotsuzuri/actions/runs/42213371286)、job127877241459、2分31秒、exit65。
+- 起動smoke2件成功、ArticleCloudExportUITests3件は全失敗（54.103秒）。
+- U1: 実際の取得中表示「画像 0/4：画像を取得中」が対象写真1/4を示さない（58行）。U2: 実readerの進捗後も50%を表示しない（19行）。U3: 写真2の取得失敗時に写真アプリの事前取得案内が残る（91行）。
+- 実Coordinator→Delivery→ImageAccess→合成readerを通り、通常Session/Viewを変更する前の画面接続不足を再現した。compile/fixtureの失敗ではない。後続の取消/復帰/再出力assertはGreenで確認する。
+- 重複full42213373800（PR）/42213371196（push）は取消要求済み、成功証拠にしない。

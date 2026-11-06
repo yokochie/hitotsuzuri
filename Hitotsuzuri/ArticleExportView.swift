@@ -15,7 +15,12 @@ struct ArticleExportView: View {
                 .focusable().focused(focus, equals: "article-export")
                 .accessibilityIdentifier("article-export").id("article-export")
             if coordinator.articleExport.isBusy {
-                ProgressView().controlSize(.small)
+                if let fraction = coordinator.articleExport.downloadFraction {
+                    ProgressView(value: fraction, total: 1).accessibilityIdentifier("article-export-progress")
+                        .accessibilityValue("\(Int((fraction * 100).rounded(.down)))%")
+                } else {
+                    ProgressView().controlSize(.small).accessibilityIdentifier("article-export-waiting")
+                }
                 Button("出力を取り消す") { coordinator.articleExport.cancel() }
                     .focusable().focused(focus, equals: "article-export-cancel")
                     .accessibilityIdentifier("article-export-cancel").id("article-export-cancel")

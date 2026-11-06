@@ -89,6 +89,77 @@ import XCTest
         catch { XCTAssertEqual(error as? ArticleFailure, .timedOut) }
     }
 
+    func testSessionRejectsInvalidRegressiveAndPreviousPhotoProgress() async throws {
+        try await sessionFixture { root, _, actions, session in
+            let latch = U3Latch(); actions.pause = latch
+            let task = Task { await session.start(choice: .save) { ArticleExportDestination(grantID: UUID(), selectedDirectory: root) } }
+            try await ExportFixture.waitUntil { latch.waiting }
+            let id = try XCTUnwrap(session.activeJobID)
+            session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 1, fraction: 0.5))
+            XCTAssertEqual(session.downloadFraction, 0.5); XCTAssertTrue(session.message.contains("写真 2/4"))
+            let before = session.message
+            for value in [Double.nan, .infinity, -1, 2, 0.25] {
+                session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 1, fraction: value))
+                XCTAssertEqual(session.message, before)
+            }
+            session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 1))
+            session.receive(ExportProgress(jobID: UUID(), stage: "committing", completedImages: 4))
+            XCTAssertEqual(session.message, before)
+            session.receive(ExportProgress(jobID: id, stage: "writing", completedImages: 2))
+            XCTAssertNil(session.downloadFraction)
+            session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 2, fraction: 0.1))
+            XCTAssertEqual(session.downloadFraction, 0.1)
+            let nextPhoto = session.message
+            session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 1, fraction: 1))
+            session.receive(ExportProgress(jobID: id, stage: "writing", completedImages: 2))
+            XCTAssertEqual(session.message, nextPhoto)
+            session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 2, fraction: 1))
+            XCTAssertNil(session.result, "取得100%を一式完了にしない")
+            latch.open(); await task.value
+            let completed = session.message
+            session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 3, fraction: 1))
+            XCTAssertEqual(session.message, completed); XCTAssertNil(session.downloadFraction)
+        }
+    }
+
+    func testSessionCancellationMessageIsNotOverwrittenByProgress() async throws {
+        try await sessionFixture { root, _, actions, session in
+            let latch = U3Latch(); actions.pause = latch
+            let task = Task { await session.start(choice: .save) { ArticleExportDestination(grantID: UUID(), selectedDirectory: root) } }
+            try await ExportFixture.waitUntil { latch.waiting }
+            let id = try XCTUnwrap(session.activeJobID)
+            session.cancel()
+            let message = session.message
+            session.receive(ExportProgress(jobID: id, stage: "acquiring", completedImages: 1, fraction: 0.9))
+            XCTAssertEqual(session.message, message); XCTAssertNil(session.downloadFraction)
+            await task.value
+            XCTAssertNil(session.result); XCTAssertFalse(session.isBusy)
+        }
+    }
+
+    func testSessionUnknownImageFailureOffersInAppRetryAndPreservesInput() async throws {
+        try await sessionFixture { root, presentation, actions, session in
+            let content = presentation.session?.content
+            actions.runFailure = .assetUnavailable
+            await session.start(choice: .save) { ArticleExportDestination(grantID: UUID(), selectedDirectory: root) }
+            XCTAssertTrue(session.message.contains("もう一度出力")); XCTAssertFalse(session.message.contains("写真アプリ"))
+            XCTAssertEqual(presentation.session?.content, content)
+            actions.runFailure = nil
+            await session.start(choice: .save) { ArticleExportDestination(grantID: UUID(), selectedDirectory: root) }
+            XCTAssertNotNil(session.result); XCTAssertEqual(actions.calls, 2)
+        }
+    }
+
+    private func sessionFixture(_ body: (URL, ArticlePresentation, ExportTestActions, ArticleExportSession) async throws -> Void) async throws {
+        let root = try ExportFixture.root("cloud-session")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prepared = try ExportFixture.prepared(), store = ArticlePersistence(directory: root.appendingPathComponent("articles"))
+        let article = try await store.create(projectID: prepared.savedInput.article.projectID, operationID: UUID(), source: prepared.savedInput.article.source, content: prepared.savedInput.article.content)
+        let actions = ExportTestActions(), presentation = ArticlePresentation(workspace: ArticleWorkspace(selections: U3Store(), articles: store), store: store, output: actions)
+        presentation.adopt(ArticleEditSession(article: article, store: store))
+        try await body(root, presentation, actions, ArticleExportSession(presentation: presentation, actions: actions))
+    }
+
     private func wait(_ condition: @MainActor () async -> Bool) async -> Bool {
         let end = ContinuousClock().now + .seconds(2)
         while !(await condition()) {
