@@ -1,24 +1,19 @@
-# コード構成
+# コード構成と分類
 
-| 領域 | 分類と責務 |
+| 領域 | 主な責務 |
 |---|---|
-| Hitotsuzuri/HitotsuzuriApp.swift、Info.plist、entitlements | 構成・依存生成・通常起動とDEBUG fixture分岐 |
-| PickerView、ArticleView、ArticleMetadataFields、ArticlePreviewView、ArticleExportView | View。記事候補、入力、プレビュー、出力進捗・回復 |
-| ArticleAppCoordinator | Controller。OSパネル・window終了確認・プレビューと出力の接続 |
-| DebugFixture | DEBUG専用の合成ライブラリ・画像・保存root・遅延注入 |
-| Core/Models、Ports | 選択モデル・型付き失敗・library/image/storage境界 |
-| SelectionWorkflow、PhotoLibraryAccess、LocalImageAccess、SelectionPersistence | 選択UseCase・PhotoKit adapter・画像queue/cache・JSON repository |
-| PickerContent、PickerPresentationState、PresentationSnapshot、PickerAccessibility、NativeFolderBrowser | 選択UIと状態・キーボード操作・NSOutlineView adapter |
-| ArticleModels、ArticlePorts、ArticleFingerprint | 記事モデル・保存protocol・canonical digest |
-| ArticleWorkspace、ArticlePersistence、ArticleFileSystem | 選択から記事への関連付け・操作ログ保存・POSIX fd相対I/O |
-| ArticleEditSession、ArticlePresentation、ArticleMetadataInput、ArticleInitialContent、ArticleProjection、ArticleOutputPorts | 手動保存・遷移・日付候補・本文/Markdown生成・出力契約 |
-| ArticleImageAccess、ArticleImageConverter | PhotoKit編集入力・要求寿命・縮小JPEG変換とmemory budget |
-| ArticleProbeDelivery | 1枚の検証出力と専用回復journal |
-| ArticleExportModels、Manifest、FileSystem、Journal、Writer、Delivery、OSActions、Session | 4枚出力の値・形式・実体照合・保存・生成・進行・OS操作・画面状態 |
-| Diagnostics、NativeMeasurement、FrameMeasurement | 分類のみのログとnative計測値 |
-| 4つのTests領域 | model/unit/integration/UI/性能のXCTestとtest doubles |
-| scripts/ | bash入口、Python試験選択、Swift coverage/画面計測 |
-| .github/workflows/ | 機能CIと限定診断 |
-| docs/ | 設計資料。現行契約と区別して参照 |
+| HitotsuzuriApp、Info.plist、entitlements、Xcode project | 起動/依存生成、Sandbox、署名、target構成 |
+| PickerView、ArticleView、ArticleMetadataFields、ArticlePreviewView、ArticleExportView | View、記事候補、編集、本文/写真表示、出力操作 |
+| ArticleAppCoordinator | Controller。sessionと表示要求の同期、window終了、パネル、出力/回復の接続 |
+| DebugFixture | 合成Photos・画像・選択・遅延、temporary/Application Supportの所有UUID領域 |
+| Core Models、Ports、SelectionWorkflow、PhotoLibraryAccess、LocalImageAccess、SelectionPersistence | 選択モデル・use case・Photos/image adapter・設定/選択JSON |
+| PickerContent、PickerPresentationState、PresentationSnapshot、PickerAccessibility、NativeFolderBrowser | 選択画面、階層、焦点、キーボード、表示状態 |
+| ArticleModels、Ports、Fingerprint、Workspace、Persistence、FileSystem | 記事値・保存契約・canonical bytes・関連付け・operation/current・安全なI/O |
+| ArticleEditSession、Presentation、MetadataInput、InitialContent、Projection、OutputPorts | 編集・手動保存・遷移・日付候補・本文/Markdown・出力契約 |
+| ArticleImageAccess、ArticleImageConverter | 同一ファイル内の表示Previewsと、出力reader/要求/変換・memory budget |
+| ArticleProbeDelivery、ArticleExport系 | 1枚検証、4枚の契約/実体/journal/Writer/Delivery/OSActions/Session |
+| Diagnostics、FrameMeasurement、NativeMeasurement | 型付き診断、native入力/表示計測 |
+| 4つのTests領域、scripts、.github/workflows | model/結合/UI/性能、選択契約、coverage、CI |
+| docs | 設計提案・依頼資料 |
 
-AppはCoreをimportし、CoreからAppへの依存はない。Core内部は同一moduleのprotocolで実装を注入する。外部package依存や循環するpackage graphは見つからない。詳細なコンポーネント責務は `component-inventory.md` に集約する。
+App→Coreのmodule依存。CoreからAppへのimportはない。外部package依存はない。詳細なcomponent区分は `component-inventory.md` に集約する。

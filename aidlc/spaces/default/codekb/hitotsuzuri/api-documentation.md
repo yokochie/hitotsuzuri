@@ -1,21 +1,19 @@
-# API・保存契約
+# API・状態・永続形式
 
-HTTP/GraphQL/WebSocket endpointはない。以下はSwift内の境界である。
+HTTP/GraphQL等のAPIはない。主要境界は次のSwift protocol/型である。
 
-| 境界 | 主な操作・契約 |
+| 境界 | 契約 |
 |---|---|
-| LibraryAccessing / LibrarySource | 認可・階層・album assets・4枚の参照検証。Photosを読取用途のみで使う |
-| ImageAccessing / ImageDriving | image、cancel、release。表示/確定用を区別し、deadline・queue・memory budgetを守る |
-| SelectionStoring | load/saveSettings、load/saveSelection、confirmSelection。missingと破損/未知版を区別 |
-| ArticleStoring | create、open、list、save、resumeWithSelection。operationIDとexpected版で再試行・競合を判定 |
-| ArticleWorkspace | readCommittedSelection、listDrafts、openArticle、resolveArticle。保存した写真順序が入力 |
-| ArticleImageReading | request/cancel。PhotoKit編集結果をownerとともに保持、ネットワーク不可 |
-| ArticleOutputActions | copyPlainText、runExport、cancelExport、revealExport。grantIDの登録と保存済み版の照合 |
+| LibraryAccessing / LibrarySource | 認可、階層、album assets、所属/4枚検証 |
+| ImageAccessing / ImageDriving | 表示画像要求、validation目的、deadline、cancel、release、資源数値 |
+| SelectionStoring | 設定/選択の独立load/saveと明示confirm。missingと破損/未知版を区別 |
+| ArticleStoring | create/open/list/save/resumeWithSelection。operation IDとexpected版 |
+| ArticlePhotoPreviews | load/retry/cancel、番号ごとのwaiting/loading/ready/failed、isLoading |
+| ArticleImageReading | 出力用編集入力request/cancel。networkAllowed=false |
+| ArticleOutputActions | 本文copy、run/cancelExport、reveal。保存済み入力・grantを照合 |
 
-`selection.json` と `settings.json` はschemaVersion 1のJSON。選択は識別子と順序・確定時刻を持ち、写真本体は恒久保存しない。
+表示PreviewsはMainActor Observableで、statesを初期化しloadが全番号を順次要求する。cancelは世代更新・全表示取消/解放・states空を実行する。retryは番号所属・非loading・states非空が必要。UIのnil/空状態の扱いは品質評価参照。
 
-記事は `Articles/<projectID>/operations/<operationID>` にschemaVersion 1、previous、inputDigest、SavedArticleを保存する。 `current` はprojectID・operationID・operationDigestを持つ。文章のUnicode/改行は正規化せずdigestへ含める。ファイル読書き上限は64MiB、重複JSON keyと未知版は拒否する。
+設定と選択はschemaVersion 1のJSON。記事は `Articles/<projectID>/operations/<operationID>` とcurrent参照を使い、入力digest・前操作・本文版を保持する。文章Unicode/改行を正規化しない。64MiB上限、重複JSON key、未知版・破損を保護する。
 
-出力は `記事-<jobID>/article.md`、`manifest.json`、`images/01.jpg`〜`04.jpg`。manifestは入力版・順序・相対パス・2560長辺上限・JPEG quality 0.9・sRGB・非拡大を保持する。内部所有receiptは公開前に除去する。journalは親と作業folderの実体identity・生成digestを保持し、再選択時に回復する。
-
-`ArticleFailure` はmissing、invalidReference、permissionDenied、capacity、conflict、uncertainResult等を区別する。記事読込のpermissionDeniedは写真認可を直接意味しない（`code-quality-assessment.md`）。保存形式変更の必要性は本調査では確認されていない。
+4枚出力はUUID別folder内にarticle.md、manifest.json、images/01.jpg〜04.jpg。JPEG、長辺2560以下、quality 0.9、sRGB、非拡大。journalは親/一時folder実体と生成digestを記録する。再起動後の保存先権限は再選択する。今回、保存形式変更の必要性は見つかっていない。

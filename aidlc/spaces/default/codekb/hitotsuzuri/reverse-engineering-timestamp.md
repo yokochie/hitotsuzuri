@@ -1,17 +1,17 @@
 # Reverse Engineering Timestamp
 
 ## Run Record
-- Date: 2026-11-05
-- Commit: 8229a1d116b7378507605171a0f990c6bca3544e
-- 日本語、Minimal、Full rescan。全手書きコードの構成・接続・試験境界を読取調査。詳しい調査粒度と除外対象はdeveloper-scan.mdのScan Coverage参照。
+- Date: 2026-11-06
+- Commit: d3feef45fe647eea80261d9f04bfc80123cdfa69
+- 日本語、Minimal、Full rescan。静的読取、本文既読領域の現在差分照合と画像lifecycle重点再読。実行検証なし。
 
 ## Scope of Analysis
 
 ```yaml
 scope_version: 1
 kind: full
-intent: 261105-article-access-fix
-fingerprint: 8062caaf1fdc0b1903a837a249924ff5f865a5fa
+intent: 261106-draft-photo-preview
+fingerprint: 515e9c2f8f9c603e18a8120b4be3e76fedb6f06e
 analyzed:
   paths:
     - ./

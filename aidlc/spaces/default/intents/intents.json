@@ -22,5 +22,13 @@
     "scope": "bugfix",
     "status": "complete",
     "request": "b40a151c"
+  },
+  {
+    "uuid": "01a1af33-c002-7f7b-9bc4-b1da44b69ab1",
+    "slug": "draft-photo-preview",
+    "dirName": "261106-draft-photo-preview",
+    "scope": "bugfix",
+    "status": "in-flight",
+    "request": "6a7651c2"
   }
 ]

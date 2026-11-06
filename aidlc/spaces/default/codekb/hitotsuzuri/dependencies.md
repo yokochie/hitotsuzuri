@@ -1,11 +1,11 @@
-# 依存関係
+# 依存関係と共有資源
 
-`Hitotsuzuri.app → HitotsuzuriCore.framework → Apple SDK` が製品のmodule関係。CoreはAppをimportしない。Xcode projectにSwift Package/外部library依存は見つからない。
+製品moduleは `Hitotsuzuri.app → HitotsuzuriCore.framework → Apple SDK`。CoreはAppを参照しない。package managerによる外部実行時依存はない。
 
-App生成時の保存URLは `SelectionPersistence.applicationDirectory()` のApplication Support/Hitotsuzuriを基本とし、失敗時にhome下へfallbackする。Articles、ProbeRecovery、ExportJobsはその子。写真表示用LocalImageAccessと書出し用PhotoKitArticleImageReaderは別の要求寿命を持つ。
+通常Appは表示用LocalImageAccessを1つ生成しSelectionWorkflowとArticleAppCoordinatorへ注入する。CoordinatorはPreviews ownerをsessionごとに生成する。一方、出力には別のArticleImageAccessを生成し、PhotoKit編集入力とConverterを使う。共有表示adapterのcancel/releaseはPickerの表示要求にも関わるため、世代/要求IDと所有範囲が修正時の重要な依存となる。
 
-ArticlePersistence、ArticleProbeDelivery/Journal、ArticleExportWriter/Journal/FileSystemはArticleDirectoryを共有する。共通helperの変更は記事を開く操作以外の新規保存・取消・回復・Finder検査にも波及するため、既存の保護試験を維持する。
+記事の正本と表示画像は分離される。Presentation/EditSessionは保存・投影を担い、画像ownerの再開責務はCoordinator側。出力Session/DeliveryはPreviewsを持たない。これらの所有境界が今回の調査対象。
 
-第三者CI依存はcheckoutと限定診断用upload-artifact。いずれもcommit SHA固定で、通常verifyはcheckout時のcredential永続化を無効にする。runnerはxcode-27。CI以外への自動配置・本番公開の構成はない。
+ArticleDirectoryは記事保存、1枚/4枚Writer、両journal、Finder前検査が共有する。前回のアクセス修正は現在headに含まれる。今回の表示復帰と保存形式を同一問題として扱わない。
 
-通常のPhotoKit・写真実体・選択パネルのgrant・FinderはOS環境に依存する。DEBUG fixtureは合成PhotosとtemporaryDirectoryを使用し、通常Application Supportの祖先権限と等価とは限らない。詳細は品質評価を参照。
+UI fixtureは合成Photosと専用pasteboardを使い、temporaryまたは通常API配下の専用Application Support UUID rootで動く。後者はtoken/device/inode receiptで所有確認してapp内cleanupする。通常データへfallbackしない。CIは固定checkout、読取権限、credential非保持。native性能は機能CIと別。

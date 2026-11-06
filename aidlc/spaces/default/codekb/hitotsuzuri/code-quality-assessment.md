@@ -1,37 +1,44 @@
-# コード品質と今回の不具合
+# 品質評価と表示復帰の調査結果
 
-## 静的評価
+## 静的品質
 | 項目 | 評価 | 根拠 |
 |---|---|---|
-| 命名・境界 | good | 選択・記事・画像・出力に型とprotocolを設ける |
-| 関数・ファイル規模 | fair | Coordinatorと一部UIに複数のOS/DEBUG責務が集中する |
-| I/O保護 | good | nofollow、fd相対操作、digest、排他、unknown/corrupt保護、原子的公開 |
-| エラー案内 | fair | typed failureはあるがpermissionDeniedが写真と保存先共通で、失敗段階が不明 |
-| 試験の存在 | good | model・保存・回復・出力・UIとrunner契約の試験あり |
-| 実環境の再現範囲 | fair | 通常保存先と合成一時rootの差を検証していない |
-| 重複・dead code | fair | 旧Phase1とPhase2の試験/入口が併存。未使用コードの完全な到達性検査は未実施 |
+| 責務/型 | good | 選択・記事・画像・出力がprotocolと型で分離 |
+| ファイル規模/結合 | fair | CoordinatorにOS・session・表示owner・出力・DEBUG計測が集中 |
+| 保存安全性 | good | nofollow-any、fd相対、排他、digest、原子的確定、未知版保護 |
+| 表示状態と操作 | fair | owner欠落/取消済み/未要求をwaitingへ潰し、有効なボタンがno-opになる |
+| 試験範囲 | fair | 部品と保存/出力試験は豊富だが、出力から表示への復帰接続が欠ける |
+| 診断 | fair | 個人文章を避ける分類ログはあるが、表示owner/要求発行を通常画面から判別できない |
 
-## 記事読込の原因候補と確度
-報告画像の文言は `ArticleFailure.permissionDenied.message` と一致する。 `ArticlePresentation.swift:86–106` は確定選択を読んだ後、記事一覧を照会してから記事を準備する。 `ArticlePersistence.swift:32–35` の一覧処理はまず `ArticleDirectory.open(directory, create:false)` を呼ぶ。通常保存先は `HitotsuzuriApp.swift:21` と `ArticleAppCoordinator.init` のArticles子directoryである。
+## 確認できたコード上の成立経路
+1. `ArticleAppCoordinator.swift:187–199` は新session IDの時だけPreviewsを生成してload Taskを開始する。同じsession IDなら189行でreturnする。
+2. 出力の358–384行では、未保存時の最初の確認を通った後、374行でpreviewTask取消・Previews.cancel・previews=nilを実行する。previewSessionIDは変更しない。
+3. この破棄後の容量拒否、保存/入力検証失敗、パネルでの保存先取消、画像取得失敗、出力処理取消、正常完了のいずれも、Coordinatorに表示ownerの再生成・再loadがない。最初の「保存して出力/取り消す」確認で取り消した場合は374行に到達しないため別扱い。
+4. `ArticleView.swift:164` はpreviews=nilや番号state欠落をwaitingに置換する。171–175行のボタンはnilだけでは無効化されず、252行のretryPhotoはnilなら即return。nilではキーボードの再試行順にも含まれない（211行付近）。`ArticlePreviewView.swift:16–17` も同じwaiting fallbackを持つ。
+5. `ArticleImageAccess.swift:62–67` のPreviews.cancelはstatesを空にし、retryはstates非空を条件とする。取消済みownerをそのままretryしても要求は発行しない。
 
-**コードから確認できた事実**: `ArticleFileSystem.swift:11–26` は絶対パスを `/` から全祖先について読取openする。create指定時には存在確認の結果にかかわらず各祖先にmkdiratを発行する。EACCES/EPERMは115行でpermissionDeniedへ変換される。この経路の失敗は写真取得を開始する前に記事表示を止める。よって画像の案内だけから写真認可不足と断定できない。
+この接続は「4枚とも取得待ち、再試行無反応」を生じ得る強いコード上の候補。ただし本人の不具合が出力後の同一sessionで発生したかは未観測で、実機の直接原因とは未確定。今回、再現試験は実行していない。
 
-**強い仮説**: Sandboxからアクセス可能な保存先までのパスで、許可外の祖先をディレクトリ読取としてopenすること、または既存祖先へのmkdir試行が拒否されている。末端へ到達する検索権限と、祖先ディレクトリを読取・作成する権限は別の条件である。
+## Freshな下書き再開・Observation・取消順序
+新プロセス、Pickerへ離脱して戻る、既存記事を再読込して新EditSessionをadoptする場合は新session IDとなり、CoordinatorはPreviews生成とloadへ進む。出力後の同一sessionの編集復帰とは経路が異なる。fresh再開だけで常に待ちになるとの事実はコードから確定できない。
 
-**未確認**: 本人の失敗syscall・errno・保存先URL、Sandboxの実際の拒否箇所は未取得。通常データやOS設定を開いておらず、この仮説を実機再現・修正完了と扱わない。
+CoordinatorとPreviewsはMainActor Observable、ArticleViewはCoordinatorをBindableで参照し、各画像stateを読む。ArticlePreviewViewも参照先statesを読む。実装に状態読取の接続はあり、annotationの見た目だけからObservation欠落と断定しない。実機で要求が発行済み/状態がreadyか、画面だけ更新されないかの観測はない。
 
-## 既存の回帰境界
-- `ArticleRecoveryTests.testRealWritePermissionLossKeepsOldArticle` は合成directoryのPOSIX mode変更で拒否を確認する。書込拒否の保護であり、アクセス可能な末端に対して祖先だけ読取不能の場合の成功を保証しない。
-- `testSymlinkRootIsRejected` は保存rootのsymlink拒否を確認する。出力Writerの実体identity・差替え・所有/既知ファイルdigestによる削除保護も維持対象。
-- CoreのArticleFixturesはrepo内 `.build/article-tests` を使用する。通常app containerの祖先権限とは異なる。
-- `DebugFixture.ownedRoot` はOSのtemporaryDirectoryを解決した合成rootを使用する。UIの保存先もfixture内Outputであり、通常 `applicationDirectory()` の経路・実際のパネルgrantの再現ではない。UI成功でも今回の通常保存先アクセスの保証にはならない。
+session同期は旧Task取消→旧Previews.cancel（世代更新・共有表示取消/解放）→新owner生成→load Taskの順で、同期本体にはawaitがない。Previewsはawait後の世代とTask取消を照合して遅い結果を拒否する。LocalImageAccessの取消handlerは要求ID単位で後からMainActorに到達し、全表示取消/releaseとは異なる。現時点でこの非同期順序が本人の直接原因と示す証拠はない。修正では遅い旧応答が新ownerを更新しないこと、退場時に不要要求/保持が残らないことを維持する。
 
-## 後続の要件・回帰設計への引継ぎ
-1. 許可された保存先に対して、祖先の列挙/作成権限を要求せず記事一覧・新規・保存・再開が成立する条件を用意する。先に意図した失敗を示す回帰を計画する。
-2. 合成root配下に検索可能だが読取不能の祖先を設けるCore fixtureは、OS設定や実写真を使わず原因候補を狭める案となる。ただしPOSIX fixtureだけではApp Sandbox policyと等価ではない。
-3. 必要ならCIのapp内で合成データを通常Application Support経路へ隔離生成し、記事読込と再開を検証する案を検討する。通常データと混ざる設計にしない。実行は今行わない。
-4. 入口修正はnofollow・symlink中間成分/末端拒否と差替え防御を保持し、権限拒否を空一覧や新規として握り潰さない。無関係な保存形式変更・権限拡張・Sandbox無効化は必要ない。
-5. ArticleDirectoryの全利用者（保存/両出力/両journal/Finder前検査）を影響範囲に含める。自動試験はCI優先とし、ローカルUIの反復を避ける本人方針を引き継ぐ。
+出力は表示画像と変換memoryの同時保持を抑えるための破棄を行う。再表示の再開を追加する場合も、出力の実画像処理/片付けが終端へ達する前に再取得しないこと、同じsessionが有効かを照合することが必要。
 
-## 検証状況
-本調査は静的読取のみ。build・試験・実写真参照・OS設定変更を実行していない。coverage設定の存在と80%floorは確認したが、新しい実行成功率/coverage数値はない。従来のCI実績は別の検証記録に属し、今回の原因再現・修正証拠にはしない。
+## 出力の画像取得失敗との区別
+本人申告は「写真アプリで読み込んだ後に出力成功」。出力用PhotoKitArticleImageReaderは編集入力/fullSizeImageURLを得られないとassetUnavailableを返し、ネットワークはfalse。表示は別のSystemImageDriver/LocalImageAccess経路で512px要求を行う。実写真のローカル可用性は未観測。出力成功が表示ownerの存在や要求発行を証明するものではない。通信追加・写真認可リセット・保存先変更をこの分析から導かない。
+
+## 既存試験と欠落
+- ArticleImageTests/ArticlePreviewRetryTestsは表示ownerを直接生成し、成功・期限・取消・番号別再試行・遅い応答拒否・資源解放を検証する。取消後states空は既存期待であり、取消後の同一owner retry再開は検証していない。
+- ArticleExportSessionTestsは注入したactionsを使い、出力の成功/取消/失敗/固定入力を検証する。Coordinatorによる表示ownerの破棄/復旧を通らない。
+- ArticleExportUITestsは成功一式・取得失敗・取消・cleanup・本文コピー・Finderを検証するが、その終端後に4枚の画像ready/実表示や再試行の要求増加を確認しない。初期の未保存確認取消と、表示破棄後の保存先取消は異なる。
+- ArticleDraftUITestsは通常再試行・photos-missing状態でのキーボード要求数・本文保持を検証する。出力が解放した後の同一sessionは対象でない。
+- ArticleSandboxStorageUITestsは本文/同じ記事の保存再開と4つの文章欄の存在を検証する。画像4枚の実表示・要求発行の検証ではない。
+
+後続では、fresh再開と同一session復帰を分け、正常/画像失敗/処理取消/保存先取消/破棄後早期returnの終端、nil/空stateからの実要求、旧応答排除を最小の回帰へ対応付ける。具体変更・試験数・注入境界は要件と実装計画で決める。
+
+## 検証の限界
+静的読取のみ。新しいbuild・試験・Photos取得・画面操作・OS設定変更は実行していない。既存CI設定は全手書きApp/Core Swiftと80%floorを維持するが、従来の成功/coverage率を今回の回帰再現や修正成功へ代用しない。本人環境の操作順と表示/要求状態は未確認。
