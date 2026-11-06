@@ -35,3 +35,13 @@
 修復したfixtureはrestore-*の場合だけPickerの検証用adapterを分け、記事driverの要求/保留とcacheを独立観測する。通常App/既存fixtureの共有構成は変更しない。この新classはPicker共有時の相互作用を証明せず、既存の共有資源試験/既存UIと本人確認を併用する。
 
 全機能CIを繰り返す負担を減らすため、一時的なmarker限定 `diagnose-photo-restoration.yml` で承認計画の対象指定コマンドを実行した。同SHAの通常full runs42171059761/42171064663は取消を要求した。これらを成功証拠にはしない。Greenを対象限定で確かめた後は一時workflowを削除し、通常の全Core→smoke→全機能/80%検査を通す。最終CIの条件を省略しない。
+
+### 修正後の対象限定Green
+
+- コミット8173d90416855eed3d6e0eca2c6ec12b444c840e。
+- CI https://github.com/yokochie/hitotsuzuri/actions/runs/42172183678 、job127742336787、6分13秒、success。
+- 起動smoke2件、新ArticlePhotoRestorationUITests10件が全成功（262.727秒）。T2/T5–T8の意図したRed5件が成功へ転じ、T3の観測とT4の取消手順も修復して成功した。
+- 番号ごとの実画像、再取得回数、本文/順序、取消中の出力実busyと要求不変、旧応答拒否/解放を確認。部分実行であり全体成功・全体coverageを主張しない。
+- 重複する同SHAの通常full runs42172183673/42172188955は取消を要求し、成功証拠にしない。
+
+一時診断workflowを削除して通常の全機能CIへ進む。製品・試験ソースは対象限定Green8173d90から変えず、全体結果を追記する。

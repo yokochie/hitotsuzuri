@@ -1011,3 +1011,12 @@
 **Message**: Green差分を準備し、編集を止めました。\n\n- Coordinatorで表示停止と全出力終端の復帰を接続。\n- 同sessionのnil/空ownerを再生成。\n- 取消可能な単一TaskとUUIDで旧復帰を排除し、実画像処理終了を待機。\n- マウス/キーの番号別再試行と操作条件を統一。\n- 編集・プレビューへ待機状態を表示。\n- T3のAX取得回数を削減。T4は実readerの取消・busy・
 
 ---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:12:46Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
