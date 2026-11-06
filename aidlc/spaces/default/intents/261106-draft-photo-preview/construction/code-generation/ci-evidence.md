@@ -83,3 +83,15 @@
 - 重複full runs42178850387/42178856617は取消要求済み。部分実行のため全体coverageと全体成功はまだ主張しない。
 
 通常ソースの変更は、exportArticleのpreparingExportを単一deferで後照会まで保持し、解除と同じ記事の表示復帰準備の間にawaitを置かないもの。最初の保存確認取消では表示を維持し、早期returnでもbusyを解放する。Core/既存の世代防御は不変。一時診断workflowを削除し、通常の全機能/80%検査を実行する。
+
+### 所有期間修正後の通常全機能Green
+
+- コミットf272e3d4fb9783f38acc7745a1d3bcd8ac2b60b9（製品/試験はc9a4d00と同一、一時診断workflow削除済み）。
+- CI https://github.com/yokochie/hitotsuzuri/actions/runs/42179866652 、pull_request、success。
+- native-core job127766730191: 1分22秒、runner契約28件成功（4.031秒）、機能Core460件成功。
+- native job127767229796: 25分30秒、起動smoke2件と全機能535件（Core460+UI75）成功。追加した画像復帰11件を含む。
+- 全手書きApp/Core Swiftの行カバレッジ5527/6041 = 91.49%。通常の80%閾値と試験選択条件を維持した。性能は既存の別区分で、新たな性能測定の成功は主張しない。
+- macOS27.0.1 (26A434)、Xcode27.1 (27A9275)、arm64。CI内bundleは `.build/Native-functional-20261106-072000-f6a6a6e0021a454eaf87ed5a9af5384d.xcresult`。ローカルへ取得していない。
+- 重複push run42179860093は取消要求済みで、上記PR runのみを最終証拠とする。
+
+両jobの完了とログを読み取り、535件の実行確認とカバレッジを確認した。ローカルで同じbuild/native/UIを重複実行していない。本人Macでの表示解消は未確認。

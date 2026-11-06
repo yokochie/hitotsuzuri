@@ -40,15 +40,17 @@ Xcode設定、entitlements、共有scheme、保存形式、CI閾値は変更し�
 
 ## 実行順
 
-- [ ] Step 1: 既存runner/設定と変更前CIを確認し、ソース同一性・既存成功を記録する。手書きApp/Coreはd3feef4から未変更、記録のみe6111da。CI42030797393のCore/native両job成功を読み取って利用する。ローカルビルド/native/UIは実行しない。（NFR3）
-- [ ] Step 2: Frontend/接続層 Red。新しい10シナリオと必要なDEBUG注入を追加し、通常の復帰ロジックを変えず既存PRへpushする。CIで出力後4枚表示/要求発行に関する意図した失敗を観測する。compile/設定/fixture失敗をRed根拠にしない。新sessionと正常再試行は対照とする。（FR1–FR3、NFR1–NFR3）
-- [ ] Step 3: Green。Coordinatorで資源停止と再開を対にし、全出力終端、同一sessionでowner欠落、番号別再試行を修正する。Viewのnil直接returnを取り除き、開始できない状態を明示する。旧応答/旧復帰Taskを排除し、実出力終了まで表示取得を待つ。（FR1–FR3、NFR1–NFR2）
-- [ ] Step 4: 修正をpushし、既存CIのCore→起動smoke→全機能/全製品coverageを通す。必要な失敗修正を行い、同じ目的のローカル再実行はしない。各ケースが実画像要素/要求発行を検証していることをログと試験実装で確認する。（全要件）
-- [ ] Step 5: Refactor。greenの根拠を保ちながら停止/復帰/再試行の共通責務を整える。新しい意味変更を加えた場合に限り該当CIを再検証する。不要な抽象化や全面整形はしない。（NFR1–NFR3）
+- [x] Step 1: 既存runner/設定と変更前CIを確認し、ソース同一性・既存成功を記録する。手書きApp/Coreはd3feef4から未変更、記録のみe6111da。CI42030797393のCore/native両job成功を読み取って利用する。ローカルビルド/native/UIは実行しない。（NFR3）
+- [x] Step 2: Frontend/接続層 Red。新しい10シナリオと必要なDEBUG注入を追加し、通常の復帰ロジックを変えず既存PRへpushする。CIで出力後4枚表示/要求発行に関する意図した失敗を観測する。compile/設定/fixture失敗をRed根拠にしない。新sessionと正常再試行は対照とする。（FR1–FR3、NFR1–NFR3）
+- [x] Step 3: Green。Coordinatorで資源停止と再開を対にし、全出力終端、同一sessionでowner欠落、番号別再試行を修正する。Viewのnil直接returnを取り除き、開始できない状態を明示する。旧応答/旧復帰Taskを排除し、実出力終了まで表示取得を待つ。（FR1–FR3、NFR1–NFR2）
+- [x] Step 4: 修正をpushし、既存CIのCore→起動smoke→全機能/全製品coverageを通す。必要な失敗修正を行い、同じ目的のローカル再実行はしない。各ケースが実画像要素/要求発行を検証していることをログと試験実装で確認する。（全要件）
+- [x] Step 5: Refactor。greenの根拠を保ちながら停止/復帰/再試行の共通責務を整える。新しい意味変更を加えた場合に限り該当CIを再検証する。不要な抽象化や全面整形はしない。（NFR1–NFR3）
 - [x] Step 6: 連続出力 Red。出力後の記録確認を決定的に保留するDEBUG注入とT11を追加し、通常のbusy制御を変えずCIで再要求が受理される意図した失敗を確認する。未観測の競合を再現済みと扱わず、実Coordinatorの受理回数と表示要求を根拠にする。（FR2、NFR2–NFR3）
 - [x] Step 7: 連続出力 Green。Coordinatorの出力所有期間を後照会まで維持し、deferで確実に解放してから同じ記事の表示を復帰する。保存確認取消・失敗等の既存終端を維持し、T11と既存10件を対象限定CIで確認する。（FR2、NFR1–NFR2）
-- [ ] Step 8: 通常全機能CIで新11件と既存機能、全製品80%以上を再検証する。Greenを保ちながら最少の責務整理を確認し、一時診断workflowを片付ける。同じ目的のローカル試験は実行しない。（全要件）
+- [x] Step 8: 通常全機能CIで新11件と既存機能、全製品80%以上を再検証する。Greenを保ちながら最少の責務整理を確認し、一時診断workflowを片付ける。同じ目的のローカル試験は実行しない。（全要件）
 - [ ] Step 9: code-summary、要件traceability、Red/Green CIのSHA/結果を記録し、独立レビューとBuild and Testへ渡す。本人の実機確認手順をまとめ、実機解消は未確認と区別する。各フェーズの記録をcommitし既存PRへ反映、Draft/未マージを維持する。（NFR3）
+
+  実施済み: code-summary、6要件のtraceability、Red/Greenと最新全機能CIの根拠、本人確認手順を記録し、Build and Testへの引継資料を準備した。本人実機の解消は未確認。最終記録の反映は引継側で継続する。
 
 model/DB、repository、外部API層の変更は今回不要で、該当しない層のTDDや架空のUnitを追加しない。
 
