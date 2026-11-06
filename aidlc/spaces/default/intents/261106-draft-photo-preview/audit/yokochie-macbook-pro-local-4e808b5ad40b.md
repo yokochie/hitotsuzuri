@@ -1628,3 +1628,34 @@
 **Message**: R-01のGreen差分を準備し、停止しました。\n\n`exportArticle`のbusyを保存確認から出力後照会まで保持し、単一`defer`でbusy解除と同sessionの表示復帰準備を続けて行います。最初の確認取消では表示を維持します。\n\nT11・Core・既存UUID防御は未変更。Step6を完了へ更新し、Step7はCI待ちです。`git diff --check`成功、ローカルbu
 
 ---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:16:48Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: Edit
+**Details**: <project-dir>/.github/workflows/diagnose-photo-restoration.yml
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T07:16:48Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T07:16:48Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
