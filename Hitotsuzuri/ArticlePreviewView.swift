@@ -13,7 +13,7 @@ struct ArticlePreviewView:View {
             ForEach(Array(content.photoTexts.enumerated()),id:\.element.assetID) {index,photo in
                 VStack(alignment:.leading,spacing:8) {
                     Text("写真 \(index+1)").font(.headline)
-                    if case .ready(let buffer)=previews?.states[photo.assetID], let image=buffer.displayImage {Image(nsImage:image).resizable().scaledToFit().frame(maxHeight:480)}
+                    if case .ready(let buffer)=previews?.states[photo.assetID], let image=buffer.displayImage {Image(nsImage:image).resizable().scaledToFit().frame(maxHeight:480).accessibilityIdentifier("article-rendered-image-\(index+1)")}
                     else {Text(previews?.states[photo.assetID]?.message ?? "画像の取得待ち").foregroundStyle(.secondary)}
                     if !photo.text.isEmpty {Text(photo.text)}
                 }

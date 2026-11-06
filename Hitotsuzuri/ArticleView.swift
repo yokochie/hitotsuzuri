@@ -81,6 +81,15 @@ struct ArticleView: View {
             HStack {navigation; Spacer(); save}
             if presentation.isLoading {Text("下書きを読み込み中…").accessibilityIdentifier("article-loading")}
             #if DEBUG
+            if let control=coordinator.fixturePhotoControl {
+                Text("試験：画像復帰診断").font(.caption2).accessibilityIdentifier("restoration-diagnostic")
+                    .accessibilityValue(coordinator.fixturePhotoDiagnostic+";entered=\(control.exportEntered);outputPending=\(control.outputPending);displayPending=\(control.displayReplies.count)")
+                HStack {
+                    Button("試験：画像を利用可能にする") {control.photosAvailable=true}.accessibilityIdentifier("restoration-available")
+                    Button("試験：表示応答を返す") {control.releaseDisplay()}.accessibilityIdentifier("restoration-release-display")
+                    Button("試験：出力応答を返す") {control.releaseOutput()}.accessibilityIdentifier("restoration-release-output")
+                }
+            }
             if let release=coordinator.fixtureReleaseSave {Button("試験：保存応答を返す") {Task {await release()}}.accessibilityIdentifier("draft-release-save")}
             if ProcessInfo.processInfo.arguments.contains("--article-test-fixture") {
                 Text("試験：固定本文コピー診断").font(.caption2)

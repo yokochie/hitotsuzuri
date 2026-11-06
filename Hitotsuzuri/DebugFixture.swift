@@ -90,9 +90,15 @@ import UniformTypeIdentifiers
         }
         let store = FixtureStore(selection:draftCase == "empty" ? nil : current,settings:TargetFolderSettings(folderIDs:["root-a"]))
         let draftStore=ArticleFixtureDraftStore(directory:root.appendingPathComponent("Articles"),mode:draftCase ?? "default")
-        let previewDriver=ArticleFixturePreviews(unavailableAll:draftCase == "photos-missing",delayMilliseconds:draftCase == "performance" ? 100000 : (draftCase == "slow-photos" ? 300 : 0))
+        let photoControl = fixtureCase.hasPrefix("restore-") ? ArticleFixturePhotoControl(mode:fixtureCase) : nil
+        let previewDriver=ArticleFixturePreviews(unavailableAll:draftCase == "photos-missing",delayMilliseconds:draftCase == "performance" ? 100000 : (draftCase == "slow-photos" ? 300 : 0),control:photoControl)
         let images=LocalImageAccess(driver:previewDriver)
-        let coordinator=ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root, mode: fixtureCase),fixtureDestination:root.appendingPathComponent("Output"),previewImages:images,articleStore:draftStore)
+        let coordinator=ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root, mode: fixtureCase,control:photoControl),fixtureDestination:root.appendingPathComponent("Output"),previewImages:images,articleStore:draftStore)
+        coordinator.fixturePhotoControl = photoControl
+        coordinator.fixturePhotoResources = {
+            let r = images.resourceSnapshot
+            return "active=\(r.active);queued=\(r.queued);retained=\(r.retainedBytes);unnecessary=\(r.unnecessaryDisplay);"
+        }
         let previewIDs=current.orderedAssetIDs
         coordinator.fixturePreviewRequestCounts={previewIDs.map {previewDriver.requestCounts[$0] ?? 0}}
         if ProcessInfo.processInfo.environment["HZS_FIXTURE_CLEANUP"] == "1" {
@@ -199,10 +205,19 @@ private actor FixtureStore:SelectionStoring {
     private let mode: String
     private var sequence = 0
     private var jobs: [Int: Task<Void, Never>] = [:]
-    init(root:URL, mode: String = "default") {self.root=root; self.mode=mode}
+    private let control: ArticleFixturePhotoControl?
+    init(root:URL, mode: String = "default",control:ArticleFixturePhotoControl?=nil) {self.root=root; self.mode=mode; self.control=control}
     func request(_ id:String,networkAllowed:Bool,completion:@escaping @MainActor (Result<ArticleImageInput,ArticleFailure>)->Void)->Int {
         sequence += 1; let token = sequence
-        if ["export-failure", "export-cleanup"].contains(mode), id.hasSuffix("photo-2") {
+        if let control, control.holdOutput {
+            control.outputPending += 1
+            control.outputReplies.append { [weak self] in
+                control.outputPending -= 1
+                self?.complete(completion)
+            }
+            return token
+        }
+        if ["export-failure", "export-cleanup", "restore-failure"].contains(mode), id.hasSuffix("photo-2") {
             completion(.failure(.assetUnavailable)); return token
         }
         if mode == "export-slow" {
@@ -238,10 +253,16 @@ private actor FixtureStore:SelectionStoring {
     private let delayMilliseconds:Int
     private var sequence=1000
     private var jobs:[Int:Task<Void,Never>]=[:]
-    init(unavailableAll:Bool=false,delayMilliseconds:Int=0) {self.unavailableAll=unavailableAll; self.delayMilliseconds=delayMilliseconds}
+    private let control:ArticleFixturePhotoControl?
+    init(unavailableAll:Bool=false,delayMilliseconds:Int=0,control:ArticleFixturePhotoControl?=nil) {self.unavailableAll=unavailableAll; self.delayMilliseconds=delayMilliseconds; self.control=control}
     func request(_ id:String,completion:@escaping @MainActor (ImageOutcome)->Void)->Int {
         requestCounts[id,default:0] += 1
-        if unavailableAll || id == "album-a-photo-2" {completion(.unavailable); return -1}
+        if let control, control.holdDisplay {
+            sequence += 1
+            control.displayReplies.append { [images] in _=images.request(id,completion:completion) }
+            return sequence // 取消後にも旧callbackを返し、実LocalImageAccessの世代防御を通す。
+        }
+        if unavailableAll || (id == "album-a-photo-2" && (control == nil || control?.photosAvailable == false)) {completion(.unavailable); return -1}
         if delayMilliseconds > 0 {
             sequence += 1; let token=sequence
             jobs[token]=Task { [weak self] in
@@ -277,7 +298,7 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
     }
     func resumeWithSelection(projectID:UUID,operationID:UUID,expected:SavedArticle,source:ArticleSource) async throws ->SavedArticle {try await disk.resumeWithSelection(projectID:projectID,operationID:operationID,expected:expected,source:source)}
     func save(projectID:UUID,operationID:UUID,expected:SavedArticle,content:ArticleContent) async throws ->SavedArticle {
-        if mode == "save-failure" {throw ArticleFailure.capacity}
+        if ["save-failure","restore-save"].contains(mode) {throw ArticleFailure.capacity}
         if ["save-delay","performance"].contains(mode) {
             let deadline=Task {do {try await Task.sleep(for:.seconds(15))} catch {return}; releaseSave()}
             await withCheckedContinuation {continuation=$0}
@@ -288,5 +309,25 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
         return value
     }
     func releaseSave() {continuation?.resume(); continuation=nil}
+}
+
+// 復帰を実行しない注入器。画像driverの可用性/応答だけを操作する。
+@MainActor @Observable final class ArticleFixturePhotoControl {
+    let mode:String
+    var photosAvailable:Bool
+    var holdDisplay:Bool
+    var holdOutput:Bool
+    var outputPending=0
+    var exportEntered=0
+    var displayReplies:[@MainActor () -> Void]=[]
+    var outputReplies:[@MainActor () -> Void]=[]
+    init(mode:String) {
+        self.mode=mode
+        photosAvailable=mode != "restore-retry"
+        holdDisplay=mode == "restore-late"
+        holdOutput=mode == "restore-cancel"
+    }
+    func releaseDisplay() {holdDisplay=false; let replies=displayReplies; displayReplies=[]; for reply in replies {reply()}}
+    func releaseOutput() {holdOutput=false; let replies=outputReplies; outputReplies=[]; for reply in replies {reply()}}
 }
 #endif

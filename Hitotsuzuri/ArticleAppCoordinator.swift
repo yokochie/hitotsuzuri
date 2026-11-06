@@ -68,6 +68,16 @@ import HitotsuzuriCore
     var fixtureDraftPreparation:((ArticleEditSession)->Void)?
     var fixtureReleaseSave:(() async ->Void)?
     var fixturePreviewRequestCounts:(()->[Int])?
+    var fixturePhotoControl: ArticleFixturePhotoControl?
+    var fixturePhotoResources: (() -> String)?
+    var fixturePhotoDiagnostic: String {
+        let pixels = session?.source.orderedAssetIDs.map { id -> String in
+            if case .ready(let buffer) = previews?.states[id] { return String(buffer.pixels.first ?? 0) }
+            return "none"
+        }.joined(separator:",") ?? ""
+        let ids = session?.source.orderedAssetIDs.joined(separator:",") ?? ""
+        return "session=\(session?.sessionID.uuidString ?? "none");owner=\(previews != nil);imageBusy=\(images.isBusy);pixels=\(pixels);ids=\(ids);" + (fixturePhotoResources?() ?? "")
+    }
     private struct FixtureMetric {
         let id=UUID()
         let started:ContinuousClock.Instant
@@ -372,9 +382,20 @@ import HitotsuzuriCore
         exportOSMessage = ""
         // 表示画像と出力用変換を同時保持しない。出力中の再取得も画面で抑止する。
         previewTask?.cancel(); previews?.cancel(); previews = nil
+        #if DEBUG
+        // 合成fixtureだけで、解放後の既存早期終了を決定的に通す。復帰処理は注入しない。
+        if let control = fixturePhotoControl {
+            control.exportEntered += 1
+            if control.mode == "restore-input" { session.metadataInput.change(year:"2026",month:"2",day:"31") }
+        }
+        #endif
         if let resources = previewImages.resources {
             let conversionReservation = 2560 * 2560 * 4 * 3 + 32 * 1024 * 1024
-            guard resources.retainedBytes + resources.reservedBytes <= 256 * 1024 * 1024 - conversionReservation else {
+            var displayBytes = resources.retainedBytes + resources.reservedBytes
+            #if DEBUG
+            if fixturePhotoControl?.mode == "restore-capacity" { displayBytes = 256 * 1024 * 1024 }
+            #endif
+            guard displayBytes <= 256 * 1024 * 1024 - conversionReservation else {
                 exportOSMessage = ArticleFailure.capacity.message; return
             }
         }
@@ -383,6 +404,9 @@ import HitotsuzuriCore
         catch { exportOSMessage = (error as? ArticleFailure ?? .ioFailure).message }
     }
     private func chooseExportDestination() async throws -> ArticleExportDestination? {
+        #if DEBUG
+        if fixturePhotoControl?.mode == "restore-destination-cancel" { return nil }
+        #endif
         let url: URL
         if let fixtureDestination {
             url = fixtureDestination
