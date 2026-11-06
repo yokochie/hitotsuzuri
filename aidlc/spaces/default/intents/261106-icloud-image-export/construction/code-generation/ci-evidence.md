@@ -48,3 +48,12 @@ Core Green、UI Red/Green、最終通常全機能の結果はこれから記録�
 b6fd9a835543c47d7690b88b7e5553e59dd228e9、CI42215343404/job127883831537はsmoke2成功、新UI3件失敗（48.893秒）。今回は追加診断の `exportStage=none;exportFraction=none` が、ready helperの全体文字列 `!contains("none")` に衝突し、出力開始前に失敗した。実診断はowner=true、working=false、pixels=47,64,81,98、要求各1。製品や画像取得の失敗ではなく試験観測の不備であり、元の進捗/完了文字の確認へは未到達。写真状態のフィールドだけを正確に照合するよう修復する。
 
 重複full42215347506（PR）/42215343423（push）は取消要求済み。上記を有効な製品RedやGreenへ数えない。
+
+### 状態文字の更新不整合
+
+caac75b7963e6c86b7e8061f2776ed5df2ec0e31、CI42215899010/job127885705780、2分59秒、smoke2成功、新UI3件失敗（77.493秒）。写真readyの観測修復後、次を確認した。
+
+- U1/U2: 実SessionはexportFraction=0.5、exportMessageは写真1/4の50%、実ProgressViewのAX値も0.5。一方、状態Textのlabelは空、valueは初期取得中の文字を保持し50%なし。
+- U3: 実Sessionは一式完了、resultあり、4枚ready/操作復帰/再出力6要求も確認。一方、Textのvalueは前の写真2失敗案内を保持。
+
+このためmodelだけを成功条件へ緩めず、選択可能Textの更新境界を修正する。Core取得/進捗処理の失敗とは区別する。重複full42215902921（PR）/42215899016（push）は取消要求済み。

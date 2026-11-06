@@ -27,6 +27,8 @@ struct ArticleExportView: View {
             }
             if !coordinator.articleExport.message.isEmpty {
                 Text(coordinator.articleExport.message).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                    // macOSの選択可能Textが旧field-editor値を保持しないよう状態ごとに更新する。
+                    .id(coordinator.articleExport.message)
                     .accessibilityIdentifier("article-export-message")
             }
             if let result = coordinator.articleExport.result, result.projectID == coordinator.session?.projectID {

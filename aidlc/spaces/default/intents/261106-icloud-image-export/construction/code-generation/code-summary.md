@@ -41,6 +41,7 @@ Core/画面の呼出境界を調整したが、保存schema、manifest、entitle
 - 5d20d82、CI42214062065/job127879569109: Core20件とsmoke2件、既存写真復帰11件（290.986秒）が成功。新UI3件は65.160秒で全失敗。U1は新しい写真1/4表示を通過した後の50%待ち、U2も50%待ちで失敗。U3は旧案内が消えて再出力の実result・操作復帰・画像readyまで進んだ後、完了文字のassertだけが失敗した。完了した部分と未到達の後続assertを区別する。
 - 新UIhelperは選択可能TextのAX valueを優先していたため、現在のlabelを優先し、実Sessionのfraction/messageと実ProgressViewのAX値を独立照合する観測へ修復した。必要なscroll位置を整え、失敗時はlabel/value/model/progressを記録する。通常出力動作の原因とは未断定で、新UI3件の再CI結果を待つ。assertの目的や期待値は弱めていない。
 - b6fd9a8、CI42215343404/job127883831537: smoke2成功、新UI3件は初期readyで失敗（48.893秒）。追加診断のexportStage=none/exportFraction=noneを、全診断文字列へのnone検索が画像なしと誤判定した。実owner=true・pixels4値・要求1,1,1,1であり、製品の表示失敗ではない。readyをpixelsフィールドだけの4値/非none照合へ修復し、元の50%/完了文字の再検証は未到達として区別する。
+- caac75b、CI42215899010/job127885705780: 新UI3件が失敗（77.493秒）。進捗は実Sessionでfraction=0.5、messageに50%、実ProgressViewのAXValueも0.5へ更新済みだったが、選択可能TextのAX valueは初期文言のままだった。再出力成功後も実Session.messageは完了、実result/4枚表示は成功なのにTextは前の写真2失敗文言を保持した。通常UIの選択可能Textにmessageのidentityを付け、状態変更時にnative値を再生成する最小修正を加えた。テストもProgressViewのnative数値0.5と百分率50%を同じ進捗値として正確に扱う。Textの現在文言・実Session・実ProgressViewの独立照合は維持し、モデルだけの成功へ緩めていない。修正後の新UI3件の再CIは未確認。
 
 ## 試験とデータの限界
 

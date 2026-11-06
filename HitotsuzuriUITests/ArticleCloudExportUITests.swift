@@ -62,8 +62,15 @@ import XCTest
         _=action("article-export-cancel",app)
         wait("実readerのfractionと画面文字/ProgressViewの50%が一致",app) {
             let progress=app.progressIndicators["article-export-progress"]
-            return self.diagnostic(app).contains("exportFraction=0.5;") && self.message(app).contains("50%") && progress.exists && String(describing:progress.value).contains("50")
+            return self.diagnostic(app).contains("exportFraction=0.5;") && self.message(app).contains("50%") && progress.exists && self.progressFraction(progress) == 0.5
         }
+    }
+    private func progressFraction(_ element:XCUIElement)->Double? {
+        // native ProgressViewはAXValueを百分率文字列ではなく0〜1の数値で返す。
+        if let number=element.value as? NSNumber {return number.doubleValue}
+        guard let text=element.value as? String else {return nil}
+        if text.hasSuffix("%"), let percent=Double(text.dropLast()) {return percent/100}
+        return Double(text)
     }
     private func finished(_ app:XCUIApplication) {
         wait("一式出力の完了",app) {app.staticTexts["article-export-result"].exists && app.buttons["article-export"].isEnabled}
