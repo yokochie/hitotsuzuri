@@ -60,6 +60,12 @@ bash scripts/verify-native.sh ArticleImageTests ArticlePreviewRetryTests Article
 
 自動UI試験は合成画像と試験所有の保存領域を使います。実写真や通常の保存データを使った確認の成功を、自動試験の結果だけで代用しません。
 
+## GitHubでの変更管理
+
+`main` への変更はPRを通し、GitHub Actionsの `native-core` と `native` の成功、最新のmainへの追従、レビュー会話の解決を必須にしています。管理者にも適用し、force pushとmainの削除は禁止しています。個人開発のため他者の承認件数は要求せず、統合はsquash mergeに限定します。マージ後の作業ブランチは自動削除します。
+
+Dependabotの脆弱性通知と修正PRを有効にしています。[Dependabot設定](.github/dependabot.yml)では、GitHub Actionsの更新を毎週月曜9時（日本時間）に確認し、1つのグループにまとめます。定期更新設定は、このファイルがmainへ統合された後に有効になります。
+
 ## 要望と開発記録
 
 - [原点の要望](docs/ひとつづり_原点の要望.md)：アプリで実現したいことと、検討中の項目。
