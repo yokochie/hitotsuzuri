@@ -34,7 +34,8 @@ import XCTest
     private func ready(_ app:XCUIApplication) {
         wait("記事の4枚表示",app) {
             let text=self.diagnostic(app)
-            return text.contains("owner=true;") && !text.contains("none") && text.contains("working=false;")
+            let pixels=text.components(separatedBy:"pixels=").last?.components(separatedBy:";").first?.split(separator:",") ?? []
+            return text.contains("owner=true;") && pixels.count == 4 && !pixels.contains("none") && text.contains("working=false;")
         }
     }
     private func beginHeld(_ app:XCUIApplication) {

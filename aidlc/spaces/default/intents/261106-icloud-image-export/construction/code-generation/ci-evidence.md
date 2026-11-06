@@ -42,3 +42,9 @@ Core Green、UI Red/Green、最終通常全機能の結果はこれから記録�
 - Core20件（Image12＋Export8）とsmoke2件、既存写真復帰11件（290.986秒）は成功。
 - 新UI3件は失敗（65.160秒）。U1/U2は50%進捗の待機timeout、U3は一式result存在/操作復帰/表示readyを経た後、完了メッセージassertで失敗。新3件を成功と扱わず、製品接続とfixture/AX観測を切り分ける。
 - 対象UI合計14件は11成功/3失敗。重複full42214065371（PR）/42214062037（push）は取消要求済み。
+
+### 観測修復の切分け
+
+b6fd9a835543c47d7690b88b7e5553e59dd228e9、CI42215343404/job127883831537はsmoke2成功、新UI3件失敗（48.893秒）。今回は追加診断の `exportStage=none;exportFraction=none` が、ready helperの全体文字列 `!contains("none")` に衝突し、出力開始前に失敗した。実診断はowner=true、working=false、pixels=47,64,81,98、要求各1。製品や画像取得の失敗ではなく試験観測の不備であり、元の進捗/完了文字の確認へは未到達。写真状態のフィールドだけを正確に照合するよう修復する。
+
+重複full42215347506（PR）/42215343423（push）は取消要求済み。上記を有効な製品RedやGreenへ数えない。

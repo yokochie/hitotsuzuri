@@ -1,0 +1,49 @@
+{
+  "stage": "code-generation",
+  "upstream_ids": [
+    "FR1",
+    "FR2",
+    "FR3",
+    "FR4",
+    "NFR1",
+    "NFR2",
+    "NFR3"
+  ],
+  "coverage": [
+    {
+      "id": "FR1",
+      "status": "OK",
+      "target": "HitotsuzuriCore/ArticleImageAccess.swift"
+    },
+    {
+      "id": "FR2",
+      "status": "OK",
+      "target": "HitotsuzuriCore/ArticleExportSession.swift"
+    },
+    {
+      "id": "FR3",
+      "status": "OK",
+      "target": "HitotsuzuriU2Tests/ArticleCloudImageTests.swift"
+    },
+    {
+      "id": "FR4",
+      "status": "OK",
+      "target": "HitotsuzuriUITests/ArticleCloudExportUITests.swift"
+    },
+    {
+      "id": "NFR1",
+      "status": "OK",
+      "target": "HitotsuzuriCore/ArticleExportDelivery.swift"
+    },
+    {
+      "id": "NFR2",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleCloudExportTests.swift"
+    },
+    {
+      "id": "NFR3",
+      "status": "OK",
+      "target": ".github/workflows/verify.yml"
+    }
+  ]
+}
