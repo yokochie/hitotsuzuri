@@ -1020,3 +1020,545 @@
 **Context**: construction > code-generation > ci-evidence.md
 
 ---
+
+## Artifact Created
+**Timestamp**: 2026-11-06T06:14:52Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md
+**Context**: construction > code-generation > code-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:15:07Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:15:27Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+**Context**: construction > code-generation > traceability.json
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:15:28Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md
+**Context**: construction > code-generation > code-summary.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T06:15:35Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1ab6b-fa0f-7620-94ce-20a20cacc7bf
+**Message**: 記録を作成し、停止しました。ソース変更はありません。\n\n- `code-generation-plan.md`: Step3/5を完了へ更新。Step4/6は未完。\n- `code-summary.md`: 変更理由、6要件とT1–T10、Red5件・観測不備、対象限定Green、共有Picker試験の限界、実機未確認を記録。\n- `traceability.json`: 6要件を既存source
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:44:38Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:44:38Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:44:39Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md
+**Context**: construction > code-generation > code-summary.md
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:44:39Z
+**Event**: SENSOR_FIRED
+**Fire id**: cc9d8729
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:44:39Z
+**Event**: SENSOR_PASSED
+**Fire id**: cc9d8729
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+**Duration ms**: 68
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:44:39Z
+**Event**: SENSOR_FIRED
+**Fire id**: 73925d82
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/unit-test-instructions.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: SENSOR_PASSED
+**Fire id**: 73925d82
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/unit-test-instructions.md
+**Duration ms**: 66
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: SENSOR_FIRED
+**Fire id**: 563fef41
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: SENSOR_PASSED
+**Fire id**: 563fef41
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md
+**Duration ms**: 65
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: SENSOR_FIRED
+**Fire id**: 0eeefec9
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: SENSOR_PASSED
+**Fire id**: 0eeefec9
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+**Duration ms**: 64
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: SENSOR_FIRED
+**Fire id**: e6b8f08e
+**Sensor ID**: traceability
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: SENSOR_PASSED
+**Fire id**: e6b8f08e
+**Sensor ID**: traceability
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+**Duration ms**: 72
+
+---
+
+## Review Requested
+**Timestamp**: 2026-11-06T06:44:40Z
+**Event**: REVIEW_REQUESTED
+**Stage**: code-generation
+**Reviewer**: aidlc-architecture-reviewer-agent
+**Iteration**: 1
+**Artifact Fingerprint**: sha256:bd155ba35585463a443f55757e8b361ec5425a6463a5aeca2665d07d5ed2f89f
+**Request Id**: review:d063cec3c0e177ac8e72885bccdd1a49
+**Source Fingerprint**: 5c0ac304117f6a48784c99a26bbdf26614fec5872bb8a855c6e563c85e0ed382
+**Review File**: .aidlc-engine/reviews/code-generation/stage/c469de80801e9b35/1.d063cec3c0e177ac8e72885bccdd1a49.review.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-06T06:49:51Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/.aidlc-engine/reviews/code-generation/stage/c469de80801e9b35/1.d063cec3c0e177ac8e72885bccdd1a49.review.md
+**Context**: .aidlc-engine > reviews > code-generation > stage > c469de80801e9b35 > 1.d063cec3c0e177ac8e72885bccdd1a49.review.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T06:49:57Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-architecture-reviewer-agent
+**Agent ID**: 01a1aba6-110f-7f80-a3d9-b5612648b74b
+**Message**: **Reviewer:** aidlc-architecture-reviewer-agent\n\nREADY、Major所見1件です。\n\n出力終了後の照会を待つ間に次の出力を開始すると、先の出力の後処理が新しい出力中に写真取得を再開し得ます。静的に追える再入経路であり、実行再現済みとはしていません。\n\nCI534件・smoke2件成功、coverage91.41%を独立確認しました。この競合は既存
+**Review File Digest**: .aidlc-engine/reviews/code-generation/stage/c469de80801e9b35/1.d063cec3c0e177ac8e72885bccdd1a49.review.md=6992d657be6754b8a73b7fd41461af0da41dfa27c23fdb446f405de4e3f3e458
+
+---
+
+## Review Completed
+**Timestamp**: 2026-11-06T06:50:09Z
+**Event**: REVIEW_COMPLETED
+**Stage**: code-generation
+**Reviewer**: aidlc-architecture-reviewer-agent
+**Iteration**: 1
+**Verdict**: READY
+**Review Verdict Dictated**: no
+**Request Fingerprint**: sha256:bd155ba35585463a443f55757e8b361ec5425a6463a5aeca2665d07d5ed2f89f
+**Artifact Fingerprint**: sha256:bd155ba35585463a443f55757e8b361ec5425a6463a5aeca2665d07d5ed2f89f
+**Request Id**: review:d063cec3c0e177ac8e72885bccdd1a49
+**Request Source Fingerprint**: 5c0ac304117f6a48784c99a26bbdf26614fec5872bb8a855c6e563c85e0ed382
+**Source Fingerprint**: 5c0ac304117f6a48784c99a26bbdf26614fec5872bb8a855c6e563c85e0ed382
+**Source Listing**: sha256:3e126141b011a0681cdd62aec38a29ff97d02314af1d37c7a320c77885f719b1
+**Review Record**: .aidlc-engine/reviews/code-generation/stage/c469de80801e9b35/1.json
+**Review Record Digest**: sha256:e45d2b4a1eadad2bfd62f96dba3df19aecf8ea939cd09cca4a416542ad2383b4
+**Testing Contract**: sha256:02e880216f822f2f68029581ce26cea7250bd911a18675cdc550b27d9b586232
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:50:23Z
+**Event**: SENSOR_FIRED
+**Fire id**: 8e020771
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:50:23Z
+**Event**: SENSOR_PASSED
+**Fire id**: 8e020771
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+**Duration ms**: 65
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_FIRED
+**Fire id**: a66d3e60
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/unit-test-instructions.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_PASSED
+**Fire id**: a66d3e60
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/unit-test-instructions.md
+**Duration ms**: 65
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_FIRED
+**Fire id**: d7e9aba4
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_PASSED
+**Fire id**: d7e9aba4
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md
+**Duration ms**: 65
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_FIRED
+**Fire id**: 5b5f1cde
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_PASSED
+**Fire id**: 5b5f1cde
+**Sensor ID**: required-sections
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+**Duration ms**: 63
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_FIRED
+**Fire id**: 55a9228f
+**Sensor ID**: traceability
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: SENSOR_PASSED
+**Fire id**: 55a9228f
+**Sensor ID**: traceability
+**Stage slug**: code-generation
+**Output path**: aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json
+**Duration ms**: 66
+
+---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-11-06T06:50:24Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: code-generation
+**Next Stage**: build-and-test
+**Brief Digest**: none
+**Sensor State**: required-sections@aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md=passed; required-sections@aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/unit-test-instructions.md=passed; required-sections@aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-summary.md=passed; required-sections@aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json=passed; traceability@aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/traceability.json=passed
+**Open Decisions**: 0
+**Question Id**: 50debc7f
+**Question Type**: gate
+**Question Chat**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Question Shows**: sha256:15b69d45424779ada1458dcaeded6fa2f1d55367dbd6bb0670f74d6915cb616e
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-06T06:55:03Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: fbc8e14d
+**Open Questions**: 50debc7f
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-questions.md","entries":{"Plan Approval":"d587abcb2d4b9ffc"}}
+
+---
+
+## Gate Rejected
+**Timestamp**: 2026-11-06T06:55:11Z
+**Event**: GATE_REJECTED
+**Stage**: code-generation
+**Feedback**: これと平行して、docs に ひとつづり_原点の要望.md というファイルを置きました。これのコミットをお願いします\nあと、README.mdを更新したいです\nDependabotの設定とGitHub自体の設定もお願いしたいです\n推奨の基本設定（依存の脆弱性通知・修正PR、mainへの直接push防止、CI必須、squash merge）\n2
+**Conductor Summary**: R-01を修正・再検証する（本人が選択肢2を選択、message fbc8e14d）
+**Message Id**: fbc8e14d
+**Message Ids**: 63d21fdd,ae0ae982,eda1ccfb,4b4dc643,fbc8e14d
+
+---
+
+## Stage Revising
+**Timestamp**: 2026-11-06T06:55:11Z
+**Event**: STAGE_REVISING
+**Stage**: code-generation
+**Revision count**: 1
+**Feedback**: これと平行して、docs に ひとつづり_原点の要望.md というファイルを置きました。これのコミットをお願いします\nあと、README.mdを更新したいです\nDependabotの設定とGitHub自体の設定もお願いしたいです\n推奨の基本設定（依存の脆弱性通知・修正PR、mainへの直接push防止、CI必須、squash merge）\n2
+
+---
+
+## Plan Approval Blocked
+**Timestamp**: 2026-11-06T06:57:09Z
+**Event**: PLAN_APPROVAL_BLOCKED
+**Guard**: plan-approval-guard
+**Reason**: plan-approval
+**Tool**: Write
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Stage**: code-generation
+**Unit**: (missing marker)
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T06:57:53Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1ab6b-fa0f-7620-94ce-20a20cacc7bf
+**Message**: R-01の読取とRed試験設計まで済ませ、編集前で停止しています。\n\nTesting Contractの取得時に承認authority不足が検出され、fresh next後も計画改訂・再承認が必要な状態でした。rootからbuild directiveが届いた後にT11を追加します。通常ソース・fixture・試験は未変更です。
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:59:18Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T06:59:18Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/unit-test-instructions.md
+**Context**: construction > code-generation > unit-test-instructions.md
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T06:59:59Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: testing-posture brief
+**Details**: brief for stage:code-generation using current content; the earlier approval is unchanged
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:00:10Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: Write
+**Details**: <project-dir>/.github/workflows/diagnose-photo-restoration.yml
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:00:38Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: Edit
+**Details**: <project-dir>/Hitotsuzuri/DebugFixture.swift
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:00:42Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: Edit
+**Details**: <project-dir>/Hitotsuzuri/ArticleAppCoordinator.swift
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:00:46Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: Edit
+**Details**: <project-dir>/Hitotsuzuri/ArticleView.swift
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:01:38Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: Edit
+**Details**: <project-dir>/HitotsuzuriUITests/ArticlePhotoRestorationUITests.swift
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:01:40Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: main
+**Stage**: code-generation
+**Tool**: Edit
+**Details**: <project-dir>/.github/workflows/diagnose-photo-restoration.yml
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-06T07:01:43Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: plan-approval
+**Authority**: instruction
+**Grant**: none
+**Actor**: subagent
+**Stage**: code-generation
+**Tool**: Bash
+**Details**: python3 -B -c 'import runpy; from pathlib import Path; import re; m=runpy.run_path("scripts/native-test-runner.py"); name="ArticlePhotoRestorationUITests"; asse
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T07:01:43Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/unit-test-instructions.md
+**Context**: construction > code-generation > unit-test-instructions.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T07:02:06Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1ab6b-fa0f-7620-94ce-20a20cacc7bf
+**Message**: T11のRed準備を完了し、停止しました。通常のbusy・入口guard・復帰処理は未変更です。\n\n- 出力後照会相当のawaitをDEBUG continuationで保留。\n- DEBUG再要求ボタンから実Coordinator入口を呼び、受理回数を確認。\n- 現実装では`accepted == 1`が`2`となる失敗を想定。\n- 修正後は解除・表示復帰・次の通常出力まで同じ試験で確認。\n\n変
+
+---

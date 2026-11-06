@@ -45,3 +45,16 @@
 - 重複する同SHAの通常full runs42172183673/42172188955は取消を要求し、成功証拠にしない。
 
 一時診断workflowを削除して通常の全機能CIへ進む。製品・試験ソースは対象限定Green8173d90から変えず、全体結果を追記する。
+
+### 通常の全機能Green
+
+- コミット0fd9e72b0aa22c3568227c8b8d3bc952861b6111（製品/試験は8173d90と同一）。
+- CI https://github.com/yokochie/hitotsuzuri/actions/runs/42173044894 、pull_request、success。
+- native-core job127745087980: 1分59秒、runner契約28件成功（5.431秒）、機能Core460件（157+149+154）成功。
+- native job127745757442: 27分56秒、起動smoke2件、全機能534件（Core460+UI74）成功。新10件は全成功（265.995秒）。選択した機能試験のskip0。性能試験は既存の別区分のままで、今回新しい性能結果を主張しない。
+- 全手書きApp/Core Swiftの行カバレッジ5467/5981 = 91.41%。80%閾値は不変。
+- macOS27.0.1 (26A434)、Xcode27.1 (27A9275)、arm64、VirtualMac2,1。
+- 主bundleはCI内の `.build/Native-functional-20261106-061710-61cb68a8dfe64683ac4142902c3a4f0d.xcresult`。ローカルへダウンロードしていない。
+- 重複push run42173038631は取消要求済みで、証拠は上記PR runのみ。
+
+両jobログとrunのhead SHA/conclusionを読み取って確認した。新しいローカルbuild/native/UI/性能試験を実行していない。本人Macでの今回の表示解消確認は未取得。

@@ -87,7 +87,7 @@ import HitotsuzuriCore
         }.joined(separator:",") ?? ""
         let ids = session?.source.orderedAssetIDs.joined(separator:",") ?? ""
         let requests=fixturePreviewRequestCounts?().map(String.init).joined(separator:",") ?? ""
-        return "session=\(session?.sessionID.uuidString ?? "none");owner=\(previews != nil);imageBusy=\(images.isBusy);pixels=\(pixels);ids=\(ids);requests=\(requests);" + (fixturePhotoResources?() ?? "")
+        return "session=\(session?.sessionID.uuidString ?? "none");owner=\(previews != nil);imageBusy=\(images.isBusy);working=\(working);exportSessionBusy=\(articleExport.isBusy);pixels=\(pixels);ids=\(ids);requests=\(requests);" + (fixturePhotoResources?() ?? "")
     }
     private struct FixtureMetric {
         let id=UUID()
@@ -424,6 +424,9 @@ import HitotsuzuriCore
     func exportArticle() async {
         guard !working, let session else { return }
         guard pendingExportRecovery == nil else { exportOSMessage = "前回の未完出力を照合してから、新しい出力を始めてください。"; return }
+        #if DEBUG
+        fixturePhotoControl?.exportAccepted += 1
+        #endif
         preparingExport = true
         var choice: ArticleLeaveChoice = .save
         if session.isDirty || session.hasUncertainSave {
@@ -458,6 +461,9 @@ import HitotsuzuriCore
             }
         }
         await articleExport.start(choice: choice) { [weak self] in try await self?.chooseExportDestination() }
+        #if DEBUG
+        await fixturePhotoControl?.waitForPostExportQuery()
+        #endif
         do { pendingExportRecovery = try await exportDelivery.pending() }
         catch { exportOSMessage = (error as? ArticleFailure ?? .ioFailure).message }
     }

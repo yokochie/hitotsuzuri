@@ -1,0 +1,30 @@
+name: Diagnose photo restoration
+on:
+  push:
+    branches: [codex/phase2-u2-draft-experience]
+permissions:
+  contents: read
+jobs:
+  photo-restoration-regression:
+    if: contains(github.event.head_commit.message, '[photo-restoration-diagnostic]')
+    runs-on: xcode-27
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Record environment
+        run: |
+          sw_vers
+          xcodebuild -version
+      - name: Reproduce exactly the post-export ownership regression
+        run: xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination platform=macOS -only-testing:HitotsuzuriUITests/ArticlePhotoRestorationUITests/testPostExportQueryKeepsOwnershipUntilNextExportCanStart -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath .build/PhotoRestoration-reentry-red.xcresult CODE_SIGN_IDENTITY=- test
+      - name: Preserve synthetic regression diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: photo-restoration-${{ github.sha }}
+          path: .build/*.xcresult
+          retention-days: 1
+          include-hidden-files: true
+          if-no-files-found: warn

@@ -1,6 +1,6 @@
 import XCTest
 
-// T1–T10: 実Coordinator/View/LocalImageAccess/出力Sessionを通る接続回帰。
+// T1–T11: 実Coordinator/View/LocalImageAccess/出力Sessionを通る接続回帰。
 // fixtureはdriver応答と失敗条件だけを制御し、表示ownerの生成/復帰は行わない。
 // restore-* はPickerの検証adapterを分離し、記事要求自体を計数する。
 // Pickerと共有した場合の相互作用はこのclassの対象外。既存資源/通常UI試験と実機確認を併用する。
@@ -204,5 +204,42 @@ import XCTest
             let text=self.diagnostic(app)
             return text.contains("pixels=64,81,98,115;") && text.contains("retained=4096;") && text.contains("active=0;queued=0;") && text.contains("unnecessary=0;")
         }
+    }
+    // T11: 出力Sessionの終了後も、Coordinatorの後照会が終わるまで所有を維持する。
+    func testPostExportQueryKeepsOwnershipUntilNextExportCanStart() {
+        let app=launch("restore-reentry")
+        ready(app,requested:[1,1,1,1])
+        export(app)
+        wait("最初の出力Sessionが終了し、実pending照会相当のawaitで保留") {
+            let text=self.diagnostic(app)
+            return text.contains("postQueryWaiters=1;") && text.contains("exportSessionBusy=false;") && text.contains("accepted=1;")
+        }
+        // 通常ボタンの無効化を迂回して実入口へ送る。fixtureはbusyも復帰も代行しない。
+        app.buttons["restoration-request-export"].click()
+        wait("実入口が再要求を拒否して返る、または誤って次を受理する") {
+            let text=self.diagnostic(app)
+            return text.contains("reentryCompleted=1;") || text.contains("accepted=2;")
+        }
+        let held=diagnostic(app)
+        let accepted=Int(held.components(separatedBy:"accepted=").last?.components(separatedBy:";").first ?? "")
+        XCTAssertEqual(accepted,1,"後照会中の再要求は実Coordinatorでも拒否する。\(held)")
+        XCTAssertTrue(held.contains("working=true;"),"出力後の照会まで所有する。\(held)")
+        XCTAssertTrue(held.contains("owner=false;"),"所有期間中に表示を復帰しない。\(held)")
+        XCTAssertEqual(counts(app),[1,1,1,1],"後照会/再要求中に表示要求を増やさない")
+        XCTAssertFalse(app.buttons["article-export"].isEnabled,"通常ボタンも同じ所有期間を守る")
+        app.buttons["restoration-release-query"].click()
+        wait("最初の照会が終了して所有を解放") {
+            let text=self.diagnostic(app)
+            return text.contains("postQueryWaiters=0;") && text.contains("working=false;")
+        }
+        ready(app,requested:[2,2,2,2])
+        export(app)
+        wait("解放後は次の出力が受理され、実出力と後照会が終了する") {
+            let text=self.diagnostic(app)
+            return text.contains("accepted=2;") && text.contains("postQueryCalls=2;") && text.contains("working=false;")
+        }
+        ready(app,requested:[3,3,3,3])
+        outputMessage(app,"完了しました")
+        XCTAssertEqual(field("article-title",app).value as? String,"合成")
     }
 }

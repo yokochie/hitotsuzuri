@@ -2,15 +2,17 @@
 
 ## Summary
 
-- Builds: 下書き再開・出力終了後の4枚表示と、実際に取得する番号別再試行。
+- Builds: 下書き再開・出力終了後の4枚表示、番号別再試行、出力後の記録確認まで含む連続出力の排他。
 - Touches: ArticleAppCoordinator、ArticleView、必要なArticlePreviewView表示、DEBUG fixture、新しい画像復帰UIテスト。
-- Tests: 新規UI回帰10シナリオを目安に、既存の画像・期限・取消・資源・保存・出力回帰をCIで検証。
+- Tests: UI回帰11シナリオ（既存10件＋連続出力1件）をCIで検証し、通常の全機能・80%条件も維持。
 
 ## 対象と判断
 
 承認済み `../../inception/requirements-analysis/requirements.md` のFR1–FR3、NFR1–NFR3を実装する。Zero Unitの1回の実装。User StoriesやUnit定義はスコープ上なく、要件IDを直接対応付ける。
 
 コード上の原因候補は、出力前の表示資源破棄と、終了後の表示復旧の欠落。同一セッション判定とUIのnil早期returnが復旧を妨げる。本人のfresh再開で同じ原因かは未確定なので、両経路を回帰対象とする。
+
+出力Sessionの終了後もCoordinatorは未完出力記録を非同期に確認する。この期間を含めて出力の所有を維持し、前の出力の後処理が次の出力中に表示を復帰しないようにする。2026-11-06の本人の変更依頼に従い、この制御と回帰1件を追加する。文書・README・Dependabot/GitHub基本設定の並行依頼は完了済みで、この修正のために再実行しない。
 
 ### 方針と比較
 
@@ -32,16 +34,21 @@
 
 Coreの保存・出力の正本処理とPhotos adapterは原則変更しない。既存のArticleImageAccess.isBusy、予算、取消/世代で実処理中を判定し、まだ処理中なら取消可能な復帰待ちを保持する。表示復帰待ちは画面に表し、出力busy終了だけで画像取得を重ねない。退場/新session時は待ちTaskを取り消し、待ちが解けた時にもsessionを再照合する。画像部品の契約変更が必要と判明した場合は、その層でも失敗試験を先に用意する。
 
+連続出力は、Coordinator側の出力中フラグを入口から後照会・表示復帰の準備まで保持して防ぐ。保存確認を取り消した場合や早期失敗でもdeferで確実に解放する。解放と同じ記事への復帰の順序を揃え、次の出力を先に受け付ける隙間を作らない。UIの無効化とCoordinator入口の拒否の両方を検証する。DEBUG専用の照会待ち注入は既存awaitと等価な位置に置き、通常のbusyや復帰動作をfixtureで代行しない。
+
 Xcode設定、entitlements、共有scheme、保存形式、CI閾値は変更しない。runnerは新テストclassを発見する既存構成を使用する。既存の作業中scheme変更、旧intent監査、未追跡setup/docsは混ぜない。
 
 ## 実行順
 
-- [x] Step 1: 既存runner/設定と変更前CIを確認し、ソース同一性・既存成功を記録する。手書きApp/Coreはd3feef4から未変更、記録のみe6111da。CI42030797393のCore/native両job成功を読み取って利用する。ローカルビルド/native/UIは実行しない。（NFR3）
-- [x] Step 2: Frontend/接続層 Red。新しい10シナリオと必要なDEBUG注入を追加し、通常の復帰ロジックを変えず既存PRへpushする。CIで出力後4枚表示/要求発行に関する意図した失敗を観測する。compile/設定/fixture失敗をRed根拠にしない。新sessionと正常再試行は対照とする。（FR1–FR3、NFR1–NFR3）
+- [ ] Step 1: 既存runner/設定と変更前CIを確認し、ソース同一性・既存成功を記録する。手書きApp/Coreはd3feef4から未変更、記録のみe6111da。CI42030797393のCore/native両job成功を読み取って利用する。ローカルビルド/native/UIは実行しない。（NFR3）
+- [ ] Step 2: Frontend/接続層 Red。新しい10シナリオと必要なDEBUG注入を追加し、通常の復帰ロジックを変えず既存PRへpushする。CIで出力後4枚表示/要求発行に関する意図した失敗を観測する。compile/設定/fixture失敗をRed根拠にしない。新sessionと正常再試行は対照とする。（FR1–FR3、NFR1–NFR3）
 - [ ] Step 3: Green。Coordinatorで資源停止と再開を対にし、全出力終端、同一sessionでowner欠落、番号別再試行を修正する。Viewのnil直接returnを取り除き、開始できない状態を明示する。旧応答/旧復帰Taskを排除し、実出力終了まで表示取得を待つ。（FR1–FR3、NFR1–NFR2）
 - [ ] Step 4: 修正をpushし、既存CIのCore→起動smoke→全機能/全製品coverageを通す。必要な失敗修正を行い、同じ目的のローカル再実行はしない。各ケースが実画像要素/要求発行を検証していることをログと試験実装で確認する。（全要件）
 - [ ] Step 5: Refactor。greenの根拠を保ちながら停止/復帰/再試行の共通責務を整える。新しい意味変更を加えた場合に限り該当CIを再検証する。不要な抽象化や全面整形はしない。（NFR1–NFR3）
-- [ ] Step 6: code-summary、要件traceability、Red/Green CIのSHA/結果を記録し、独立レビューとBuild and Testへ渡す。本人の実機確認手順をまとめ、実機解消は未確認と区別する。各フェーズの記録をcommitし既存PRへ反映、Draft/未マージを維持する。（NFR3）
+- [ ] Step 6: 連続出力 Red。出力後の記録確認を決定的に保留するDEBUG注入とT11を追加し、通常のbusy制御を変えずCIで再要求が受理される意図した失敗を確認する。未観測の競合を再現済みと扱わず、実Coordinatorの受理回数と表示要求を根拠にする。（FR2、NFR2–NFR3）
+- [ ] Step 7: 連続出力 Green。Coordinatorの出力所有期間を後照会まで維持し、deferで確実に解放してから同じ記事の表示を復帰する。保存確認取消・失敗等の既存終端を維持し、T11と既存10件を対象限定CIで確認する。（FR2、NFR1–NFR2）
+- [ ] Step 8: 通常全機能CIで新11件と既存機能、全製品80%以上を再検証する。Greenを保ちながら最少の責務整理を確認し、一時診断workflowを片付ける。同じ目的のローカル試験は実行しない。（全要件）
+- [ ] Step 9: code-summary、要件traceability、Red/Green CIのSHA/結果を記録し、独立レビューとBuild and Testへ渡す。本人の実機確認手順をまとめ、実機解消は未確認と区別する。各フェーズの記録をcommitし既存PRへ反映、Draft/未マージを維持する。（NFR3）
 
 model/DB、repository、外部API層の変更は今回不要で、該当しない層のTDDや架空のUnitを追加しない。
 
@@ -59,8 +66,9 @@ model/DB、repository、外部API層の変更は今回不要で、該当しな�
 | T8 | 入力検証失敗による出力中止でも表示再開、入力保持 | FR2、NFR1 |
 | T9 | 一部表示失敗→利用可能へ切替→番号別再試行で実要求と画像表示。マウスとキーボードの経路を確認 | FR1、FR3 |
 | T10 | 復帰待ち/遅い応答中に退場・別sessionへ移行。旧画像/要求が新記事へ混入せず不要保持を解放 | FR2、NFR2 |
+| T11 | 最初の出力後照会を保留して再要求。実入口でも次の出力を受理せず表示要求は増えない。照会解除・表示復帰後には次の出力が受理され、その終了後も4枚が戻る | FR2、NFR2 |
 
-既存ArticleImageTests/ArticlePreviewRetryTests/ArticleResourceTestsで部品の成功、15秒期限、世代/遅い応答、取消、番号別直列化、資源予算を併せて検証する。既存部品テストをCoordinator接続の代用にしない。新UI10シナリオはfixture都合で最少の独立テストへ構成してよいが、全シナリオの根拠と対応を残す。新回帰と既存全スイートの成功、全体80%がNFR3の合格条件。
+既存ArticleImageTests/ArticlePreviewRetryTests/ArticleResourceTestsで部品の成功、15秒期限、世代/遅い応答、取消、番号別直列化、資源予算を併せて検証する。既存部品テストをCoordinator接続の代用にしない。新UI11シナリオはfixture都合で最少の独立テストへ構成してよいが、全シナリオの根拠と対応を残す。新回帰と既存全スイートの成功、全体80%がNFR3の合格条件。
 
 ## 検証・データ・戻し方
 

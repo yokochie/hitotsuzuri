@@ -326,6 +326,13 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
     var outputPending=0
     var outputCancelRequests=0
     var exportEntered=0
+    var exportAccepted=0
+    var reentryAttempts=0
+    var reentryCompleted=0
+    var postQueryWaiters=0
+    var postQueryCalls=0
+    private var holdsPostQuery:Bool
+    private var postQueryReplies:[CheckedContinuation<Void,Never>]=[]
     var displayReplies:[@MainActor () -> Void]=[]
     var outputReplies:[@MainActor () -> Void]=[]
     init(mode:String) {
@@ -333,6 +340,20 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
         photosAvailable=mode != "restore-retry"
         holdDisplay=mode == "restore-late"
         holdOutput=mode == "restore-cancel"
+        holdsPostQuery=mode == "restore-reentry"
+    }
+    // pending() actor照会と同じ位置で呼出元だけを保留。busy/表示ownerは変更しない。
+    func waitForPostExportQuery() async {
+        postQueryCalls += 1
+        guard holdsPostQuery else {return}
+        postQueryWaiters += 1
+        await withCheckedContinuation {postQueryReplies.append($0)}
+        postQueryWaiters -= 1
+    }
+    func releasePostExportQuery() {
+        holdsPostQuery=false
+        let replies=postQueryReplies; postQueryReplies=[]
+        for reply in replies {reply.resume()}
     }
     func releaseDisplay() {holdDisplay=false; let replies=displayReplies; displayReplies=[]; for reply in replies {reply()}}
     func releaseOutput() {holdOutput=false; let replies=outputReplies; outputReplies=[]; for reply in replies {reply()}}
