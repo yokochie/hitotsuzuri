@@ -48,6 +48,16 @@ import HitotsuzuriCore
     private let images: ArticleImageAccess
     private let previewImages:any ImageAccessing
     private var previewTask:Task<Void,Never>?
+    private var previewRequestID:UUID?
+    private(set) var isWaitingForPhotoOutput=false
+    var canRetryPhotos:Bool {
+        session != nil && !working && !presentation.isLoading && !isWaitingForPhotoOutput &&
+        previewRequestID == nil && previews?.isLoading != true
+    }
+    var photoSuspensionMessage:String? {
+        if isWaitingForPhotoOutput || (working && previews == nil) {return "出力の画像処理が終わるまで待っています。"}
+        return nil
+    }
     private let delivery = ArticleProbeDelivery()
     private let journal:ArticleProbeJournal
     private(set) var recovery:ArticleProbeRecoveryRecord?
@@ -76,7 +86,8 @@ import HitotsuzuriCore
             return "none"
         }.joined(separator:",") ?? ""
         let ids = session?.source.orderedAssetIDs.joined(separator:",") ?? ""
-        return "session=\(session?.sessionID.uuidString ?? "none");owner=\(previews != nil);imageBusy=\(images.isBusy);pixels=\(pixels);ids=\(ids);" + (fixturePhotoResources?() ?? "")
+        let requests=fixturePreviewRequestCounts?().map(String.init).joined(separator:",") ?? ""
+        return "session=\(session?.sessionID.uuidString ?? "none");owner=\(previews != nil);imageBusy=\(images.isBusy);pixels=\(pixels);ids=\(ids);requests=\(requests);" + (fixturePhotoResources?() ?? "")
     }
     private struct FixtureMetric {
         let id=UUID()
@@ -196,19 +207,64 @@ import HitotsuzuriCore
     }
     private func synchronizeSession() {
         guard let draft=session else { finishLeaving(); return }
-        guard previewSessionID != draft.sessionID else {return}
+        if previewSessionID != draft.sessionID {
+            stopPhotoPreviews()
+            previewSessionID=draft.sessionID
         #if DEBUG
-        let preparation=fixtureDraftPreparation; fixtureDraftPreparation=nil; preparation?(draft)
+            let preparation=fixtureDraftPreparation; fixtureDraftPreparation=nil; preparation?(draft)
         #endif
-        previewTask?.cancel(); previews?.cancel()
-        previewSessionID=draft.sessionID
-        exportOSMessage = ""
-        attach(NSApp.keyWindow ?? NSApp.mainWindow)
-        let previews=ArticlePhotoPreviews(assetIDs:draft.source.orderedAssetIDs,images:previewImages)
-        self.previews=previews
-        previewTask=Task {await previews.load()}
+            exportOSMessage = ""
+            attach(NSApp.keyWindow ?? NSApp.mainWindow)
+        }
+        guard !working else {return}
+        resumePhotoPreviews(for:draft.sessionID)
     }
-    private func finishLeaving() {restoreWindowDelegate(); previewTask?.cancel(); previewTask=nil; previews?.cancel(); previews=nil; previewSessionID=nil}
+    private func stopPhotoPreviews() {
+        previewTask?.cancel(); previewTask=nil; previewRequestID=nil
+        isWaitingForPhotoOutput=false
+        previews?.cancel(); previews=nil
+    }
+    private func finishLeaving() {restoreWindowDelegate(); stopPhotoPreviews(); previewSessionID=nil}
+    private func resumePhotoPreviews(for sessionID:UUID) {
+        guard session?.sessionID == sessionID, previewRequestID == nil else {return}
+        if previewSessionID == sessionID, let previews, !previews.states.isEmpty {return}
+        stopPhotoPreviews()
+        previewSessionID=sessionID
+        let request=UUID(); previewRequestID=request
+        isWaitingForPhotoOutput=images.isBusy
+        previewTask=Task { [weak self] in
+            guard let self else {return}
+            defer {finishPhotoRequest(request)}
+            // 出力の論理取消だけでは同期変換/readerが終わったとは限らない。
+            while images.isBusy {
+                do {try await Task.sleep(for:.milliseconds(25))} catch {return}
+                guard !Task.isCancelled, previewRequestID == request, session?.sessionID == sessionID else {return}
+            }
+            guard !Task.isCancelled, previewRequestID == request, let draft=session, draft.sessionID == sessionID else {return}
+            isWaitingForPhotoOutput=false
+            let owner=ArticlePhotoPreviews(assetIDs:draft.source.orderedAssetIDs,images:previewImages)
+            previews=owner
+            await owner.load()
+        }
+    }
+    private func finishPhotoRequest(_ request:UUID) {
+        guard previewRequestID == request else {return}
+        previewRequestID=nil; previewTask=nil; isWaitingForPhotoOutput=false
+    }
+    func retryPhoto(_ index:Int) {
+        guard canRetryPhotos, let draft=session, draft.source.orderedAssetIDs.indices.contains(index) else {return}
+        guard previewSessionID == draft.sessionID, let owner=previews, !owner.states.isEmpty else {
+            resumePhotoPreviews(for:draft.sessionID); return
+        }
+        let request=UUID(); previewRequestID=request
+        let assetID=draft.source.orderedAssetIDs[index]
+        previewTask=Task { [weak self] in
+            guard let self else {return}
+            defer {finishPhotoRequest(request)}
+            guard !Task.isCancelled, previewRequestID == request, session?.sessionID == draft.sessionID else {return}
+            await owner.retry(assetID)
+        }
+    }
     private func awaitFixture() async {
         #if DEBUG
         await fixturePreparation?.value
@@ -381,7 +437,9 @@ import HitotsuzuriCore
         if case .keepEditing = choice { return }
         exportOSMessage = ""
         // 表示画像と出力用変換を同時保持しない。出力中の再取得も画面で抑止する。
-        previewTask?.cancel(); previews?.cancel(); previews = nil
+        stopPhotoPreviews()
+        let photoSessionID=session.sessionID
+        defer {resumePhotoPreviews(for:photoSessionID)}
         #if DEBUG
         // 合成fixtureだけで、解放後の既存早期終了を決定的に通す。復帰処理は注入しない。
         if let control = fixturePhotoControl {

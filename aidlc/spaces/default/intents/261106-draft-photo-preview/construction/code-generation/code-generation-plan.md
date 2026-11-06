@@ -37,7 +37,7 @@ Xcode設定、entitlements、共有scheme、保存形式、CI閾値は変更し�
 ## 実行順
 
 - [x] Step 1: 既存runner/設定と変更前CIを確認し、ソース同一性・既存成功を記録する。手書きApp/Coreはd3feef4から未変更、記録のみe6111da。CI42030797393のCore/native両job成功を読み取って利用する。ローカルビルド/native/UIは実行しない。（NFR3）
-- [ ] Step 2: Frontend/接続層 Red。新しい10シナリオと必要なDEBUG注入を追加し、通常の復帰ロジックを変えず既存PRへpushする。CIで出力後4枚表示/要求発行に関する意図した失敗を観測する。compile/設定/fixture失敗をRed根拠にしない。新sessionと正常再試行は対照とする。（FR1–FR3、NFR1–NFR3）
+- [x] Step 2: Frontend/接続層 Red。新しい10シナリオと必要なDEBUG注入を追加し、通常の復帰ロジックを変えず既存PRへpushする。CIで出力後4枚表示/要求発行に関する意図した失敗を観測する。compile/設定/fixture失敗をRed根拠にしない。新sessionと正常再試行は対照とする。（FR1–FR3、NFR1–NFR3）
 - [ ] Step 3: Green。Coordinatorで資源停止と再開を対にし、全出力終端、同一sessionでowner欠落、番号別再試行を修正する。Viewのnil直接returnを取り除き、開始できない状態を明示する。旧応答/旧復帰Taskを排除し、実出力終了まで表示取得を待つ。（FR1–FR3、NFR1–NFR2）
 - [ ] Step 4: 修正をpushし、既存CIのCore→起動smoke→全機能/全製品coverageを通す。必要な失敗修正を行い、同じ目的のローカル再実行はしない。各ケースが実画像要素/要求発行を検証していることをログと試験実装で確認する。（全要件）
 - [ ] Step 5: Refactor。greenの根拠を保ちながら停止/復帰/再試行の共通責務を整える。新しい意味変更を加えた場合に限り該当CIを再検証する。不要な抽象化や全面整形はしない。（NFR1–NFR3）

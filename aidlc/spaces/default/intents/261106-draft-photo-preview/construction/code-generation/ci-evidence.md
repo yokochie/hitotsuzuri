@@ -22,3 +22,16 @@
 - T4には別途、Deliveryが実画像処理終了を待つのに応答を返す前にendedを待つ手順不備も静的に見つかった。初回CIではそこまで到達していない。
 
 現在はテスト/fixtureの観測と手順を修復する。通常の表示復帰ロジックは未変更。有効な意図した失敗を再観測してからGreenに進む。変更前の成功や試験準備の失敗を修正根拠へ代用しない。
+
+### 観測修復後の対象限定CI（有効なRed）
+
+- コミットd45acb74a7c8f48db690a10880bf5aa984c3aab2。
+- CI https://github.com/yokochie/hitotsuzuri/actions/runs/42171059895 、job127738722780、6分33秒、exit65。
+- 起動smoke2件成功、新UI10件は3成功・7失敗（279.881秒）。
+- 対照T1（fresh下書き再開）、T9（マウス/キーで番号別再試行）、T10（遅い旧応答の排除/不要保持解放）は成功。
+- T2正常出力、T5保存先取消、T6容量拒否、T7保存失敗、T8入力検証失敗の5件は、出力終端後に `owner=false;imageBusy=false;pixels=none,none,none,none;entered=1` の状態で4枚のready/要求再開を待って失敗。通常復帰ロジックは未修正で、目的の表示欠落を再現した有効なRedとする。
+- T3出力画像失敗はAX snapshotの取得エラー、T4取消はbusy中のメッセージ待ちtimeout。両者は有効なRed5件と区別し、修復してから成功を確認する。
+
+修復したfixtureはrestore-*の場合だけPickerの検証用adapterを分け、記事driverの要求/保留とcacheを独立観測する。通常App/既存fixtureの共有構成は変更しない。この新classはPicker共有時の相互作用を証明せず、既存の共有資源試験/既存UIと本人確認を併用する。
+
+全機能CIを繰り返す負担を減らすため、一時的なmarker限定 `diagnose-photo-restoration.yml` で承認計画の対象指定コマンドを実行した。同SHAの通常full runs42171059761/42171064663は取消を要求した。これらを成功証拠にはしない。Greenを対象限定で確かめた後は一時workflowを削除し、通常の全Core→smoke→全機能/80%検査を通す。最終CIの条件を省略しない。

@@ -5,6 +5,7 @@ struct ArticlePreviewView:View {
     let content:ArticleContent
     let rendered:RenderedArticle
     let previews:ArticlePhotoPreviews?
+    var suspensionMessage:String? = nil
     var body:some View {
         VStack(alignment:.leading,spacing:20) {
             Text("内容のプレビューです。note上の最終表示とは異なる場合があります。").font(.caption).foregroundStyle(.secondary)
@@ -14,7 +15,7 @@ struct ArticlePreviewView:View {
                 VStack(alignment:.leading,spacing:8) {
                     Text("写真 \(index+1)").font(.headline)
                     if case .ready(let buffer)=previews?.states[photo.assetID], let image=buffer.displayImage {Image(nsImage:image).resizable().scaledToFit().frame(maxHeight:480).accessibilityIdentifier("article-rendered-image-\(index+1)")}
-                    else {Text(previews?.states[photo.assetID]?.message ?? "画像の取得待ち").foregroundStyle(.secondary)}
+                    else {Text(suspensionMessage ?? previews?.states[photo.assetID]?.message ?? "画像の取得待ち").foregroundStyle(.secondary)}
                     if !photo.text.isEmpty {Text(photo.text)}
                 }
             }

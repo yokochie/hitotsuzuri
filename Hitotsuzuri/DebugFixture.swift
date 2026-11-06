@@ -247,7 +247,10 @@ private actor FixtureStore:SelectionStoring {
             completion(.success(ArticleImageInput(url:url,orientation:1)))
         } catch {completion(.failure(.ioFailure))}
     }
-    func cancel(_ request:Int) { jobs[request]?.cancel() }
+    func cancel(_ request:Int) {
+        if let control, control.holdOutput, control.outputPending > 0 {control.outputCancelRequests += 1}
+        jobs[request]?.cancel()
+    }
 }
 @MainActor @Observable private final class ArticleFixturePreviews:ImageDriving {
     private(set) var requestCounts:[String:Int]=[:]
@@ -321,6 +324,7 @@ private actor ArticleFixtureDraftStore:ArticleStoring {
     var holdDisplay:Bool
     var holdOutput:Bool
     var outputPending=0
+    var outputCancelRequests=0
     var exportEntered=0
     var displayReplies:[@MainActor () -> Void]=[]
     var outputReplies:[@MainActor () -> Void]=[]

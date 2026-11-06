@@ -33,6 +33,9 @@ import XCTest
     private func counts(_ app:XCUIApplication)->[Int] {
         value(app.staticTexts["draft-photo-request-counts"]).split(separator:",").compactMap {Int($0)}
     }
+    private func diagnosticCounts(_ text:String)->[Int] {
+        (text.components(separatedBy:"requests=").last?.components(separatedBy:";").first ?? "").split(separator:",").compactMap {Int($0)}
+    }
     private func action(_ id:String,_ app:XCUIApplication)->XCUIElement {
         let button=app.buttons[id]
         if !button.exists {scrollForm(app,delta:10000)}
@@ -52,9 +55,11 @@ import XCTest
         wait("4番号が実際にreadyになる: \(diagnostic(app))") {
             let text=self.diagnostic(app)
             let pixels=text.components(separatedBy:"pixels=").last?.components(separatedBy:";").first?.split(separator:",") ?? []
-            let countsMatch=requested.map {self.counts(app) == $0} ?? true
+            // 1つのAX診断snapshot内の状態と実要求を照合し、predicate中のremote lookupを減らす。
+            let countsMatch=requested.map {self.diagnosticCounts(text) == $0} ?? true
             return text.contains("owner=true") && pixels.count == 4 && !pixels.contains("none") && countsMatch
         }
+        if let requested {XCTAssertEqual(counts(app),requested,"独立した要求数表示も一致する")}
         scrollForm(app,delta:10000)
         for number in 1...4 {
             let image=app.images["article-preview-\(number)"]
@@ -123,7 +128,10 @@ import XCTest
         export(app)
         wait("合成出力readerを保留") {self.diagnostic(app).contains("outputPending=1")}
         action("article-export-cancel",app).click()
-        outputMessage(app,"取消")
+        wait("取消が実readerへ届き、応答保留中も実処理を保持する") {
+            let text=self.diagnostic(app)
+            return text.contains("outputCancelled=1;") && text.contains("outputPending=1;") && text.contains("imageBusy=true;")
+        }
         XCTAssertTrue(diagnostic(app).contains("imageBusy=true"))
         XCTAssertFalse(app.buttons["article-export"].isEnabled,"実reader終端まで出力Sessionも待機する")
         XCTAssertEqual(counts(app),[1,1,1,1],"実画像処理中は表示要求を開始しない")

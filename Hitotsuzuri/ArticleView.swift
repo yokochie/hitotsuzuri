@@ -17,7 +17,7 @@ struct ArticleView: View {
                 ScrollViewReader { scroll in
                     ScrollView {
                         if presentation.mode == .preview, let rendered=presentation.rendered, let content=try? session.validatedContent() {
-                            ArticlePreviewView(content:content,rendered:rendered,previews:coordinator.previews)
+                            ArticlePreviewView(content:content,rendered:rendered,previews:coordinator.previews,suspensionMessage:coordinator.photoSuspensionMessage)
                                 .frame(maxWidth:720).frame(maxWidth:.infinity).padding(16).id("article-preview-top")
                         } else {
                             let wide=geometry.size.width >= 960
@@ -83,7 +83,7 @@ struct ArticleView: View {
             #if DEBUG
             if let control=coordinator.fixturePhotoControl {
                 Text("試験：画像復帰診断").font(.caption2).accessibilityIdentifier("restoration-diagnostic")
-                    .accessibilityValue(coordinator.fixturePhotoDiagnostic+";entered=\(control.exportEntered);outputPending=\(control.outputPending);displayPending=\(control.displayReplies.count)")
+                    .accessibilityValue(coordinator.fixturePhotoDiagnostic+";entered=\(control.exportEntered);outputPending=\(control.outputPending);outputCancelled=\(control.outputCancelRequests);displayPending=\(control.displayReplies.count)")
                 HStack {
                     Button("試験：画像を利用可能にする") {control.photosAvailable=true}.accessibilityIdentifier("restoration-available")
                     Button("試験：表示応答を返す") {control.releaseDisplay()}.accessibilityIdentifier("restoration-release-display")
@@ -176,9 +176,9 @@ struct ArticleView: View {
                     if case .ready(let buffer)=state, let image=buffer.displayImage {
                         Image(nsImage:image).resizable().scaledToFit().frame(maxHeight:160).accessibilityIdentifier("article-preview-\(index+1)")
                     }
-                    Text(state.message).font(.callout).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("article-preview-state-\(index+1)")
+                    Text(coordinator.photoSuspensionMessage ?? state.message).font(.callout).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("article-preview-state-\(index+1)")
                     Button("写真 \(index+1) を再試行") {retryPhoto(index)}
-                        .disabled(coordinator.previews?.isLoading == true || coordinator.working)
+                        .disabled(!coordinator.canRetryPhotos)
                         .focusable().focused($focusedField,equals:"article-retry-\(index+1)")
                         .accessibilityIdentifier("article-retry-\(index+1)").id("article-retry-\(index+1)")
                 }.frame(maxWidth:.infinity,alignment:.leading)
@@ -217,7 +217,7 @@ struct ArticleView: View {
         if coordinator.pendingExportRecovery != nil { order += ["article-export-recover"] }
         if coordinator.exportRecoveryNeedsCleanup { order += ["article-export-cleanup"] }
         order += ["article-save"]
-        if presentation.mode == .editing, coordinator.previews?.isLoading == false {order += photoRetryOrder}
+        if presentation.mode == .editing, coordinator.canRetryPhotos {order += photoRetryOrder}
         guard let current=focusedField, let index=order.firstIndex(of:current) else {return .ignored}
         let target=order[(index+(backward ? order.count-1 : 1)) % order.count]
         if target == "article-export-copy-fixed" {
@@ -258,10 +258,7 @@ struct ArticleView: View {
         return .handled
     }
     private func retryPhoto(_ index:Int) {
-        guard let previews=coordinator.previews, !previews.isLoading,
-              session.source.orderedAssetIDs.indices.contains(index) else {return}
-        let assetID=session.source.orderedAssetIDs[index]
-        Task {await previews.retry(assetID)}
+        coordinator.retryPhoto(index)
     }
     private func showPreview() {
         #if DEBUG
