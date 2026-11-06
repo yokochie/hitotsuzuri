@@ -4,12 +4,14 @@ import Foundation
     var isBusy: Bool { get }
     var reservedImageBytes: Int { get }
     var peakReservedImageBytes: Int { get }
+    var lastAcquisitionDuration: Duration { get }
     func image(_ assetID: String, requestID: UUID) async throws -> ArticleJPEG
     func image(_ assetID: String, requestID: UUID, networkAllowed: Bool, progress: @escaping @MainActor (Double) -> Void) async throws -> ArticleJPEG
     func cancel(_ requestID: UUID)
 }
 extension ArticleImageAccess: ArticleExportImageProviding { }
 extension ArticleExportImageProviding {
+    public var lastAcquisitionDuration: Duration { .zero }
     public func image(_ assetID: String, requestID: UUID, networkAllowed: Bool, progress: @escaping @MainActor (Double) -> Void) async throws -> ArticleJPEG {
         try await image(assetID, requestID: requestID)
     }
@@ -30,6 +32,7 @@ public actor ArticleExportDelivery {
     private var cancelRequested = false
     private var committing = false
     private var photoIndex: Int?
+    private var progressFraction: Double?
     public init(images: any ArticleExportImageProviding, journal: ArticleExportJournal,
                 now: @escaping @Sendable () -> ContinuousClock.Instant = { ContinuousClock().now },
                 writerFactory: @escaping ArticleExportWriterFactory = { ArticleExportWriter(destination: $0, record: $1) }) {
@@ -40,7 +43,7 @@ public actor ArticleExportDelivery {
         guard prepared.savedInput.settings == ArticleImageSettings() else { throw ArticleFailure.invalidInput }
         activeJobID = jobID; cancelRequested = false; failureDetail = nil
         defer { activeJobID = nil; activeRequestID = nil; committing = false; photoIndex = nil }
-        let deadline = now() + .seconds(180)
+        var deadline = now() + .seconds(180)
         let parentIdentity = try await Task.detached { try ArticleExportFileSystem.identity(of: destination) }.value
         var record = ArticleExportRecoveryRecord(jobID: jobID, prepared: prepared, parentIdentity: parentIdentity)
         if let existing = try await journal.lookup(jobID) {
@@ -61,7 +64,8 @@ public actor ArticleExportDelivery {
                 photoIndex = offset + 1
                 try check(deadline)
                 await progress(ExportProgress(jobID: jobID, stage: "acquiring", completedImages: offset))
-                let next = try await processImage(assetID, index: offset + 1, writer: writer, deadline: deadline)
+                let (next, acquisition) = try await processImage(assetID, index: offset + 1, writer: writer, deadline: deadline, jobID: jobID, progress: progress)
+                deadline += acquisition
                 try await journal.update(next, expected: record); record = next
                 await progress(ExportProgress(jobID: jobID, stage: "writing", completedImages: offset + 1))
             }
@@ -128,17 +132,28 @@ public actor ArticleExportDelivery {
         guard !cancelRequested, !Task.isCancelled else { throw ArticleFailure.cancelled }
         guard now() < deadline else { throw ArticleFailure.timedOut }
     }
-    private func processImage(_ assetID: String, index: Int, writer: ArticleExportWriter, deadline: ContinuousClock.Instant) async throws -> ArticleExportRecoveryRecord {
+    private func processImage(_ assetID: String, index: Int, writer: ArticleExportWriter, deadline: ContinuousClock.Instant, jobID: UUID, progress: @escaping ArticleExportProgressSink) async throws -> (ArticleExportRecoveryRecord, Duration) {
         let started = now(), request = UUID()
-        activeRequestID = request
-        defer { activeRequestID = nil }
+        activeRequestID = request; progressFraction = nil
+        defer { activeRequestID = nil; progressFraction = nil }
         guard await images.reservedImageBytes <= 256 * 1024 * 1024 else { throw ArticleFailure.capacity }
-        let image = try await images.image(assetID, requestID: request)
-        try check(min(deadline, started + .seconds(30)))
+        let image = try await images.image(assetID, requestID: request, networkAllowed: true) { [weak self] value in
+            Task { await self?.receivedProgress(value, jobID: jobID, request: request, index: index, sink: progress) }
+        }
+        // 取得だけを控除する。変換・書込時間を無制限にはしない。
+        let acquisition = max(.zero, await images.lastAcquisitionDuration)
+        try check(min(deadline + acquisition, started + acquisition + .seconds(30)))
         guard await images.reservedImageBytes <= 256 * 1024 * 1024, image.bytes.count <= 32 * 1024 * 1024 else { throw ArticleFailure.capacity }
         let record = try await writer.writeImage(image, index: index)
-        try check(min(deadline, started + .seconds(40)))
-        return record
+        try check(min(deadline + acquisition, started + acquisition + .seconds(40)))
+        return (record, acquisition)
+    }
+    private func receivedProgress(_ value: Double, jobID: UUID, request: UUID, index: Int, sink: ArticleExportProgressSink) async {
+        guard activeJobID == jobID, activeRequestID == request, photoIndex == index,
+              !cancelRequested, !committing, value.isFinite, (0...1).contains(value),
+              value >= (progressFraction ?? 0) else { return }
+        progressFraction = value
+        await sink(ExportProgress(jobID: jobID, stage: "acquiring", completedImages: index - 1, fraction: value))
     }
     private func settleImages() async {
         if let request = activeRequestID { await images.cancel(request) }

@@ -243,7 +243,7 @@ import UniformTypeIdentifiers
         XCTAssertEqual(seconds.count, 30); XCTAssertEqual(fixture.reader.requests, 120)
         let p95 = seconds.sorted()[28]
         XCTAssertLessThanOrEqual(p95, 10)
-        XCTAssertEqual(fixture.reader.networkRequests, 0)
+        XCTAssertEqual(fixture.reader.networkRequests, 120, "出力はPhotoKit取得を許可する。合成入力なので実通信はしない")
         print("U3 normal export trials=30 images=4 input=4096x3072 bodyEach=10000 p95Seconds=\(p95) maxSeconds=\(seconds.max()!) samples=\(seconds)")
     }
     func testExportMemoryAndCancellationThirtyTrials() async throws {
@@ -331,8 +331,8 @@ private func exportSeconds(_ duration: Duration) -> Double {
     init(inputs: [String: ArticleImageInput]) { self.inputs = inputs }
     func request(_ id: String, networkAllowed: Bool, completion: @escaping @MainActor (Result<ArticleImageInput, ArticleFailure>) -> Void) -> Int {
         requests += 1
-        if networkAllowed { networkRequests += 1; completion(.failure(.permissionDenied)) }
-        else if let input = inputs[id] { completion(.success(input)) }
+        if networkAllowed { networkRequests += 1 }
+        if let input = inputs[id] { completion(.success(input)) }
         else { completion(.failure(.assetUnavailable)) }
         return requests
     }

@@ -3,7 +3,7 @@ import Foundation
 public enum ArticleFailure: String, Error, Codable, Sendable {
     case invalidInput, missing, corruptData, unsupportedVersion, conflict
     case permissionDenied, assetUnavailable, invalidReference, capacity, timedOut
-    case cancelled, ioFailure, uncertainResult, cleanupFailure, busy
+    case cancelled, ioFailure, uncertainResult, cleanupFailure, busy, networkUnavailable
 
     public var message: String {
         switch self {
@@ -22,6 +22,7 @@ public enum ArticleFailure: String, Error, Codable, Sendable {
         case .uncertainResult: "保存結果を確認できません。再試行の前に結果を照合します。"
         case .cleanupFailure: "一時出力を片付けられませんでした。残存場所を確認してください。"
         case .busy: "前の処理の終了を待っています。"
+        case .networkUnavailable: "通信できませんでした。接続を確認して、もう一度出力してください。"
         }
     }
 }

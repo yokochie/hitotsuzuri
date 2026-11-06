@@ -948,3 +948,30 @@
 **Message**: Core Redの準備ができました。新規8件と、通常動作を変えない試験用境界を追加しています。\n\n対象コマンド：\n`bash scripts/verify-native.sh ArticleCloudImageTests ArticleCloudExportTests`\n\n`git diff --check`成功。ローカル試験・Green実装は行わず、CI結果を待っています。
 
 ---
+
+## Artifact Created
+**Timestamp**: 2026-11-06T11:42:02Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-icloud-image-export/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T11:46:37Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-icloud-image-export/construction/code-generation/code-generation-plan.md
+**Context**: construction > code-generation > code-generation-plan.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T11:46:52Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1b0a5-0a9b-7d12-806d-01cd1c6d47c2
+**Message**: Core Green候補を固定しました。新規17件で、長期待機・進捗・取消・旧通知・失敗後再試行・書込期限を検証します。\n\nUIは未変更です。`git diff --check`成功、ローカル試験は実行していません。CI結果を待ちます。
+
+---
