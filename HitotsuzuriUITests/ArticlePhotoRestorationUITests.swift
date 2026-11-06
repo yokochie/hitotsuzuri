@@ -2,28 +2,49 @@ import XCTest
 
 // T1–T10: 実Coordinator/View/LocalImageAccess/出力Sessionを通る接続回帰。
 // fixtureはdriver応答と失敗条件だけを制御し、表示ownerの生成/復帰は行わない。
+// restore-* はPickerの検証adapterを分離し、記事要求自体を計数する。
+// Pickerと共有した場合の相互作用はこのclassの対象外。既存資源/通常UI試験と実機確認を併用する。
 @MainActor final class ArticlePhotoRestorationUITests: ArticleDraftUITestCase {
     override func setUpWithError() throws { continueAfterFailure = false }
+    private var observedApp:XCUIApplication?
+    override func launch(_ fixture:String="default",open:Bool=true)->XCUIApplication {
+        let app=super.launch(fixture,open:open)
+        observedApp=app
+        return app
+    }
 
     private func wait(_ reason:String, timeout:TimeInterval=6, _ condition:@escaping @MainActor () -> Bool) {
         let predicate=NSPredicate {_,_ in MainActor.assumeIsolated {condition()}}
-        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:predicate,object:nil)],timeout:timeout),.completed,reason)
+        let outcome=XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:predicate,object:nil)],timeout:timeout)
+        if outcome != .completed, let app=observedApp {
+            // このclassは合成fixtureだけを起動する。本人写真や他アプリを取得しない。
+            let element=app.staticTexts["restoration-diagnostic"]
+            let attachment=XCTAttachment(string:"reason=\(reason)\nlatestDiagnostic=\(diagnostic(app))\nlatestCounts=\(counts(app))\ndiagnostic.label=\(element.exists ? element.label : "missing")\ndiagnostic.value=\(element.exists ? String(describing:element.value) : "missing")\n\(app.windows.firstMatch.debugDescription)")
+            attachment.name="photo-restoration-wait-failure"; attachment.lifetime = .keepAlways; add(attachment)
+        }
+        XCTAssertEqual(outcome,.completed,reason)
     }
-    private func value(_ element:XCUIElement)->String { (element.value as? String) ?? element.label }
+    private func value(_ element:XCUIElement)->String {
+        guard element.exists else {return "<missing>"}
+        if let value=element.value as? String, !value.isEmpty {return value}
+        return element.label
+    }
     private func diagnostic(_ app:XCUIApplication)->String {value(app.staticTexts["restoration-diagnostic"])}
     private func counts(_ app:XCUIApplication)->[Int] {
         value(app.staticTexts["draft-photo-request-counts"]).split(separator:",").compactMap {Int($0)}
     }
     private func action(_ id:String,_ app:XCUIApplication)->XCUIElement {
         let button=app.buttons[id]
-        XCTAssertTrue(button.draftExists(timeout:5),id)
+        if !button.exists {scrollForm(app,delta:10000)}
         func visible()->Bool {
+            guard button.exists else {return false}
             let frame=button.frame, viewport=app.scrollViews.firstMatch.frame
             return button.isHittable && frame.minY >= viewport.minY+3 && frame.maxY <= viewport.maxY-3
         }
         for _ in 0..<30 {
             if visible() {break}
-            scrollForm(app,delta:button.frame.midY > app.scrollViews.firstMatch.frame.midY ? -350 : 350)
+            if !button.exists {scrollForm(app,delta:-250)}
+            else {scrollForm(app,delta:button.frame.midY > app.scrollViews.firstMatch.frame.midY ? -350 : 350)}
         }
         XCTAssertTrue(visible(),id); return button
     }
@@ -42,7 +63,8 @@ import XCTest
                 scrollForm(app,delta:-220)
             }
             XCTAssertTrue(image.exists,"写真\(number)の実Image要素")
-            XCTAssertEqual(app.staticTexts["article-preview-state-\(number)"].label,"画像を取得しました")
+            let state=app.staticTexts["article-preview-state-\(number)"]
+            XCTAssertTrue([state.label,(state.value as? String) ?? ""].contains("画像を取得しました"),"写真\(number)の実状態。label=\(state.label), value=\(String(describing:state.value))")
         }
         XCTAssertTrue(diagnostic(app).contains("ids=album-a-photo-1,album-a-photo-2,album-a-photo-3,album-a-photo-4"),"保存された写真順")
     }
@@ -100,10 +122,13 @@ import XCTest
         let app=launch("restore-cancel"); ready(app,requested:[1,1,1,1])
         export(app)
         wait("合成出力readerを保留") {self.diagnostic(app).contains("outputPending=1")}
-        action("article-export-cancel",app).click(); ended(app)
+        action("article-export-cancel",app).click()
+        outputMessage(app,"取消")
         XCTAssertTrue(diagnostic(app).contains("imageBusy=true"))
+        XCTAssertFalse(app.buttons["article-export"].isEnabled,"実reader終端まで出力Sessionも待機する")
         XCTAssertEqual(counts(app),[1,1,1,1],"実画像処理中は表示要求を開始しない")
         app.buttons["restoration-release-output"].click()
+        ended(app)
         wait("旧出力readerの実終端") {self.diagnostic(app).contains("imageBusy=false")}
         ready(app,requested:[2,2,2,2])
         XCTAssertFalse(app.staticTexts["article-export-result"].exists)
@@ -143,7 +168,8 @@ import XCTest
     // T9: マウスは取得不能なまま実要求、切替後のキーボードは画像へ回復。
     func testMouseAndKeyboardRetryIssueOnlyTargetRequestAndRecoverImage() {
         let app=launch("restore-retry")
-        wait("初回の4要求が終端へ到達") {self.counts(app) == [1,1,1,1] && app.buttons["article-retry-2"].isEnabled}
+        let retry=action("article-retry-2",app)
+        wait("初回の4要求が終端へ到達") {self.counts(app) == [1,1,1,1] && retry.isEnabled}
         replace(field("article-title",app),"Retry keeps unsaved text")
         action("article-retry-2",app).click()
         wait("マウスによる番号2の実要求") {self.counts(app) == [1,2,1,1] && app.buttons["article-retry-2"].isEnabled}

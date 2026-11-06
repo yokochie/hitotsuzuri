@@ -93,6 +93,9 @@ import UniformTypeIdentifiers
         let photoControl = fixtureCase.hasPrefix("restore-") ? ArticleFixturePhotoControl(mode:fixtureCase) : nil
         let previewDriver=ArticleFixturePreviews(unavailableAll:draftCase == "photos-missing",delayMilliseconds:draftCase == "performance" ? 100000 : (draftCase == "slow-photos" ? 300 : 0),control:photoControl)
         let images=LocalImageAccess(driver:previewDriver)
+        // restore-* の要求/保留は記事側だけを観測する。Picker起動時の4枚validationが
+        // 記事driverを暖めたり、合成失敗時に記事要求を取消したりしないよう分離する。
+        let pickerImages=photoControl == nil ? images : LocalImageAccess(driver:FixtureImages())
         let coordinator=ArticleAppCoordinator(selections:store,directory:root,reader:ArticleFixtureReader(root:root, mode: fixtureCase,control:photoControl),fixtureDestination:root.appendingPathComponent("Output"),previewImages:images,articleStore:draftStore)
         coordinator.fixturePhotoControl = photoControl
         coordinator.fixturePhotoResources = {
@@ -106,7 +109,7 @@ import UniformTypeIdentifiers
                 try cleanOwnedRoot(root)
                 coordinator.message="試験データを回収しました。"
             } catch {coordinator.message="試験データの回収に失敗しました。"}
-            return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:images,store:store),coordinator)
+            return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:pickerImages,store:store),coordinator)
         }
         if storage == .applicationSupport {
             do { try prepareApplicationSupportRoot(root) }
@@ -160,7 +163,7 @@ import UniformTypeIdentifiers
                 } catch { coordinator.message="試験用下書きを準備できませんでした。" }
             }
         }
-        return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:images,store:store),coordinator)
+        return (SelectionWorkflow(library:PhotoLibraryAccess(source:FixtureLibrary()),images:pickerImages,store:store),coordinator)
     }
 }
 @MainActor private final class FixtureLibrary:LibrarySource {

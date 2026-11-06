@@ -886,3 +886,101 @@
 **Message**: Red準備を完了し、編集を止めました。通常の復帰ロジックは未変更です。\n\n変更ファイル：\n\n- `HitotsuzuriUITests/ArticlePhotoRestorationUITests.swift`（新規10件、T1–T10）\n- `Hitotsuzuri/DebugFixture.swift`\n- `Hitotsuzuri/ArticleAppCoordinator.swift`（D
 
 ---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T05:25:00Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1ab6b-fa0f-7620-94ce-20a20cacc7bf
+**Message**: Green設計をrootへ共有しました。ファイルは編集していません。\n\n- 出力の表示解放直後に`defer`を登録し、全終了経路から同一sessionの表示を復帰。\n- `images.isBusy`中は取消可能な復帰Taskで待機し、世代・sessionを再照合。\n- 同sessionでもownerがnil/空なら再生成。\n- マウスとキーの再試行をCoordinatorへ統合し、操作条件と二
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-06T05:39:29Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: 63d21fdd
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-questions.md","entries":{"Plan Approval":"d587abcb2d4b9ffc"}}
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-06T05:40:28Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: ae0ae982
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-questions.md","entries":{"Plan Approval":"d587abcb2d4b9ffc"}}
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-06T05:44:19Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: eda1ccfb
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-questions.md","entries":{"Plan Approval":"d587abcb2d4b9ffc"}}
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-06T05:44:36Z
+**Event**: HUMAN_TURN
+**Session**: 01a1a9e0-b456-7d83-bec1-c651818fdeb3
+**Origin**: person
+**Source**: typed
+**Message Id**: 4b4dc643
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/code-generation-questions.md","entries":{"Plan Approval":"d587abcb2d4b9ffc"}}
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-06T05:45:50Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/.aidlc-engine/github-settings/branch-protection.json
+**Context**: .aidlc-engine > github-settings > branch-protection.json
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-06T05:45:50Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/.aidlc-engine/github-settings/repository-settings.json
+**Context**: .aidlc-engine > github-settings > repository-settings.json
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-06T05:46:50Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/supporting/github-repository-settings.md
+**Context**: supporting > github-repository-settings.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-06T05:49:54Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261106-draft-photo-preview/construction/code-generation/ci-evidence.md
+**Context**: construction > code-generation > ci-evidence.md
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-06T05:52:37Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-developer-agent
+**Agent ID**: 01a1ab6b-fa0f-7620-94ce-20a20cacc7bf
+**Message**: 試験・fixtureの修復を完了し、編集を止めました。通常復帰ロジックは未変更です。\n\n変更は2ファイルです。\n\n- `HitotsuzuriUITests/ArticlePhotoRestorationUITests.swift`\n- `Hitotsuzuri/DebugFixture.swift`\n\n修復内容：\n\n- 状態文字列を`.label`と`.value`の両方から検証。\n- T9の再
+
+---
