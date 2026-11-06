@@ -1,40 +1,48 @@
 # コンポーネント一覧
 
+以下はsource上の責務単位。ファイル分類はcode-structure.md、呼出契約はapi-documentation.md。
+
 ## App Composition
-HitotsuzuriAppが通常adapterとCoordinatorを生成し、DEBUG時に合成fixtureへ分岐。Coordinatorがsessionと画像owner、OSパネル・window終了・出力を接続する。
+HitotsuzuriAppが通常/DEBUG依存を構成。通常Pickerと記事表示は同じLocalImageAccessを共有する。
 
-## Selection Models and Ports
-4枚・順序・認可・設定・保存状態・型付き失敗と、library/image/storage境界。
-
-## Selection Workflow
-復元/参照検証/確定をdeadlineとgeneration/operation IDで管理。全4枚検証後に一括反映し、確定後の取消/認可変化と保存成功を区別。
-
-## Photo Library
-PhotoLibraryAccess/SystemLibrarySource。フォルダ再帰・重複/循環排除・アルバム所属・写真参照。読取用途のみ。
-
-## Local Images
-LocalImageAccess/SystemImageDriver。表示512px、queue/cache、同時枠、返却bufferを含む予算、取消とdeadline。
-
-## Selection Persistence
-settings/selection JSONを独立処理。破損選択の明示再確定だけで原本digest付き退避を作成し、未知版/破損設定は保護。
+## Picker Workflow
+SelectionWorkflowが認可、フォルダ/アルバム、順序付き4枚、再検証、保存/復元を制御。PhotoLibraryAccess/SystemLibrarySource、SelectionPersistenceに依存。
 
 ## Picker UI
-PickerContent/PresentationSnapshot/PickerPresentationState/PickerAccessibility/NativeFolderBrowser。階層選択、native outline、狭幅領域切替、焦点、4枠。PickerViewが記事画面へ切替える。
+PickerContent/PickerView、NativeFolderBrowser、PickerPresentationState、PhotoSemantics/GridNavigation、PresentationSnapshot。SwiftUIとNSOutlineViewで狭幅/focus/文字状態を提供。
 
-## Article Domain and Editing
-Models/Ports/Fingerprint/Workspace/EditSession/Presentation/InitialContent/MetadataInput/Projection/OutputPorts。確定選択との関連、手動保存、日付候補、未保存遷移、本文生成。
+## Display Images
+LocalImageAccess/SystemImageDriverが512px画像、cache/LRU、validation優先queue、15秒期限、生存buffer予算を管理。ArticlePhotoPreviewsが記事の4状態と番号別retryを持つ。
 
-## Article Persistence and File Access
-ArticlePersistenceのoperation/current、再試行・競合。ArticleDirectoryは対象の全成分nofollow直接open、ENOENT時のみ不足部分生成、fd相対I/O・排他・同期を提供する。
+## Article Domain
+ArticleSource/Content/SavedArticle、日付入力/初期候補、ArticleFingerprint。写真順と正確な文字bytes/版のvalidation。
 
-## Article Images
-ArticlePhotoPreviewsは表示状態と世代、ArticleImageAccess/PhotoKitArticleImageReader/Converter/Budgetは出力要求・入力owner・縮小・向き/sRGB JPEGとmemory予算。表示と出力を混同しない。
+## Article Persistence
+ArticleWorkspaceが選択から記事を解決し、ArticlePersistenceがoperation/currentの保存/関連付けを管理。ArticleDirectoryのnofollow/fd相対I/O、lock、fsync、CASに依存。
 
-## Probe and Export
-1枚のProbeDelivery/Journal、4枚のExportModels/Manifest/FileSystem/Journal/Writer/Delivery/OSActions/Session。所有/実体/digest、固定入力、進行・期限・取消・回復、pasteboard/Finder。
+## Article Editing
+ArticleEditSessionが入力/保存snapshot/結果不明を保持。ArticlePresentationが候補/離脱/投影/コピー/出力lockを制御。ArticleProjectionContextがplain/Markdownを生成。
 
-## Measurement and Diagnostics
-分類のみのDiagnostics/ArticleDiagnostics。NativeMeasurement/FrameMeasurement/measure-native.swiftは採用入力と同frame表示を照合し、欠測を成功にしない。
+## Article UI Coordinator
+ArticleAppCoordinatorと記事各View。AppKit確認/保存先、終了委譲、画像表示の停止/復帰UUID、出力所有期間を接続。
 
-## Verification Suite
-4 XCTest targets、DebugFixture、runner/coverage/選択契約、GitHub workflows。合成画像・専用pasteboard・所有UUID rootを利用する。App Support隔離再開試験も存在するが、画像実表示の回帰範囲は品質評価に記す。
+## Export Image Acquisition
+ArticleImageAccess、PhotoKitArticleImageReader、ArticleImageConverter/Budget/JPEG。単一要求、content editing input、期限/取消/実終端、縮小/向き/色/metadata非継承。
+
+## Export Orchestration
+ArticleExportSession、ArticleOutputActions、ArticleExportOSActions、ArticleExportDelivery。固定保存入力、4枚順次処理、進捗、grant、取消、結果/照合/cleanup詳細を接続。
+
+## Export Storage
+ArticleExportWriter、ArticleExportJournal、ArticleExportManifest、ArticleExportFileSystemとrecovery model。所有・digest・phaseに基づく一時生成/非置換公開/復旧。
+
+## Probe Output
+ArticleProbeDelivery/JournalとCoordinator.probe。先頭一枚の検証出力で、通常4枚bundleとは記録/命名を分離。
+
+## Diagnostics and Measurement
+Diagnostics/ArticleDiagnosticsは分類だけをOSLogへ記録。NativeMeasurement/FrameMeasurementとscripts/measure-native.swiftは入力/描画と資源の計測を補助。
+
+## Test Fixtures
+DebugFixture、各TestDoubles、FixtureLaunch。実Photosと通常記事を避け、合成画像と所有UUID領域を使用。restore-*のみPicker adapter分離、通常共有構成は維持。
+
+## Verification Tooling
+native-test-runner.py、test-native-runner.py、check-coverage.swift、Bash入口、verify.yml。Core先行、smoke、全機能/coverageと別区分性能。DependabotはActions更新。

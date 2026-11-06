@@ -1,44 +1,34 @@
-# 品質評価と表示復帰の調査結果
+# 品質・変更影響
 
-## 静的品質
-| 項目 | 評価 | 根拠 |
-|---|---|---|
-| 責務/型 | good | 選択・記事・画像・出力がprotocolと型で分離 |
-| ファイル規模/結合 | fair | CoordinatorにOS・session・表示owner・出力・DEBUG計測が集中 |
-| 保存安全性 | good | nofollow-any、fd相対、排他、digest、原子的確定、未知版保護 |
-| 表示状態と操作 | fair | owner欠落/取消済み/未要求をwaitingへ潰し、有効なボタンがno-opになる |
-| 試験範囲 | fair | 部品と保存/出力試験は豊富だが、出力から表示への復帰接続が欠ける |
-| 診断 | fair | 個人文章を避ける分類ログはあるが、表示owner/要求発行を通常画面から判別できない |
+## 検証基盤
 
-## 確認できたコード上の成立経路
-1. `ArticleAppCoordinator.swift:187–199` は新session IDの時だけPreviewsを生成してload Taskを開始する。同じsession IDなら189行でreturnする。
-2. 出力の358–384行では、未保存時の最初の確認を通った後、374行でpreviewTask取消・Previews.cancel・previews=nilを実行する。previewSessionIDは変更しない。
-3. この破棄後の容量拒否、保存/入力検証失敗、パネルでの保存先取消、画像取得失敗、出力処理取消、正常完了のいずれも、Coordinatorに表示ownerの再生成・再loadがない。最初の「保存して出力/取り消す」確認で取り消した場合は374行に到達しないため別扱い。
-4. `ArticleView.swift:164` はpreviews=nilや番号state欠落をwaitingに置換する。171–175行のボタンはnilだけでは無効化されず、252行のretryPhotoはnilなら即return。nilではキーボードの再試行順にも含まれない（211行付近）。`ArticlePreviewView.swift:16–17` も同じwaiting fallbackを持つ。
-5. `ArticleImageAccess.swift:62–67` のPreviews.cancelはstatesを空にし、retryはstates非空を条件とする。取消済みownerをそのままretryしても要求は発行しない。
+4つのXCTest/XCUITest target。runnerはclass/methodを実ファイルから発見し、xcresultで選択試験のPassed/実行を確認、smoke2経路を必須とする。全機能bundleのApp/Core全手書きSwiftを加重集計して80%以上を検査する。実時間/実メモリ性能はCI全機能と別区分。今回試験/build/programは一切実行せず、新しい合否/件数/coverageは取得していない。
 
-この接続は「4枚とも取得待ち、再試行無反応」を生じ得る強いコード上の候補。ただし本人の不具合が出力後の同一sessionで発生したかは未観測で、実機の直接原因とは未確定。今回、再現試験は実行していない。
+## 維持すべき強み
 
-## Freshな下書き再開・Observation・取消順序
-新プロセス、Pickerへ離脱して戻る、既存記事を再読込して新EditSessionをadoptする場合は新session IDとなり、CoordinatorはPreviews生成とloadへ進む。出力後の同一sessionの編集復帰とは経路が異なる。fresh再開だけで常に待ちになるとの事実はコードから確定できない。
+- expected保存版/operation UUID/正確なUTF8 fingerprintにより競合・結果不明・再試行を区別する。
+- nofollow/fd相対I/O、directory identity、digest、非置換確定、所有確認cleanupで原本/既存成果物を保護。
+- 出力は保存snapshot、4枚順序、2560px/sRGB/向き/GPS非継承を検証する。
+- 取消と実処理終端、表示/出力資源、古いsession/request/jobの排除を分離し、前修正は後照会までCoordinatorの所有を維持。
+- 合成fixture/専用root/試験pasteboardにより通常写真/データを自動試験で触らない。
 
-CoordinatorとPreviewsはMainActor Observable、ArticleViewはCoordinatorをBindableで参照し、各画像stateを読む。ArticlePreviewViewも参照先statesを読む。実装に状態読取の接続はあり、annotationの見た目だけからObservation欠落と断定しない。実機で要求が発行済み/状態がreadyか、画面だけ更新されないかの観測はない。
+## 今回の主要ギャップ
 
-session同期は旧Task取消→旧Previews.cancel（世代更新・共有表示取消/解放）→新owner生成→load Taskの順で、同期本体にはawaitがない。Previewsはawait後の世代とTask取消を照合して遅い結果を拒否する。LocalImageAccessの取消handlerは要求ID単位で後からMainActorに到達し、全表示取消/releaseとは異なる。現時点でこの非同期順序が本人の直接原因と示す証拠はない。修正では遅い旧応答が新ownerを更新しないこと、退場時に不要要求/保持が残らないことを維持する。
+| 場所 | 観測事実と影響 |
+|---|---|
+| ArticleImageAccess.swift | callerもreader optionsもnetwork=false。readerのnetworkAllowed引数は実optionsへ反映されない。事前取得不要という今回の要求を満たさない |
+| ArticleImageReading / ArticleExportImageProviding | completionとcancelだけでdownload progressが渡らない |
+| ExportProgress / ExportSession / ExportView | fractionは型にあるが値生成なし。枚数＋indeterminateのみで長い取得の状態を説明できない |
+| 取得/Delivery期限 | 30秒/枚、書込込み40秒、全体180秒。downloadに適した時間と変換/書込の既存制限を分けて検討する必要 |
+| reader info/error | nil入力/urlやasset不在を同じassetUnavailableへ畳み、「写真アプリで事前取得」へ誘導。取得失敗を全て未ローカルと断定できない |
+| 取消/実終端 | readerPendingがcallbackまで残る。通信追加後のPhotoKit cancel/progress stop/遅いcallbackと次要求の関係を契約化すべき |
+| 既存tests | network=falseを明示assertする。出力policy変更に応じて更新が必要だが、Picker表示の通信禁止や予算を一律弱めない |
+| README/画面説明 | 通信しないという現説明、事前取得手順、前表示修正を修正中とする記載。新実装成立後に現実と揃える候補 |
 
-出力は表示画像と変換memoryの同時保持を抑えるための破棄を行う。再表示の再開を追加する場合も、出力の実画像処理/片付けが終端へ達する前に再取得しないこと、同じsessionが有効かを照合することが必要。
+## 変更範囲と検証候補
 
-## 出力の画像取得失敗との区別
-本人申告は「写真アプリで読み込んだ後に出力成功」。出力用PhotoKitArticleImageReaderは編集入力/fullSizeImageURLを得られないとassetUnavailableを返し、ネットワークはfalse。表示は別のSystemImageDriver/LocalImageAccess経路で512px要求を行う。実写真のローカル可用性は未観測。出力成功が表示ownerの存在や要求発行を証明するものではない。通信追加・写真認可リセット・保存先変更をこの分析から導かない。
+主に出力reader/access→Delivery→Session→ExportView、ports/progress/failure、合成reader/testsが中程度の影響。Coordinatorの保存確認/後照会/表示復帰、現在編集結果の変換、Writer/Journalは契約を維持する。iCloud開始/進捗/成功、通信失敗・取消・期限、取消後の旧進捗/旧completion、次の出力・表示復帰、固定本文/順序、所有cleanupをテスト対象にする。
 
-## 既存試験と欠落
-- ArticleImageTests/ArticlePreviewRetryTestsは表示ownerを直接生成し、成功・期限・取消・番号別再試行・遅い応答拒否・資源解放を検証する。取消後states空は既存期待であり、取消後の同一owner retry再開は検証していない。
-- ArticleExportSessionTestsは注入したactionsを使い、出力の成功/取消/失敗/固定入力を検証する。Coordinatorによる表示ownerの破棄/復旧を通らない。
-- ArticleExportUITestsは成功一式・取得失敗・取消・cleanup・本文コピー・Finderを検証するが、その終端後に4枚の画像ready/実表示や再試行の要求増加を確認しない。初期の未保存確認取消と、表示破棄後の保存先取消は異なる。
-- ArticleDraftUITestsは通常再試行・photos-missing状態でのキーボード要求数・本文保持を検証する。出力が解放した後の同一sessionは対象でない。
-- ArticleSandboxStorageUITestsは本文/同じ記事の保存再開と4つの文章欄の存在を検証する。画像4枚の実表示・要求発行の検証ではない。
+本人は出力時ダウンロードを明示許可した。旧memory/READMEの通信禁止と現在ソースのfalseは歴史的現状であり、本人の今回の指示より優先しない。実iCloud/Sandboxの確認は自動fake成功とは別に最後に本人Macで行う。全面改修、全library事前取得、Photos編集、権限resetの根拠はない。
 
-後続では、fresh再開と同一session復帰を分け、正常/画像失敗/処理取消/保存先取消/破棄後早期returnの終端、nil/空stateからの実要求、旧応答排除を最小の回帰へ対応付ける。具体変更・試験数・注入境界は要件と実装計画で決める。
-
-## 検証の限界
-静的読取のみ。新しいbuild・試験・Photos取得・画面操作・OS設定変更は実行していない。既存CI設定は全手書きApp/Core Swiftと80%floorを維持するが、従来の成功/coverage率を今回の回帰再現や修正成功へ代用しない。本人環境の操作順と表示/要求状態は未確認。
+追加指示330bdddaでは画像サイズによって遅くなってもよいと本人が回答。既存30/40/180秒を新通信へ機械的に適用するのでなく、取得完遂・取消・進捗・停止の扱いを要件化する。具体的な期限値と無期限待機はまだ決定されていない。

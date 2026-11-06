@@ -28,7 +28,15 @@
     "slug": "draft-photo-preview",
     "dirName": "261106-draft-photo-preview",
     "scope": "bugfix",
-    "status": "in-flight",
+    "status": "complete",
     "request": "6a7651c2"
+  },
+  {
+    "uuid": "01a1b096-d708-75f3-947f-3b0469071f57",
+    "slug": "icloud-image-export",
+    "dirName": "261106-icloud-image-export",
+    "scope": "bugfix",
+    "status": "in-flight",
+    "request": "3b6bff90"
   }
 ]

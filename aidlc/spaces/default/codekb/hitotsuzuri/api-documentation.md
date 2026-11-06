@@ -1,19 +1,33 @@
-# API・状態・永続形式
+# APIと契約
 
-HTTP/GraphQL等のAPIはない。主要境界は次のSwift protocol/型である。
+## 外部接続
 
-| 境界 | 契約 |
+HTTP server/API endpointはない。PhotosのreadWrite authorizationを参照に用いるが、写真を変更するperformChanges等はない。画面はAppKit/SwiftUI、保存先はNSOpenPanelと一時security scope、コピーはNSPasteboard、表示はNSWorkspace。
+
+## 内部境界
+
+| API | 主な契約 |
 |---|---|
-| LibraryAccessing / LibrarySource | 認可、階層、album assets、所属/4枚検証 |
-| ImageAccessing / ImageDriving | 表示画像要求、validation目的、deadline、cancel、release、資源数値 |
-| SelectionStoring | 設定/選択の独立load/saveと明示confirm。missingと破損/未知版を区別 |
-| ArticleStoring | create/open/list/save/resumeWithSelection。operation IDとexpected版 |
-| ArticlePhotoPreviews | load/retry/cancel、番号ごとのwaiting/loading/ready/failed、isLoading |
-| ArticleImageReading | 出力用編集入力request/cancel。networkAllowed=false |
-| ArticleOutputActions | 本文copy、run/cancelExport、reveal。保存済み入力・grantを照合 |
+| LibrarySource / LibraryAccessing | status/request authorization、hierarchy、album assets、4参照の再検証 |
+| ImageDriving / ImageAccessing | request/cancel、display/validation、15秒deadline、release/資源snapshot |
+| SelectionStoring | settingsとselectionのload/save、明示confirmで破損原本を退避 |
+| ArticleStoring | create/open/list/save/resumeWithSelection、operation UUIDとexpected保存版で冪等/競合検出 |
+| ArticleImageReading | request(assetID, networkAllowed, completion)→Int token、cancel(token)。現実装はnetwork引数を無視 |
+| ArticleExportImageProviding | image(assetID, requestID)→JPEG、cancel(requestID)、busy/予算。進捗引数はない |
+| ArticleOutputActions | copy、runExport固定入力/保存先/進捗、cancel、reveal |
+| ExportProgress | jobID、stage文字列、completedImages、optional fraction。現状fractionを生成しない |
 
-表示PreviewsはMainActor Observableで、statesを初期化しloadが全番号を順次要求する。cancelは世代更新・全表示取消/解放・states空を実行する。retryは番号所属・非loading・states非空が必要。UIのnil/空状態の扱いは品質評価参照。
+## 出力画像取得の現状
 
-設定と選択はschemaVersion 1のJSON。記事は `Articles/<projectID>/operations/<operationID>` とcurrent参照を使い、入力digest・前操作・本文版を保持する。文章Unicode/改行を正規化しない。64MiB上限、重複JSON key、未知版・破損を保護する。
+`ArticleImageAccess.image`は30秒deadline、単一current、取消handlerとtimerを持つ。`PhotoKitArticleImageReader.request`はPHAssetを検索し、PHContentEditingInputRequestOptionsのnetworkをfalse、canHandleAdjustmentDataをfalseにして現在の編集結果のURLを得る。PhotoKit callbackのinfo/errorは捨てる。asset/input/URL不在は同じassetUnavailable。progressHandlerは設定しない。入力ownerを変換完了まで保持し、出力JPEGは長辺2560・quality0.9・sRGB・向き焼込み・GPS等非継承。
 
-4枚出力はUUID別folder内にarticle.md、manifest.json、images/01.jpg〜04.jpg。JPEG、長辺2560以下、quality 0.9、sRGB、非拡大。journalは親/一時folder実体と生成digestを記録する。再起動後の保存先権限は再選択する。今回、保存形式変更の必要性は見つかっていない。
+公式APIにはnetwork許可と進捗callbackがあるため、呼出policy/進捗型/取消/期限の接続を設計する余地がある。出力改善のために表示用SystemImageDriverのnetwork=falseまで一律変更する必要はない。
+
+- [Apple: isNetworkAccessAllowed](https://developer.apple.com/documentation/photos/phcontenteditinginputrequestoptions/isnetworkaccessallowed)
+- [Apple: progressHandler](https://developer.apple.com/documentation/photos/phcontenteditinginputrequestoptions/progresshandler)
+
+上記仕様は親が確認した参考資料。実Photosによる取得成功や、現在のアプリに実装済みである証拠ではない。
+
+## 保存・出力の互換契約
+
+schemaVersion1のJSON。記事はsource/photoID順序と本文・revision・fingerprintをvalidateする。PreparedArticleExportは投影と固定保存入力を照合し、manifestは4番号/設定/参照を照合する。Writerはfd/identity/digestを確認し、既存成果物を置換せず公開する。今回のiCloud改善を理由に保存形式変更や所有確認の省略を導かない。

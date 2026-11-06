@@ -1,52 +1,76 @@
-# Architecture Analysis
+## Architecture Analysis
 
-## System Overview
-単一のSwiftUI/AppKitアプリとCore framework。MainActorのObservation状態、保存/出力actor、Photos adapter、fd相対ファイル操作を分離する。外部サーバーやDBはない。
+### System Overview
 
-## Component Relationships
+単一macOSアプリ＋Core framework。SwiftUI/AppKitの画面、MainActorの観測可能な状態、actorの永続化/出力、同期画像変換を分離する。backendはない。
+
+### Architectural Style
+
+protocolを介したadapter注入と状態機械。AppのArticleAppCoordinatorが画面/OS操作/資源を接続し、Coreが保存正本と出力の所有・確定を担当する。
+
+### Component Relationships
+
 ```mermaid
 flowchart TD
-    App["HitotsuzuriApp"] --> Picker["SelectionWorkflow / PickerView"]
-    App --> Coordinator["ArticleAppCoordinator"]
-    Picker --> Images["共有 LocalImageAccess"]
-    Coordinator --> Previews["ArticlePhotoPreviews"]
-    Previews --> Images
-    Coordinator --> Presentation["ArticlePresentation / EditSession"]
-    Presentation --> Store["ArticleWorkspace / ArticlePersistence"]
-    Coordinator --> Export["ArticleExportSession / OSActions / Delivery"]
-    Export --> FullImages["ArticleImageAccess / PhotoKit reader / Converter"]
-    Export --> Files["Writer / Journal / ArticleDirectory"]
-    Store --> Files
+    UI[Picker and Article Views] --> C[ArticleAppCoordinator]
+    UI --> S[SelectionWorkflow]
+    S --> L[PhotoLibraryAccess]
+    S --> D[LocalImageAccess]
+    C --> D
+    C --> P[ArticlePresentation and EditSession]
+    P --> W[ArticleWorkspace and Persistence]
+    C --> E[ArticleExportSession]
+    E --> O[ArticleExportOSActions]
+    O --> X[ArticleExportDelivery]
+    X --> I[ArticleImageAccess and PhotoKit reader]
+    I --> V[ArticleImageConverter]
+    X --> F[Writer and Journal]
 ```
-<!-- Text fallback: Appは選択Workflowと記事Coordinatorを生成する。選択と記事表示はLocalImageAccessを共有し、記事出力は別のArticleImageAccessを使う。記事Presentationは保存へ、Exportは変換・Writer・Journalへ進む。 -->
 
-## Data Flow
-選択JSON→ArticleSource→保存記事の対応照合→EditSession→Coordinatorのsession同期→表示用Previews.load。表示と独立して手動保存・本文生成が可能。4枚出力は保存済み入力固定→パネル選択→一時生成→digest照合→排他的rename→journal確定。
+図はflowchartのnode/edge構文を静的点検済み。テキスト代替: 選択画面はlibrary/display adapterを使い、記事Coordinatorは編集正本と出力Sessionを接続する。OSActionsが保存先grantを保持し、Deliveryが出力画像、Writer、Journalを順次制御する。
 
-## Key Design Decisions
-表示と出力で要求・memory予算を分離する。出力開始前に表示画像を解放して同時保持を抑える。保存はoperation IDとexpected版・canonical digestを用いて競合と結果不明を処理する。出力は所有・実体identity・全生成bytesを照合し、不明物を消さない。
+### Data Flow
+
+選択はsettings.json/selection.json、記事はproject別operationsとcurrent、出力履歴はExportJobsのactive/job記録。出力は一時名で生成→4画像/本文/manifestをbytes照合→排他的rename→確定照合。生の写真bytesを恒久コピーせず、content editing inputのURLとownerを変換完了まで保持する。
+
+### Key Design Decisions
+
+- 保存時の固定入力とrevision/fingerprintから出力し、表示中の後編集を混入しない。
+- 512px表示はLocalImageAccess、出力はPhotoKit編集入力＋JPEG変換。表示成功を原寸可用性の証拠にしない。
+- MainActorの論理取消と同期変換/readerの実終端を分け、busy/予算/grantを実終端まで保持。
+- Coordinatorは後照会まで出力所有を保持し、その後同じsessionの表示だけ復帰する。
+- 写真/アルバム変更API、HTTP API、独自クラウド、配布CDはない。
+
+### Improvement Opportunities
+
+出力時の通信許可、PhotoKit進捗→ExportProgress→UI、ダウンロード用期限、取消後の終端、分類した失敗/再試行が今回の変更候補。保存/出力確定の設計は維持できる。詳細はapi-documentation.mdとcode-quality-assessment.md。
 
 ## Interaction Diagrams
+
 ```mermaid
 sequenceDiagram
-    participant UI as ArticleView
-    participant C as ArticleAppCoordinator
-    participant P as ArticlePhotoPreviews
-    participant L as LocalImageAccess
-    participant E as ArticleExportSession
-    UI->>C: 記事開始 または 選択した下書き再開
-    C->>P: 新sessionなら生成してload
-    P->>L: 番号順に表示画像要求
-    L-->>P: 成功または型付き失敗
-    UI->>C: 4枚出力
-    C->>P: cancel
-    C->>C: previewsをnilへ
-    C->>E: 保存済み入力の出力
-    E-->>C: 成功 失敗 または 取消
-    UI->>C: 写真再試行
-    Note over UI,C: 現行Viewはpreviewsがnilなら要求を発行しない
+    participant U as User
+    participant C as Coordinator
+    participant S as ExportSession
+    participant D as Delivery
+    participant I as ImageAccess
+    participant P as PhotoKit
+    participant W as Writer
+    U->>C: Export article and four photos
+    C->>C: Save confirmation and suspend previews
+    C->>S: Start fixed saved export
+    S->>D: Run with destination grant
+    loop Four photos in saved order
+        D->>I: Request JPEG with request UUID
+        I->>P: Content editing input, network false
+        P-->>I: File URL or failure
+        I-->>D: Converted JPEG or typed failure
+        D->>W: Write numbered image
+    end
+    D->>W: Seal and publish
+    D-->>S: Result or cleanup failure
+    S-->>C: Terminal
+    C->>C: Query pending record and resume current previews
 ```
-<!-- Text fallback: 通常の新sessionは表示ownerを生成して取得する。出力は表示ownerを取消・破棄して実行するが、終端で再生成する接続がなく、同一sessionの再試行が要求を発行しない。本人の実機操作との因果はまだ未確定。 -->
 
-## Improvement Opportunities
-表示資源の解放と再開の責務を対にし、pending・解放中・失敗・再試行可能を正直に表現する余地がある。改善候補の採否は後続要件/計画で決める。本文/選択の保存形式やPhotoKit通信方針の変更はこの分析から必要とは判断していない。
+sequenceDiagramのparticipant/loop/endと矢印を静的点検済み。テキスト代替: 保存確認・表示解放後、固定記事を渡し4枚を順次取得/変換/書込する。成功はseal/publish、失敗は実画像終端待ちとcleanup/照合へ進み、後照会が終わってから表示を復帰する。現状はPhotoKit download進捗の経路が存在しない。

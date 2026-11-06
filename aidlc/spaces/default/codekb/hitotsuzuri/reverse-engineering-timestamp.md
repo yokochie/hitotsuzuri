@@ -1,35 +1,37 @@
 # Reverse Engineering Timestamp
 
 ## Run Record
+
 - Date: 2026-11-06
-- Commit: d3feef45fe647eea80261d9f04bfc80123cdfa69
-- 日本語、Minimal、Full rescan。静的読取、本文既読領域の現在差分照合と画像lifecycle重点再読。実行検証なし。
+- Commit: 4fae0a6596fb28ce5ca2b9bab344b93709f31fda
+- Full rescan。製品ソース、試験構成/主要assert、project/runner/CI/docsを読取。build/test/実Photosは実行していない。AI-DLC install/runtimeと生成物は対象外。
 
 ## Scope of Analysis
 
 ```yaml
 scope_version: 1
 kind: full
-intent: 261106-draft-photo-preview
-fingerprint: 515e9c2f8f9c603e18a8120b4be3e76fedb6f06e
+intent: icloud-image-export
+fingerprint: fdb6e37da1f800632c8ed794df35c9729d977e33
 analyzed:
   paths:
     - ./
   components:
     - App Composition
-    - Selection Models and Ports
-    - Selection Workflow
-    - Photo Library
-    - Local Images
-    - Selection Persistence
+    - Picker Workflow
     - Picker UI
-    - Article Domain and Editing
-    - Article Persistence and File Access
-    - Article Images
-    - Probe and Export
-    - Measurement and Diagnostics
-    - Verification Suite
+    - Display Images
+    - Article Domain
+    - Article Persistence
+    - Article Editing
+    - Article UI Coordinator
+    - Export Image Acquisition
+    - Export Orchestration
+    - Export Storage
+    - Probe Output
+    - Diagnostics and Measurement
+    - Test Fixtures
+    - Verification Tooling
 shallow:
-  paths:
-    - docs/
+  paths: []
 ```
