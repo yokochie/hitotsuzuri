@@ -309,4 +309,25 @@ class ExportDiagnosticWorkflowTests(unittest.TestCase):
         self.assertTrue(upload["with"].get("include-hidden-files", False), "所有bundle内の隠しデータも欠落させない")
         self.assertTrue(is_pinned_action_reference(steps[0]["uses"], "actions/checkout"))
 
+class NativeWorkflowGateTests(unittest.TestCase):
+    def test_native_gate_requires_core_and_both_shards_to_succeed(self):
+        path = ROOT / ".github/workflows/verify.yml"
+        workflow = json.loads(subprocess.check_output(
+            ["ruby", "-ryaml", "-rjson", "-e", "puts JSON.generate(YAML.load_file(ARGV[0]))", str(path)],
+            text=True))
+        jobs = workflow["jobs"]
+        self.assertEqual(jobs["native-ui"]["needs"], "native-core")
+        self.assertEqual(jobs["native-ui"]["strategy"]["matrix"]["shard"], ["a", "b"])
+        gate = jobs["native"]
+        self.assertEqual(gate["if"], "always()")
+        self.assertEqual(set(gate["needs"]), {"native-core", "native-ui"})
+        command = gate["steps"][0]["run"]
+        for core in ("success", "failure", "cancelled", "skipped"):
+            for ui in ("success", "failure", "cancelled", "skipped"):
+                with self.subTest(core=core, ui=ui):
+                    result = subprocess.run(
+                        ["bash", "-c", command],
+                        env=dict(os.environ, CORE_RESULT=core, UI_RESULT=ui))
+                    self.assertEqual(result.returncode == 0, core == ui == "success")
+
 if __name__ == "__main__": unittest.main()
