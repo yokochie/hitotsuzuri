@@ -38,5 +38,13 @@
     "scope": "bugfix",
     "status": "complete",
     "request": "3b6bff90"
+  },
+  {
+    "uuid": "01a1b3b3-fd59-7587-ab44-6b5e68a860f6",
+    "slug": "ci-speedup",
+    "dirName": "261107-ci-speedup",
+    "scope": "infra",
+    "status": "in-flight",
+    "request": "7c547f26"
   }
 ]

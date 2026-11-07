@@ -72,6 +72,8 @@
 
 - NEVER 統合前CIの条件を満たす前に統合完了と扱い、またはローカルの手動テストをCI実行済みと記録する。 (affirmed 2026-11-04)
 
+- NEVER 統合前CIの条件を満たす前に統合完了と扱い、ローカル手動テストをCI実行済みと記録する。 (affirmed 2026-11-07)
+
 ## Mandated
 
 <!-- Populated by practices-discovery affirmation gate. -->
@@ -101,6 +103,12 @@
 - ALWAYS Phase2の下書きを手動保存とし、未保存で離れるときに保存するか確認する。 (affirmed 2026-11-04)
 
 - ALWAYS Phase2の統合前CIの条件を維持し、実行先・設定・費用の有無を実装計画で具体化して本人確認する。 (affirmed 2026-11-04)
+
+- ALWAYS 各フェーズ完了時に成果物と関連変更をGitにコミットする。 (affirmed 2026-11-07)
+
+- ALWAYS 製品全体の80%以上の行カバレッジと統合前CIの条件を維持する。 (affirmed 2026-11-07)
+
+- ALWAYS 判断、手順、検証結果を日本語で残し、本人Macでの確認と自動試験を区別する。 (affirmed 2026-11-07)
 
 ## Corrections
 
