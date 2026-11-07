@@ -77,6 +77,20 @@ elif name=="xcrun":
         self.assertEqual(len([c for c in self.calls() if c[0]=="xcodebuild"]),2)
     def test_zero_executed_is_rejected(self):
         self.assertNotEqual(self.run_script("--smoke",CONTRACT_ZERO="1").returncode,0)
+    def test_ui_shards_run_disjoint_classes_without_repeating_smoke(self):
+        for shard in ("a", "b"):
+            result = self.run_script("--ui-shard-"+shard, script="verify-native.sh")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [call for call in self.calls() if call[0] == "xcodebuild"]
+        self.assertEqual(len(calls), 2)
+        selections = [{arg for arg in call if arg.startswith("-only-testing:")} for call in calls]
+        self.assertTrue(selections[0].isdisjoint(selections[1]))
+        self.assertEqual(len(selections[0] | selections[1]), 7)
+        self.assertTrue(all(arg.startswith("-only-testing:HitotsuzuriUITests/") for arg in selections[0] | selections[1]))
+        self.assertFalse(any("FixtureSmokeUITests" in arg or "Performance" in arg for arg in selections[0] | selections[1]))
+    def test_ui_shard_rejects_missing_execution(self):
+        result = self.run_script("--ui-shard-a", script="verify-native.sh", CONTRACT_ZERO="1")
+        self.assertNotEqual(result.returncode, 0)
     def test_unknown_argument_is_rejected_before_execution(self):
         self.assertNotEqual(self.run_script("--unknown").returncode,0)
         self.assertEqual(self.calls(),[])
