@@ -77,6 +77,20 @@ elif name=="xcrun":
         self.assertEqual(len([c for c in self.calls() if c[0]=="xcodebuild"]),2)
     def test_zero_executed_is_rejected(self):
         self.assertNotEqual(self.run_script("--smoke",CONTRACT_ZERO="1").returncode,0)
+    def test_ui_shards_run_disjoint_classes_without_repeating_smoke(self):
+        for shard in ("article-edit-export", "navigation-photo-storage"):
+            result = self.run_script("--ui-shard-"+shard, script="verify-native.sh")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [call for call in self.calls() if call[0] == "xcodebuild"]
+        self.assertEqual(len(calls), 2)
+        selections = [{arg for arg in call if arg.startswith("-only-testing:")} for call in calls]
+        self.assertTrue(selections[0].isdisjoint(selections[1]))
+        self.assertEqual(len(selections[0] | selections[1]), 7)
+        self.assertTrue(all(arg.startswith("-only-testing:HitotsuzuriUITests/") for arg in selections[0] | selections[1]))
+        self.assertFalse(any("FixtureSmokeUITests" in arg or "Performance" in arg for arg in selections[0] | selections[1]))
+    def test_ui_shard_rejects_missing_execution(self):
+        result = self.run_script("--ui-shard-article-edit-export", script="verify-native.sh", CONTRACT_ZERO="1")
+        self.assertNotEqual(result.returncode, 0)
     def test_unknown_argument_is_rejected_before_execution(self):
         self.assertNotEqual(self.run_script("--unknown").returncode,0)
         self.assertEqual(self.calls(),[])
@@ -294,5 +308,27 @@ class ExportDiagnosticWorkflowTests(unittest.TestCase):
         self.assertEqual(upload["with"]["retention-days"], 1)
         self.assertTrue(upload["with"].get("include-hidden-files", False), "所有bundle内の隠しデータも欠落させない")
         self.assertTrue(is_pinned_action_reference(steps[0]["uses"], "actions/checkout"))
+
+class NativeWorkflowGateTests(unittest.TestCase):
+    def test_native_gate_requires_core_and_both_shards_to_succeed(self):
+        path = ROOT / ".github/workflows/verify.yml"
+        workflow = json.loads(subprocess.check_output(
+            ["ruby", "-ryaml", "-rjson", "-e", "puts JSON.generate(YAML.load_file(ARGV[0]))", str(path)],
+            text=True))
+        jobs = workflow["jobs"]
+        self.assertEqual(jobs["native-ui"]["needs"], "native-core")
+        self.assertEqual(jobs["native-ui"]["strategy"]["matrix"]["shard"],
+                         ["article-edit-export", "navigation-photo-storage"])
+        gate = jobs["native"]
+        self.assertEqual(gate["if"], "always()")
+        self.assertEqual(set(gate["needs"]), {"native-core", "native-ui"})
+        command = gate["steps"][0]["run"]
+        for core in ("success", "failure", "cancelled", "skipped"):
+            for ui in ("success", "failure", "cancelled", "skipped"):
+                with self.subTest(core=core, ui=ui):
+                    result = subprocess.run(
+                        ["bash", "-c", command],
+                        env=dict(os.environ, CORE_RESULT=core, UI_RESULT=ui))
+                    self.assertEqual(result.returncode == 0, core == ui == "success")
 
 if __name__ == "__main__": unittest.main()

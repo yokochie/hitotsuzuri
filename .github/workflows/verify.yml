@@ -28,12 +28,16 @@ jobs:
           pmset -g batt
       - name: Verify every Core target before starting UI
         run: bash scripts/verify-native.sh --core
-  native:
+      - name: Verify fixture smoke before starting UI shards
+        run: bash scripts/verify-native.sh --smoke
+  native-ui:
     needs: native-core
     runs-on: xcode-27
-    timeout-minutes: 45
-    env:
-      HZS_CORE_PREFLIGHT_DONE: '1'
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [article-edit-export, navigation-photo-storage]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -52,5 +56,18 @@ jobs:
           else
             echo "Keyboard navigation preference is not explicitly configured."
           fi
-      - name: Verify smoke, full functional regression and product coverage
-        run: bash scripts/verify-native.sh --functional
+      - name: Verify UI shard
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: bash scripts/verify-native.sh "--ui-shard-$SHARD"
+  native:
+    if: always()
+    needs: [native-core, native-ui]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require Core, smoke and both UI shards
+        env:
+          CORE_RESULT: ${{ needs.native-core.result }}
+          UI_RESULT: ${{ needs.native-ui.result }}
+        run: test "$CORE_RESULT" = success && test "$UI_RESULT" = success

@@ -19,6 +19,11 @@ EXPORT_PERFORMANCE = ["HitotsuzuriU3Tests/ArticleExportIntegrationTests/"+name f
     "testFourImageExportThirtyTrialsPerformance", "testExportMemoryAndCancellationThirtyTrials"]]
 SMOKE = "FixtureSmokeUITests"
 PERFORMANCE = "ArticleDraftPerformanceUITests"
+UI_SHARDS = {
+    "--ui-shard-article-edit-export": ("ArticleDraftUITests", "ArticleExportUITests", "ArticleCloudExportUITests"),
+    "--ui-shard-navigation-photo-storage": ("NativeInputTests", "ArticlePhotoRestorationUITests",
+                     "ArticleFoundationUITests", "ArticleSandboxStorageUITests"),
+}
 INPUT_FOCUS = [
     "HitotsuzuriUITests/NativeInputTests/testSingleTabFromAlbumOperatesPhotoAndShiftTabReturns",
     "HitotsuzuriUITests/NativeInputTests/testAlbumArrowsInCompactAfterMouseSelectionFollowPhotos",
@@ -103,6 +108,15 @@ def run_group(prefix, filters, expected, expected_cases=()):
 def main():
     scope, *args = sys.argv[1:]
     all_classes = native_classes()
+    if scope == "native" and len(args) == 1 and args[0] in UI_SHARDS:
+        expected = {name for name, target in all_classes.items()
+                    if target == "HitotsuzuriUITests" and name not in {SMOKE, PERFORMANCE}}
+        assigned = [name for shard in UI_SHARDS.values() for name in shard]
+        if len(assigned) != len(set(assigned)) or set(assigned) != expected:
+            raise ValueError("UI分割に重複、未割当、または対象外のクラスがあります。")
+        shard = UI_SHARDS[args[0]]
+        run_group(args[0][2:], ["-only-testing:HitotsuzuriUITests/"+name for name in shard], shard)
+        return
     allowed = {name:"HitotsuzuriU2Tests" for name in CORE}
     allowed.update({name:"HitotsuzuriUITests" for name in [SMOKE, "ArticleDraftUITests", PERFORMANCE]})
     if scope == "native":

@@ -26,7 +26,8 @@ import XCTest
                 app.launchEnvironment["HZS_FIXTURE_CLEANUP"]="1"
                 app.launchEnvironment["HZS_ARTICLE_TEST_STORAGE"]=storage.rawValue
                 app.launch(); app.activate()
-                XCTAssertTrue(app.staticTexts["試験データを回収しました。"].waitForExistence(timeout:10),"当該ケース所有rootの回収を確認")
+                let cleanupConfirmation = app.staticTexts["試験データを回収しました。"]
+                XCTAssertTrue(cleanupConfirmation.draftExists(timeout: 10), "当該ケース所有rootの回収を確認")
                 app.terminate()
             }
         }

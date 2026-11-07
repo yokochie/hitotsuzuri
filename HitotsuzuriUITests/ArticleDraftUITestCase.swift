@@ -42,8 +42,16 @@ import XCTest
         element.typeKey(.tab,modifierFlags:[])
     }
     func confirmation(_ app:XCUIApplication)->XCUIElement {
-        if app.sheets.firstMatch.draftExists(timeout:3) {return app.sheets.firstMatch}
-        XCTAssertTrue(app.dialogs.firstMatch.draftExists(timeout:3)); return app.dialogs.firstMatch
+        let sheet = app.sheets.firstMatch
+        let dialog = app.dialogs.firstMatch
+        if sheet.exists { return sheet }
+        if dialog.exists { return dialog }
+        let eitherExists = NSPredicate { _, _ in
+            MainActor.assumeIsolated { sheet.exists || dialog.exists }
+        }
+        let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: eitherExists, object: nil)], timeout: 6)
+        XCTAssertEqual(result, .completed, "保存確認がシートまたはダイアログとして表示される")
+        return sheet.exists ? sheet : dialog
     }
     func state(_ app:XCUIApplication,contains text:String)->XCUIElement {
         app.staticTexts.matching(NSPredicate(format:"identifier == %@ AND (label CONTAINS %@ OR value CONTAINS %@)","article-save-state",text,text)).firstMatch
