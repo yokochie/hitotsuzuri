@@ -6,10 +6,10 @@
 HitotsuzuriAppが通常/DEBUG依存を構成。通常Pickerと記事表示は同じLocalImageAccessを共有する。
 
 ## Picker Workflow
-SelectionWorkflowが認可、フォルダ/アルバム、順序付き4枚、再検証、保存/復元を制御。PhotoLibraryAccess/SystemLibrarySource、SelectionPersistenceに依存。
+SelectionWorkflowが認可、フォルダ/アルバム、順序付き4枚、再検証、保存/復元を制御。PhotoLibraryAccess/SystemLibrarySource、SelectionPersistenceに依存。選択フォルダの更新で`albums`を作り直し、別アルバムへ移ると未確定の写真選択をクリアする。
 
 ## Picker UI
-PickerContent/PickerView、NativeFolderBrowser、PickerPresentationState、PhotoSemantics/GridNavigation、PresentationSnapshot。SwiftUIとNSOutlineViewで狭幅/focus/文字状態を提供。
+PickerContent/PickerView、NativeFolderBrowser、PickerPresentationState、PhotoSemantics/GridNavigation、PresentationSnapshot。SwiftUIとNSOutlineViewで狭幅/focus/文字状態を提供。広幅・狭幅が共通の`albumList`を利用し、選択行と写真グリッドを同期する。
 
 ## Display Images
 LocalImageAccess/SystemImageDriverが512px画像、cache/LRU、validation優先queue、15秒期限、生存buffer予算を管理。ArticlePhotoPreviewsが記事の4状態と番号別retryを持つ。

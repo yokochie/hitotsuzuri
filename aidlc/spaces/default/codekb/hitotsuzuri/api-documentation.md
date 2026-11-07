@@ -17,7 +17,18 @@ HTTP server/API endpointはない。PhotosのreadWrite authorizationを参照に
 | ArticleOutputActions | copy、runExport固定入力/保存先/進捗、cancel、reveal |
 | ExportProgress | jobID、stage文字列、completedImages、optional fraction。現状fractionを生成しない |
 
-## 出力画像取得の現状
+## 一覧と選択の契約
+
+| API | 2026-11-07に確認した動作 |
+|---|---|
+| `PhotoLibraryAccess.albums(in:hierarchy:)` | 選択フォルダと子孫を走査し、IDで重複排除した一覧を返す。写真枚数は評価しない |
+| `SelectionWorkflow.albums` | 現在の対象フォルダから得た、`PickerContent`が列挙する候補 |
+| `SelectionWorkflow.selectAlbum(_:)` | 一覧内の別IDなら以前の画像と未確定選択を解除し、認可を再確認して写真を取得する。同じID、一覧外、編集凍結中は変更しない |
+| `SelectionWorkflow.confirm()` | 選択した写真が4枚揃ったとき、参照と画像を再検証して保存する |
+
+記事出力に関する表の説明と以下の詳細は2026-11-06調査時点の記録。今回の参照箇所では、`PhotoKitArticleImageReader.request`は受け取った`networkAllowed`をオプションに反映し、進捗も受け取れることを確認した（`ArticleImageAccess.swift:111–120`）。
+
+## 2026-11-06の出力画像取得記録
 
 `ArticleImageAccess.image`は30秒deadline、単一current、取消handlerとtimerを持つ。`PhotoKitArticleImageReader.request`はPHAssetを検索し、PHContentEditingInputRequestOptionsのnetworkをfalse、canHandleAdjustmentDataをfalseにして現在の編集結果のURLを得る。PhotoKit callbackのinfo/errorは捨てる。asset/input/URL不在は同じassetUnavailable。progressHandlerは設定しない。入力ownerを変換完了まで保持し、出力JPEGは長辺2560・quality0.9・sRGB・向き焼込み・GPS等非継承。
 

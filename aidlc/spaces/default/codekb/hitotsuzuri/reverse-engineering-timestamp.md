@@ -2,36 +2,37 @@
 
 ## Run Record
 
-- Date: 2026-11-06
-- Commit: 4fae0a6596fb28ce5ca2b9bab344b93709f31fda
-- Full rescan。製品ソース、試験構成/主要assert、project/runner/CI/docsを読取。build/test/実Photosは実行していない。AI-DLC install/runtimeと生成物は対象外。
+- Date: 2026-11-07
+- Commit: c3e6fb36662d4a99de8a901b3268c31841b7a0c9
+- アルバム一覧・フォルダ絞り込み・選択と関連するUI試験に絞って調査した。アプリと試験の実行は行っていない。
 
 ## Scope of Analysis
 
 ```yaml
 scope_version: 1
-kind: full
-intent: icloud-image-export
-fingerprint: fdb6e37da1f800632c8ed794df35c9729d977e33
+kind: partial
+intent: random-album-picker
+fingerprint: f173f4520d9eb9dbdac45c235c9253e8cf0216ed
 analyzed:
   paths:
-    - ./
+    - Hitotsuzuri/HitotsuzuriApp.swift
+    - Hitotsuzuri/PickerView.swift
+    - HitotsuzuriCore/Models.swift
+    - HitotsuzuriCore/PickerContent.swift
+    - HitotsuzuriCore/PickerPresentationState.swift
+    - HitotsuzuriCore/Ports.swift
+    - HitotsuzuriCore/PhotoLibraryAccess.swift
+    - HitotsuzuriCore/SelectionWorkflow.swift
+    - HitotsuzuriUITests/NativeInputTests.swift
   components:
     - App Composition
     - Picker Workflow
     - Picker UI
-    - Display Images
-    - Article Domain
-    - Article Persistence
-    - Article Editing
-    - Article UI Coordinator
-    - Export Image Acquisition
-    - Export Orchestration
-    - Export Storage
-    - Probe Output
-    - Diagnostics and Measurement
-    - Test Fixtures
-    - Verification Tooling
 shallow:
-  paths: []
+  paths:
+    - ./
+    - Hitotsuzuri/DebugFixture.swift
+    - HitotsuzuriCore/ArticleImageAccess.swift
+    - .github/workflows/verify.yml
+    - README.md
 ```
