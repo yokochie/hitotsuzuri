@@ -4,7 +4,7 @@
 
 入力は `../../construction/build-and-test/test-results.md`。検証済みhead983c60b64f413034259bc7d2498f0c47cbde3e15、PR CI42226898333の機能558件/smoke2/91.79%成功。製品ソースは既存Draft PRへpush済み。配布CD/クラウド配置先はなく、本人Macで通常Xcode Runを行う。
 
-実iCloud取得の本人結果待ち。自動Photos操作、認可変更、キャッシュ削除、写真正本変更、一般clipboard操作は行わない。新規migration/外部サービス/公開/mergeはない。
+本人回答0be65dd1により、写真アプリの事前操作なしでの4枚出力と、出力後の4枚・本文・写真順保持を確認。進捗表示の有無は回答されておらず、実際に未取得画像のiCloudダウンロードが発生したかは未確認。自動Photos操作、認可変更、キャッシュ削除、写真正本変更、一般clipboard操作は行わない。新規migration/外部サービス/公開/mergeはない。
 
 ## 本人の確認手順
 
