@@ -262,9 +262,9 @@ final class NativeInputTests:XCTestCase {
         throw XCTSkip("UI fixtureはDebug専用です。Releaseではアプリを起動しません。")
         #endif
     }
-    @MainActor func launch()->XCUIApplication {
+    @MainActor func launch(randomAlbumID:String?=nil)->XCUIApplication {
         continueAfterFailure=false
-        let app=FixtureLaunch.picker(test:self)
+        let app=FixtureLaunch.picker(test:self,randomAlbumID:randomAlbumID)
         let window=app.windows.firstMatch
         XCTAssertTrue(window.waitForExistence(timeout:10))
         // 前の狭幅試験が保存したフレームからも開始できるよう、試験ごとに
@@ -281,6 +281,50 @@ final class NativeInputTests:XCTestCase {
         XCTAssertTrue(app.staticTexts["テスト親B"].exists)
         XCTAssertFalse(app.buttons["permission-allow"].exists)
         XCTAssertTrue(app.buttons["selection-confirm"].exists)
+    }
+    @MainActor func testRandomAlbumDrawIsAvailableOnlyForDisplayedAlbums() {
+        let app=launch(randomAlbumID:"album-c")
+        let draw=app.buttons["album-random-draw"]
+        XCTAssertTrue(draw.exists)
+        XCTAssertFalse(draw.isEnabled)
+        app.staticTexts["テスト親A"].click()
+        XCTAssertTrue(app.staticTexts["テストアルバムC"].waitForExistence(timeout:3))
+        XCTAssertTrue(draw.isEnabled)
+        draw.click()
+        expectPhotoCount(8,app)
+    }
+    @MainActor func testRandomAlbumDrawConfirmsDraftLossAndStaysInCompactAlbumList() {
+        let app=launch(randomAlbumID:"album-c")
+        openAlbum(app)
+        app.buttons.matching(identifier:"photo-cell").element(boundBy:0).click()
+        expectSelectionCount(1,stage:"random-album-before-draw",app)
+
+        let window=app.windows.firstMatch
+        let corner=window.coordinate(withNormalizedOffset:CGVector(dx:1,dy:1)).withOffset(CGVector(dx:-1,dy:-1))
+        corner.click(forDuration:0.2,thenDragTo:window.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:760,dy:660)))
+        let switcher=app.radioGroups["region-picker"]
+        XCTAssertTrue(switcher.waitForExistence(timeout:3))
+        switcher.radioButtons["アルバム"].click()
+
+        let draw=app.buttons["album-random-draw"]
+        XCTAssertTrue(draw.waitForExistence(timeout:3))
+        draw.click()
+        let cancel=app.buttons["抽選を取り消す"]
+        XCTAssertTrue(cancel.waitForExistence(timeout:3))
+        cancel.click()
+        expectSelectionCount(1,stage:"random-album-cancelled",app)
+        XCTAssertTrue(inputDiagnostic(app).contains("albumRow=1;"))
+
+        draw.click()
+        let confirm=app.buttons["切り替える"]
+        XCTAssertTrue(confirm.waitForExistence(timeout:3))
+        confirm.click()
+        expectSelectionCount(0,stage:"random-album-applied",app)
+        XCTAssertTrue(draw.exists)
+        XCTAssertTrue(inputDiagnostic(app).contains("albumRow=2;"))
+        XCTAssertFalse(app.descendants(matching:.any).matching(identifier:"photo-grid").firstMatch.exists)
+        switcher.radioButtons["写真"].click()
+        expectPhotoCount(8,app)
     }
     @MainActor func testRightExpandsAndLeftCollapsesFolder() {
         let app=launch()
