@@ -2,6 +2,13 @@ import Foundation
 import Observation
 
 @MainActor @Observable public final class SelectionWorkflow {
+    struct RandomAlbumDraw {
+        let album:LibraryAlbum
+        let requiresConfirmation:Bool
+        fileprivate let revision:Int
+        fileprivate let operationID:UUID?
+    }
+
     public private(set) var authorization:AccessStatus = .notDetermined
     public private(set) var hierarchy=LibraryHierarchy(folders:[],albums:[])
     public private(set) var targetFolders=Set<String>()
@@ -38,6 +45,29 @@ import Observation
     public var imageResources:ImageResourceSnapshot? {imageAccess.resources}
     public var canConfirm:Bool {authorization == .authorized && activeAlbum != nil && !isEditingFrozen && !isLoading && selection.orderedIDs.count==4 && selection.orderedIDs.allSatisfy {images[$0] != nil}}
     public var isDirty:Bool {lastCommitted?.albumID != activeAlbum?.id || lastCommitted?.orderedAssetIDs != selection.orderedIDs}
+    var canDrawRandomAlbum:Bool {authorization == .authorized && !isEditingFrozen && !albums.isEmpty}
+
+    func drawRandomAlbum(selectIndex:(Range<Int>)->Int = {Int.random(in:$0)})->RandomAlbumDraw? {
+        guard canDrawRandomAlbum else {return nil}
+        let index=selectIndex(albums.indices)
+        guard albums.indices.contains(index) else {return nil}
+        let album=albums[index]
+        return RandomAlbumDraw(
+            album:album,
+            requiresConfirmation:album.id != activeAlbum?.id && !selection.orderedIDs.isEmpty && isDirty,
+            revision:revision,
+            operationID:operationID
+        )
+    }
+
+    @discardableResult
+    func applyRandomAlbum(_ draw:RandomAlbumDraw,afterConfirmation:Bool=false) async ->Bool {
+        guard canDrawRandomAlbum,draw.revision==revision,draw.operationID==operationID,
+              !draw.requiresConfirmation || afterConfirmation else {return false}
+        await selectAlbum(draw.album)
+        return activeAlbum?.id==draw.album.id
+    }
+
     public func start() async {
         if let startup {await startup.value; return}
         guard restoreState == .notStarted else {return}

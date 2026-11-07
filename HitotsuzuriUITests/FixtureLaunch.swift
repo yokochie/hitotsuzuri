@@ -6,16 +6,17 @@ import XCTest
     static func article(test:XCTestCase,fixture:String?=nil,storage:Storage = .temporary)->XCUIApplication {
         launch(test:test,flag:"--article-test-fixture",fixture:fixture,storage:storage)
     }
-    static func picker(test:XCTestCase)->XCUIApplication {
-        launch(test:test,flag:"--ui-test-fixture",fixture:nil,storage:.temporary)
+    static func picker(test:XCTestCase,randomAlbumID:String?=nil)->XCUIApplication {
+        launch(test:test,flag:"--ui-test-fixture",fixture:nil,storage:.temporary,randomAlbumID:randomAlbumID)
     }
-    private static func launch(test:XCTestCase,flag:String,fixture:String?,storage:Storage)->XCUIApplication {
+    private static func launch(test:XCTestCase,flag:String,fixture:String?,storage:Storage,randomAlbumID:String?=nil)->XCUIApplication {
         let token="uitest-"+UUID().uuidString
         let app=XCUIApplication()
         app.launchArguments=[flag]+isolationArguments
         app.launchEnvironment["HZS_ARTICLE_TEST_ROOT"]=token
         app.launchEnvironment["HZS_DRAFT_CASE"]=fixture
         app.launchEnvironment["HZS_ARTICLE_TEST_STORAGE"]=storage.rawValue
+        app.launchEnvironment["HZS_PICKER_RANDOM_ALBUM"]=randomAlbumID
         // 同一ケースの再起動ではrootを保持。最後だけapp自身のsandbox内で回収する。
         test.addTeardownBlock {
             await MainActor.run {

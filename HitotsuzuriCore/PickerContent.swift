@@ -12,6 +12,7 @@ public struct PickerContent:View {
     @State private var lastInteractionRegion:PickerRegion?
     @State private var compactLayout=false
     @State private var focusTransfer=0
+    @State private var pendingAlbumDraw:SelectionWorkflow.RandomAlbumDraw?
     #if DEBUG
     @State private var fixtureFocusHistory:[String]=[]
     #endif
@@ -96,31 +97,75 @@ public struct PickerContent:View {
         }.disabled(workflow.isEditingFrozen)
     }
     private var albumList:some View {
-        VStack(alignment:.leading) {
-            heading(.albums)
-            List(selection:Binding(get:{workflow.activeAlbum?.id},set:{id in if let album=workflow.albums.first(where:{$0.id==id}) {Task {await workflow.selectAlbum(album)}}})) {
-                ForEach(workflow.albums) {album in Text(name(album.title)).lineLimit(1).help(name(album.title)).accessibilityLabel(name(album.title))
-                    .frame(maxWidth:.infinity,alignment:.leading).contentShape(Rectangle())
-                    .tag(album.id)
-                    .simultaneousGesture(TapGesture().onEnded {selectAlbumFromMouse(album)})}
-            }.focused($focus,equals:.albums)
-                .onKeyPress(keys:[.tab,KeyEquivalent("\u{19}")]) {press in
-                    #if DEBUG
-                    recordFixtureFocus("album-key-"+((press.modifiers.contains(.shift) || press.key==KeyEquivalent("\u{19}")) ? "backtab" : "tab"))
-                    #endif
-                    if selectFirstAlbumForTabEntry() {
-                        #if DEBUG
-                        recordFixtureFocus("album-key-select-first")
-                        #endif
-                        return .handled
-                    }
-                    let backwards=press.modifiers.contains(.shift) || press.key==KeyEquivalent("\u{19}")
-                    if compactLayout,workflow.canConfirm,!backwards {focusConfirmation(); return .handled}
-                    let next:PickerRegion=backwards ? .folders : .photos
-                    presentation.region=next; restoreFocus(next); return .handled
+        ScrollViewReader { scroll in
+            VStack(alignment:.leading) {
+                heading(.albums)
+                albumRows
+                Button("ランダムに選ぶ") {
+                    guard let draw=drawRandomAlbum() else {return}
+                    if draw.requiresConfirmation {pendingAlbumDraw=draw}
+                    else {applyRandomAlbum(draw,scroll:scroll)}
                 }
-                .accessibilityLabel("アルバム").accessibilityIdentifier("album-list")
+                .disabled(!workflow.canDrawRandomAlbum)
+                .accessibilityIdentifier("album-random-draw")
+                .padding(.horizontal)
+                .padding(.bottom,6)
+            }
+            .alert("アルバムを切り替えますか？",isPresented:Binding(
+                get:{pendingAlbumDraw != nil},
+                set:{if !$0 {pendingAlbumDraw=nil}}
+            ),presenting:pendingAlbumDraw) { draw in
+                Button("抽選を取り消す",role:.cancel) {}
+                    .accessibilityIdentifier("album-random-cancel")
+                Button("切り替える",role:.destructive) {
+                    applyRandomAlbum(draw,afterConfirmation:true,scroll:scroll)
+                }
+                .accessibilityIdentifier("album-random-confirm")
+            } message: { draw in
+                Text("「\(name(draw.album.title))」に切り替えると、確定前の写真選択が解除されます。")
+            }
         }.disabled(workflow.isEditingFrozen)
+    }
+    private var albumRows:some View {
+        List(selection:Binding(get:{workflow.activeAlbum?.id},set:{id in if let album=workflow.albums.first(where:{$0.id==id}) {Task {await workflow.selectAlbum(album)}}})) {
+            ForEach(workflow.albums) {album in Text(name(album.title)).lineLimit(1).help(name(album.title)).accessibilityLabel(name(album.title))
+                .frame(maxWidth:.infinity,alignment:.leading).contentShape(Rectangle())
+                .tag(album.id)
+                .simultaneousGesture(TapGesture().onEnded {selectAlbumFromMouse(album)})}
+        }.focused($focus,equals:.albums)
+            .onKeyPress(keys:[.tab,KeyEquivalent("\u{19}")]) {press in
+                #if DEBUG
+                recordFixtureFocus("album-key-"+((press.modifiers.contains(.shift) || press.key==KeyEquivalent("\u{19}")) ? "backtab" : "tab"))
+                #endif
+                if selectFirstAlbumForTabEntry() {
+                    #if DEBUG
+                    recordFixtureFocus("album-key-select-first")
+                    #endif
+                    return .handled
+                }
+                let backwards=press.modifiers.contains(.shift) || press.key==KeyEquivalent("\u{19}")
+                if compactLayout,workflow.canConfirm,!backwards {focusConfirmation(); return .handled}
+                let next:PickerRegion=backwards ? .folders : .photos
+                presentation.region=next; restoreFocus(next); return .handled
+            }
+            .accessibilityLabel("アルバム").accessibilityIdentifier("album-list")
+    }
+    private func drawRandomAlbum()->SelectionWorkflow.RandomAlbumDraw? {
+        #if DEBUG
+        let process=ProcessInfo.processInfo
+        if process.arguments.contains("--ui-test-fixture"),
+           let id=process.environment["HZS_PICKER_RANDOM_ALBUM"],
+           let index=workflow.albums.firstIndex(where:{$0.id==id}) {
+            return workflow.drawRandomAlbum { _ in index }
+        }
+        #endif
+        return workflow.drawRandomAlbum()
+    }
+    private func applyRandomAlbum(_ draw:SelectionWorkflow.RandomAlbumDraw,afterConfirmation:Bool=false,scroll:ScrollViewProxy) {
+        Task {
+            guard await workflow.applyRandomAlbum(draw,afterConfirmation:afterConfirmation) else {return}
+            scroll.scrollTo(draw.album.id)
+        }
     }
     private var photoGrid:some View {
         VStack(alignment:.leading) {
