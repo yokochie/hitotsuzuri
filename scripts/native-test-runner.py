@@ -20,8 +20,8 @@ EXPORT_PERFORMANCE = ["HitotsuzuriU3Tests/ArticleExportIntegrationTests/"+name f
 SMOKE = "FixtureSmokeUITests"
 PERFORMANCE = "ArticleDraftPerformanceUITests"
 UI_SHARDS = {
-    "--ui-shard-a": ("ArticleDraftUITests", "ArticleExportUITests", "ArticleCloudExportUITests"),
-    "--ui-shard-b": ("NativeInputTests", "ArticlePhotoRestorationUITests",
+    "--ui-shard-article-edit-export": ("ArticleDraftUITests", "ArticleExportUITests", "ArticleCloudExportUITests"),
+    "--ui-shard-navigation-photo-storage": ("NativeInputTests", "ArticlePhotoRestorationUITests",
                      "ArticleFoundationUITests", "ArticleSandboxStorageUITests"),
 }
 INPUT_FOCUS = [
