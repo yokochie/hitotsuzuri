@@ -2,11 +2,16 @@
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parent.parent
+
+def is_pinned_action_reference(reference, action):
+    """依存更新を許可しつつ、正しいAction名と完全なcommit固定を検査する。"""
+    return re.fullmatch(re.escape(action) + r"@[0-9a-f]{40}", reference) is not None
 
 class RunnerContractTests(unittest.TestCase):
     def setUp(self):
@@ -214,6 +219,40 @@ elif name=="xcrun":
         self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testFourImageExportThirtyTrialsPerformance",call)
         self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testExportMemoryAndCancellationThirtyTrials",call)
 
+class PinnedActionReferenceTests(unittest.TestCase):
+    def test_accepts_previous_and_updated_commit_pins(self):
+        references = {
+            "actions/checkout": [
+                "d23441a48e516b6c34aea4fa41551a30e30af803",
+                "3d3c42e5aac5ba805825da76410c181273ba90b1",
+            ],
+            "actions/upload-artifact": [
+                "ea165f8d65b6e75b540449e92b4886f43607fa02",
+                "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            ],
+        }
+        for action, commits in references.items():
+            for commit in commits:
+                with self.subTest(action=action, commit=commit):
+                    self.assertTrue(is_pinned_action_reference(f"{action}@{commit}", action))
+
+    def test_rejects_tags_branches_and_short_or_invalid_commits(self):
+        action = "actions/upload-artifact"
+        for reference in ["v7", "main", "cf430e0", "g" * 40, "A" * 40]:
+            with self.subTest(reference=reference):
+                self.assertFalse(is_pinned_action_reference(f"{action}@{reference}", action))
+
+    def test_rejects_another_action_with_a_valid_commit(self):
+        reference = "actions/checkout@" + "a" * 40
+        self.assertFalse(is_pinned_action_reference(reference, "actions/upload-artifact"))
+
+    def test_rejects_extra_characters_around_the_reference(self):
+        valid = "actions/upload-artifact@" + "a" * 40
+        for reference in [valid + "0", valid + "\n", valid + "/extra", " " + valid]:
+            with self.subTest(reference=reference):
+                self.assertFalse(is_pinned_action_reference(reference, "actions/upload-artifact"))
+
+
 class ExportDiagnosticWorkflowTests(unittest.TestCase):
     def workflow(self):
         path = ROOT / ".github/workflows/diagnose-article-export.yml"
@@ -250,10 +289,10 @@ class ExportDiagnosticWorkflowTests(unittest.TestCase):
         self.assertNotIn("--functional", command)
         upload = steps[-1]
         self.assertEqual(upload["if"], "always()")
-        self.assertEqual(upload["uses"], "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02")
+        self.assertTrue(is_pinned_action_reference(upload["uses"], "actions/upload-artifact"))
         self.assertEqual(upload["with"]["path"], ".build/ArticleExport-copy-diagnostic.xcresult")
         self.assertEqual(upload["with"]["retention-days"], 1)
         self.assertTrue(upload["with"].get("include-hidden-files", False), "所有bundle内の隠しデータも欠落させない")
-        self.assertEqual(steps[0]["uses"], "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803")
+        self.assertTrue(is_pinned_action_reference(steps[0]["uses"], "actions/checkout"))
 
 if __name__ == "__main__": unittest.main()
