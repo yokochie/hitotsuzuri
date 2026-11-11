@@ -28,5 +28,8 @@ aidlc/diagnostics/
 # Xcodeの生成物と個人設定
 .build/
 xcuserdata/
+
+# リポジトリ内の作業ツリー
+/.worktrees/
 *.xcuserstate
 .DS_Store
