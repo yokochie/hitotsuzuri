@@ -38,5 +38,21 @@
     "scope": "bugfix",
     "status": "complete",
     "request": "3b6bff90"
+  },
+  {
+    "uuid": "01a1b3b3-fd59-7587-ab44-6b5e68a860f6",
+    "slug": "ci-speedup",
+    "dirName": "261107-ci-speedup",
+    "scope": "infra",
+    "status": "complete",
+    "request": "7c547f26"
+  },
+  {
+    "uuid": "01a1b4d3-d290-7b53-9193-72de16bc9a02",
+    "slug": "random-album-picker",
+    "dirName": "261107-random-album-picker",
+    "scope": "express",
+    "status": "complete",
+    "request": "821daf18"
   }
 ]

@@ -1,0 +1,12 @@
+{
+  "stage": "code-generation",
+  "upstream_ids": ["FR1", "FR2", "FR3", "NFR1", "NFR2"],
+  "coverage": [
+    {"id":"FR1","status":"OK","target":".worktrees/pr3-ci-fix/scripts/test-native-runner.py"},
+    {"id":"FR2","status":"OK","target":".worktrees/pr3-ci-fix/scripts/test-native-runner.py"},
+    {"id":"FR3","status":"Deferred","target":"PR head 1209e298へ反映済み。通常CIの成功確認はBuild and Testで行う"},
+    {"id":"NFR1","status":"Deferred","target":"code-summary.md: Red/Greenは実測済み。通常CIのCore/UI・製品全体80%カバレッジを後続Build and Testで確認する"},
+    {"id":"NFR2","status":"OK","target":"aidlc/spaces/default/intents/261106-pr3-fixes/construction/code-generation/code-summary.md"}
+  ],
+  "reverse": []
+}

@@ -43,9 +43,33 @@ flowchart TD
 
 ### Improvement Opportunities
 
-出力時の通信許可、PhotoKit進捗→ExportProgress→UI、ダウンロード用期限、取消後の終端、分類した失敗/再試行が今回の変更候補。保存/出力確定の設計は維持できる。詳細はapi-documentation.mdとcode-quality-assessment.md。
+2026-11-06の調査では、出力時の通信許可、PhotoKit進捗→ExportProgress→UI、ダウンロード用期限、取消後の終端、分類した失敗/再試行を変更候補とした。保存/出力確定の設計は維持できる。詳細はapi-documentation.mdとcode-quality-assessment.md。
 
 ## Interaction Diagrams
+
+### フォルダ選択からアルバム表示
+
+```mermaid
+sequenceDiagram
+    participant U as 利用者
+    participant P as PickerContent
+    participant S as SelectionWorkflow
+    participant L as PhotoLibraryAccess
+    U->>P: フォルダを選択
+    P->>S: setTargetFolders
+    S->>L: albums in selected folders
+    L-->>S: 重複を除いた候補
+    S-->>P: アルバム一覧を更新
+    U->>P: アルバム行を選択
+    P->>S: selectAlbum
+    S->>L: assets in selected album
+    L-->>S: 写真参照
+    S-->>P: 有効な世代の写真一覧
+```
+
+テキスト代替。選択フォルダが変わると、Coreが対象の子孫も含めて一覧を作り直す。別のアルバムを選択すると、以前の写真と未確定の選択を解除し、写真参照の取得結果を画面に反映する。古い世代の取得結果は破棄する。
+
+### 2026-11-06のiCloud出力調査時点の記録
 
 ```mermaid
 sequenceDiagram
