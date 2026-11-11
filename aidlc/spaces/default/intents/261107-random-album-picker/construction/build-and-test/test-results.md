@@ -24,3 +24,16 @@
 ## 検証結果の扱い
 
 利用者は「Accept failure」を選択した。UIと製品全体の行カバレッジを未確認として、このステップの承認確認に進む。80%以上の基準と統合前CIの条件は維持する。
+
+## 画面ロック解除後の再検証
+
+- `random-album-picker` の `dce650b` で `bash scripts/verify-native.sh --functional` を再実行。CoreとUIスモークは通過し、全機能の試験は565件中564件成功、1件失敗、終了コード65。
+- 追加したアルバム抽選のUIテスト2件は成功。一覧に候補があるときだけ操作できること、切り替え確認の取消と承諾、狭幅で一覧に残ることを合成ライブラリで確認した。
+- 失敗した既存の `ArticlePhotoRestorationUITests.testMouseAndKeyboardRetryIssueOnlyTargetRequestAndRecoverImage` は、2枚目の画像が準備完了になるのを待つ段階でタイムアウトした。同じケースの単独再実行は終了コード0。全機能の一括実行結果は失敗のまま。
+- 一括実行の結果に既存の `scripts/check-coverage.swift` を適用し、製品全体の行カバレッジは **91.93%（5864 / 6379行）**。80%の基準を満たした。結果バンドルは `.build/random-album-picker/verification/Native-functional-20261107-232806-3cb10586a80f4431a24bc80b030bf631.xcresult`。
+- この再検証はローカルで実行した。GitHub Actionsでの統合前検証と実写真ライブラリでの手動確認は別に扱う。
+
+## 追加確認
+
+- 一括実行でタイムアウトした写真復元UIテストを再度単独実行し、終了コード0を確認した。
+- 2026-11-08、本人から実写真ライブラリでの手動確認で問題がなかったとの報告を受けた。
