@@ -13,3 +13,5 @@
 | CI | GitHub Actions xcode-27 runner、commit固定のcheckout/upload-artifact、Dependabot Actions週次更新 |
 
 Apple frameworkの独立バージョンやローカルXcodeの版をsource設定から捏造しない。今回build/runtime照会や試験は実行していない。外部Swift package、Web frontend、DB server、AWS、独自APIは発見していない。
+
+2026-11-07のアルバム選択調査では、`PickerContent`のSwiftUIとAppKit、`SelectionWorkflow`のObservationとMainActor、`PhotoLibraryAccess`のPhotos、`NativeInputTests`のXCTestをソースのimportと宣言で確認した。表のビルド設定・ツール版は既存記録を引き継いだ。

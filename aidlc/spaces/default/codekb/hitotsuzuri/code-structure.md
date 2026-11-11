@@ -24,3 +24,9 @@
 | docs/、README.md | 原点要望、Phase1/将来案、利用/開発の説明。提案と実装を区別 |
 
 Xcodeはsynchronized groupsを使い、新しいSwift test classはrunnerが実ファイルから発見する。外部package/module境界を増やす必要は現時点では見つからない。具体的なAPI/依存は別成果物に集約した。
+
+## アルバム選択で確認した責務
+
+- `PickerContent.swift`が広幅・狭幅共通の一覧と入力を提供し、`PickerPresentationState.swift`が領域と直近のフォーカスを保持する。
+- `SelectionWorkflow.swift`が候補・アクティブなアルバム・写真参照・未確定選択を保持し、`PhotoLibraryAccess.swift`がフォルダ階層を候補に変換する。
+- `NativeInputTests.swift`が、合成フォルダの絞り込み、通常幅と狭幅、写真グリッドとの連動を検査する。
