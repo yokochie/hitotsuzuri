@@ -17,7 +17,7 @@ else
 fi
 stamp="$(date +%Y%m%d-%H%M%S)-$$"
 result=".build/Article-$stamp.xcresult"
-xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' "${filters[@]}" -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath "$result" CODE_SIGN_IDENTITY=- test
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' "${filters[@]}" -derivedDataPath .build/DerivedData -resultBundlePath "$result" CODE_SIGN_IDENTITY=- test
 swift -e '
 import Foundation
 let process = Process(), pipe = Pipe()

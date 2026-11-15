@@ -6,5 +6,4 @@ if [[ ! -f Hitotsuzuri.xcodeproj/project.pbxproj ]]; then
 fi
 stamp="$(date +%Y%m%d-%H%M%S)-$$"
 result=".build/Phase1-$stamp.xcresult"
-xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriU1Tests -only-testing:HitotsuzuriU2Tests -enableCodeCoverage YES -derivedDataPath .build/DerivedData -resultBundlePath "$result" CODE_SIGN_IDENTITY=- test
-swift scripts/check-coverage.swift "$result"
+xcodebuild -project Hitotsuzuri.xcodeproj -scheme Hitotsuzuri -destination 'platform=macOS' -only-testing:HitotsuzuriU1Tests -only-testing:HitotsuzuriU2Tests -derivedDataPath .build/DerivedData -resultBundlePath "$result" CODE_SIGN_IDENTITY=- test

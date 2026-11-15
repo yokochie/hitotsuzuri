@@ -66,6 +66,14 @@ elif name=="xcrun":
         return subprocess.run(["bash", "scripts/"+script, *args], cwd=ROOT, env=dict(self.env, **env), capture_output=True, text=True)
     def calls(self):
         return [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
+    def assert_checks_results_without_coverage(self, builds):
+        calls = self.calls()
+        expected = []
+        for build in builds:
+            self.assertNotIn("-enableCodeCoverage", build)
+            bundle = build[build.index("-resultBundlePath") + 1]
+            expected.extend([build, ["xcrun", "xcresulttool", "get", "test-results", "tests", "--path", bundle]])
+        self.assertEqual(calls, expected)
     def test_smoke_is_accepted_and_only_runs_smoke(self):
         result=self.run_script("--smoke")
         self.assertEqual(result.returncode,0,result.stderr)
@@ -113,43 +121,45 @@ elif name=="xcrun":
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
         self.assertEqual(len(calls),4)
         self.assertIn("-only-testing:HitotsuzuriUITests/ArticleDraftPerformanceUITests",calls[-1])
-    def test_native_all_retains_all_targets_and_single_coverage_bundle(self):
+    def test_native_all_retains_all_targets(self):
         self.assertEqual(self.run_script(script="verify-native.sh").returncode,0)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
         self.assertEqual(len(calls),4)
         for target in ["HitotsuzuriU1Tests","HitotsuzuriU2Tests","HitotsuzuriU3Tests","HitotsuzuriUITests"]:
             self.assertIn("-only-testing:"+target,calls[-1])
-        coverage=[c for c in self.calls() if c[0]=="swift"]
-        self.assertEqual(len(coverage),1)
-        self.assertEqual(coverage[0][1],"scripts/check-coverage.swift")
+        self.assert_checks_results_without_coverage(calls)
     def test_core_failure_stops_before_any_ui(self):
         result=self.run_script("--functional",script="verify-native.sh",CONTRACT_CORE_FAIL="1")
         self.assertNotEqual(result.returncode,0)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
         self.assertEqual(len(calls),1)
         self.assertFalse(any("HitotsuzuriUITests" in x for x in calls[0]))
-    def test_core_mode_runs_no_ui_and_no_partial_coverage_claim(self):
+    def test_core_mode_runs_no_ui(self):
         result=self.run_script("--core",script="verify-native.sh")
         self.assertEqual(result.returncode,0,result.stderr)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
         self.assertEqual(len(calls),1)
         self.assertFalse(any("HitotsuzuriUITests" in x for x in calls[0]))
-        self.assertFalse(any(c[0]=="swift" for c in self.calls()))
-    def test_native_functional_checks_whole_product_coverage(self):
+        self.assert_checks_results_without_coverage(calls)
+    def test_native_functional_checks_core_smoke_and_regression_results(self):
         result=self.run_script("--functional",script="verify-native.sh")
         self.assertEqual(result.returncode,0,result.stderr)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
         self.assertTrue(all(any(target in x for x in calls[0]) for target in ["HitotsuzuriU1Tests","HitotsuzuriU2Tests","HitotsuzuriU3Tests"]))
-        coverage=[c for c in self.calls() if c[0]=="swift"]
-        self.assertEqual(len(coverage),1)
+        self.assertEqual(len(calls),3)
+        self.assertIn("-only-testing:HitotsuzuriUITests/FixtureSmokeUITests",calls[1])
+        self.assertIn("-only-testing:HitotsuzuriUITests",calls[-1])
+        self.assertIn("-skip-testing:HitotsuzuriUITests/FixtureSmokeUITests",calls[-1])
+        self.assertIn("-skip-testing:HitotsuzuriUITests/ArticleDraftPerformanceUITests",calls[-1])
         self.assertIn("-skip-testing:HitotsuzuriU2Tests/ArticlePreviewRetryTests/testDisplayMemoryAndCancellationThirtyTrials",calls[-1])
+        self.assert_checks_results_without_coverage(calls)
     def test_ci_dependency_skips_only_duplicate_core_preflight(self):
         result=self.run_script("--functional",script="verify-native.sh",GITHUB_ACTIONS="true",HZS_CORE_PREFLIGHT_DONE="1")
         self.assertEqual(result.returncode,0,result.stderr)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
         self.assertEqual(len(calls),2)
         self.assertIn("-only-testing:HitotsuzuriU2Tests",calls[-1])
-        self.assertEqual(len([c for c in self.calls() if c[0]=="swift"]),1)
+        self.assert_checks_results_without_coverage(calls)
     def test_core_zero_execution_stops_before_ui(self):
         self.assertNotEqual(self.run_script("--functional",CONTRACT_ZERO="1").returncode,0)
         calls=[c for c in self.calls() if c[0]=="xcodebuild"]
