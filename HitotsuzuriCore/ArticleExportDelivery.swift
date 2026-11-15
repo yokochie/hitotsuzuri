@@ -47,8 +47,8 @@ public actor ArticleExportDelivery {
         let parentIdentity = try await Task.detached { try ArticleExportFileSystem.identity(of: destination) }.value
         var record = ArticleExportRecoveryRecord(jobID: jobID, prepared: prepared, parentIdentity: parentIdentity)
         if let existing = try await journal.lookup(jobID) {
-            guard existing.article == record.article, existing.parentIdentity == record.parentIdentity,
-                  existing.markdown.utf8.elementsEqual(record.markdown.utf8), existing.fixedPlainText.utf8.elementsEqual(record.fixedPlainText.utf8) else { throw ArticleFailure.conflict }
+            // 読み込んだ記録の本文は保存された形式で検証済み。同じ入力の再試行では既存の出力を返す。
+            guard existing.article == record.article, existing.parentIdentity == record.parentIdentity else { throw ArticleFailure.conflict }
             guard existing.phase == .succeeded else { throw existing.originalFailure ?? ArticleFailure.uncertainResult }
             let writer = writerFactory(destination, existing)
             guard let directory = try await writer.reconcile() else { throw ArticleFailure.uncertainResult }

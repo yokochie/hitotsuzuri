@@ -2,8 +2,7 @@ import SwiftUI
 import HitotsuzuriCore
 
 struct ArticlePreviewView:View {
-    let content:ArticleContent
-    let rendered:RenderedArticle
+    let content:ArticleRenderedContent
     let previews:ArticlePhotoPreviews?
     var suspensionMessage:String? = nil
     var body:some View {
@@ -20,8 +19,10 @@ struct ArticlePreviewView:View {
                 }
             }
             if !content.closing.isEmpty {Text(content.closing)}
-            let memo=ArticleProjectionContext.shootingMemo(content)
-            if !memo.isEmpty {Text("撮影メモ").font(.headline); ForEach(Array(memo.enumerated()),id:\.offset) {_,line in Text(line)}}
+            if !content.shootingMemo.isEmpty {
+                Text("撮影情報").font(.headline)
+                ForEach(Array(content.shootingMemo.enumerated()),id:\.offset) {_,line in Text(line)}
+            }
         }.frame(maxWidth:.infinity,alignment:.leading).textSelection(.enabled)
     }
 }

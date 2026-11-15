@@ -46,7 +46,7 @@ final class ArticleExportModelTests: XCTestCase {
         var record = ArticleExportRecoveryRecord(jobID: UUID(), prepared: prepared, parentIdentity: ExportFixture.identity)
         XCTAssertFalse(record.finalName.contains("/")); XCTAssertFalse(record.stagingName.contains("$"))
         try record.validate()
-        record.schemaVersion = 2
+        record.schemaVersion = 999
         XCTAssertThrowsError(try record.validate())
     }
 }

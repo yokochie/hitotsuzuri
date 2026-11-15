@@ -1,48 +1,61 @@
 # コンポーネント一覧
 
-以下はsource上の責務単位。ファイル分類はcode-structure.md、呼出契約はapi-documentation.md。
-
 ## App Composition
-HitotsuzuriAppが通常/DEBUG依存を構成。通常Pickerと記事表示は同じLocalImageAccessを共有する。
+
+`HitotsuzuriApp`、`PickerView`、plist、entitlements。アプリ、画面、実機用I/Oを構成する。
 
 ## Picker Workflow
-SelectionWorkflowが認可、フォルダ/アルバム、順序付き4枚、再検証、保存/復元を制御。PhotoLibraryAccess/SystemLibrarySource、SelectionPersistenceに依存。選択フォルダの更新で`albums`を作り直し、別アルバムへ移ると未確定の写真選択をクリアする。
+
+`SelectionWorkflow`、`Models`、`Ports`、`SelectionPersistence`、`PhotoLibraryAccess`。PhotoKitの階層探索、表示対象のアルバムからのランダム選択、写真4枚の確定と復元を担当する。
 
 ## Picker UI
-PickerContent/PickerView、NativeFolderBrowser、PickerPresentationState、PhotoSemantics/GridNavigation、PresentationSnapshot。SwiftUIとNSOutlineViewで狭幅/focus/文字状態を提供。広幅・狭幅が共通の`albumList`を利用し、選択行と写真グリッドを同期する。
+
+`PickerContent`、`PickerPresentationState`、`NativeFolderBrowser`、`PickerAccessibility`、`PresentationSnapshot`。フォルダ・アルバム・写真の操作、コンパクト表示、フォーカスや選択順を扱う。
 
 ## Display Images
-LocalImageAccess/SystemImageDriverが512px画像、cache/LRU、validation優先queue、15秒期限、生存buffer予算を管理。ArticlePhotoPreviewsが記事の4状態と番号別retryを持つ。
+
+`LocalImageAccess` と `ArticleImageAccess.swift` の `ArticlePhotoPreviews`。表示・選択用のローカル画像、再試行、要求とキャッシュの寿命を扱う。
 
 ## Article Domain
-ArticleSource/Content/SavedArticle、日付入力/初期候補、ArticleFingerprint。写真順と正確な文字bytes/版のvalidation。
+
+`ArticleModels`、`ArticleInitialContent`、`ArticleMetadataInput`、`ArticleFingerprint`、`ArticleProjection`。記事・候補日の値、初期本文、検証・識別、テキスト変換を扱う。
 
 ## Article Persistence
-ArticleWorkspaceが選択から記事を解決し、ArticlePersistenceがoperation/currentの保存/関連付けを管理。ArticleDirectoryのnofollow/fd相対I/O、lock、fsync、CASに依存。
+
+`ArticleWorkspace`、`ArticlePorts`、`ArticlePersistence`、`ArticleFileSystem`。確定選択と記事の対応を解決し、記事の作成・版管理・復旧とファイル操作を担当する。
 
 ## Article Editing
-ArticleEditSessionが入力/保存snapshot/結果不明を保持。ArticlePresentationが候補/離脱/投影/コピー/出力lockを制御。ArticleProjectionContextがplain/Markdownを生成。
+
+`ArticleEditSession`、`ArticlePresentation`。編集中の値、保存、未保存の移動確認、プレビュー・コピー・保存済み出力への移行を扱う。
 
 ## Article UI Coordinator
-ArticleAppCoordinatorと記事各View。AppKit確認/保存先、終了委譲、画像表示の停止/復帰UUID、出力所有期間を接続。
+
+`ArticleAppCoordinator`、`ArticleView`、`ArticleMetadataFields`、`ArticlePreviewView`、`ArticleExportView`。入力からOSの保存先選択までをつなぐ。
 
 ## Export Image Acquisition
-ArticleImageAccess、PhotoKitArticleImageReader、ArticleImageConverter/Budget/JPEG。単一要求、content editing input、期限/取消/実終端、縮小/向き/色/metadata非継承。
+
+`ArticleImageAccess`、`PhotoKitArticleImageReader`、`ArticleImageConverter`。PhotoKit画像を取得して、向きを反映した長辺2560px以下のJPEGに変換する。
 
 ## Export Orchestration
-ArticleExportSession、ArticleOutputActions、ArticleExportOSActions、ArticleExportDelivery。固定保存入力、4枚順次処理、進捗、grant、取消、結果/照合/cleanup詳細を接続。
+
+`ArticleExportSession`、`ArticleOutputPorts`、`ArticleExportDelivery`、`ArticleExportOSActions`。保存版の準備、進捗と取消し、出力時のApple OS連携、完了時の本文を扱う。
 
 ## Export Storage
-ArticleExportWriter、ArticleExportJournal、ArticleExportManifest、ArticleExportFileSystemとrecovery model。所有・digest・phaseに基づく一時生成/非置換公開/復旧。
+
+`ArticleExportModels`、`ArticleExportManifest`、`ArticleExportFileSystem`、`ArticleExportJournal`、`ArticleExportWriter`。ファイル一式の検査、一時ディレクトリからの公開、復旧・所有確認を担当する。
 
 ## Probe Output
-ArticleProbeDelivery/JournalとCoordinator.probe。先頭一枚の検証出力で、通常4枚bundleとは記録/命名を分離。
+
+`ArticleProbeDelivery` と `ArticleProbeJournal`。画像1枚の検証出力とその復旧を担当する。
 
 ## Diagnostics and Measurement
-Diagnostics/ArticleDiagnosticsは分類だけをOSLogへ記録。NativeMeasurement/FrameMeasurementとscripts/measure-native.swiftは入力/描画と資源の計測を補助。
+
+`Diagnostics`、`FrameMeasurement`、`NativeMeasurement`。OSLog、フレーム計測、入力と表示の計測データを扱う。
 
 ## Test Fixtures
-DebugFixture、各TestDoubles、FixtureLaunch。実Photosと通常記事を避け、合成画像と所有UUID領域を使用。restore-*のみPicker adapter分離、通常共有構成は維持。
+
+`DebugFixture`、Core試験のTestDoubles、UI試験の `FixtureLaunch`。合成画像や専用保存領域で再現条件を作る。
 
 ## Verification Tooling
-native-test-runner.py、test-native-runner.py、check-coverage.swift、Bash入口、verify.yml。Core先行、smoke、全機能/coverageと別区分性能。DependabotはActions更新。
+
+`verify-native.sh`、`native-test-runner.py`、`check-coverage.swift`、用途別の検証・計測スクリプト、GitHub Actions。Core・UI試験の起動と結果の検査を行う。

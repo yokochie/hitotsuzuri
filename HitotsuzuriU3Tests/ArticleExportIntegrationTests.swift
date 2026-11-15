@@ -22,7 +22,40 @@ import UniformTypeIdentifiers
                 let manifest = try ArticleExportManifest.decode(Data(contentsOf: result.directory.appendingPathComponent("manifest.json")))
                 try manifest.validate(prepared: prepared)
                 XCTAssertEqual(try String(contentsOf: result.directory.appendingPathComponent("article.md"), encoding: .utf8), prepared.rendered.markdown)
+                XCTAssertTrue(result.fixedPlainText.contains("【ダミー】導入文です。"))
+                XCTAssertFalse(result.fixedPlainText.contains("*記号*"))
             }
+        }
+    }
+    func testVersionOneExportCanRecoverItsOriginalFilesAndFixedCopy() async throws {
+        try await fixture { root, _, journal, delivery, _ in
+            let prepared = try ExportFixture.prepared(title: "旧記事")
+            let record = ArticleExportRecoveryRecord(
+                jobID: UUID(), prepared: prepared, parentIdentity: try ArticleExportFileSystem.identity(of: root)
+            )
+            let plain = "旧記事\n\n本文\n*記号*\n\n写真1\n\n写真2\n\n写真3\n\n写真4"
+            let markdown = "# 旧記事\n\n本文  \n\\*記号\\*\n\n" +
+                (1...4).map { "![写真\($0)](images/0\($0).jpg)" }.joined(separator: "\n\n")
+            let encoded = try JSONEncoder().encode(record)
+            var fields = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+            fields["schemaVersion"] = 1
+            fields["fixedPlainText"] = plain
+            fields["markdown"] = markdown
+            let legacy = try JSONDecoder().decode(ArticleExportRecoveryRecord.self, from: JSONSerialization.data(withJSONObject: fields))
+            try await journal.begin(legacy)
+            let writer = ArticleExportWriter(destination: root, record: legacy)
+            _ = try await writer.prepare()
+            for index in 1...4 { _ = try await writer.writeImage(ExportFixture.jpeg(), index: index) }
+            let sealed = try await writer.seal()
+            try await journal.update(sealed, expected: legacy)
+            let published = try await writer.publish()
+            let recovered = try await delivery.recover(destination: root, cleanupConfirmed: false)
+            let result = try XCTUnwrap(recovered)
+            XCTAssertEqual(result.directory, published)
+            XCTAssertEqual(result.fixedPlainText, plain)
+            XCTAssertEqual(try String(contentsOf: published.appendingPathComponent("article.md"), encoding: .utf8), markdown)
+            let retried = try await delivery.run(jobID: legacy.jobID, prepared: prepared, destination: root)
+            XCTAssertEqual(retried, result)
         }
     }
     func testImageFailureLeavesNoSuccessfulFolder() async throws {

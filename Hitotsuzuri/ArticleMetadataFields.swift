@@ -18,10 +18,6 @@ struct ArticleMetadataFields:View {
                 Button("日付を確認") {try? session.metadataInput.confirm()}.disabled(session.metadataInput.validationMessage != nil || session.metadataInput.year.isEmpty).focusable().focused(focus,equals:"article-date-confirm").accessibilityIdentifier("article-date-confirm").id("article-date-confirm")
                 Button("日付を削除") {session.metadataInput.remove()}.focusable().focused(focus,equals:"article-date-remove").accessibilityIdentifier("article-date-remove").id("article-date-remove")
             }
-            memo("場所",id:"article-location",value:$session.content.location)
-            memo("機材",id:"article-equipment",value:$session.content.equipment)
-            memo("フィルム",id:"article-film",value:$session.content.film)
-            memo("人物名",id:"article-people",value:$session.content.people)
         }
     }
     private var stateText:String {
@@ -33,8 +29,5 @@ struct ArticleMetadataFields:View {
     }
     private func dateField(_ label:String,id:String,value:String,change:@escaping (String)->Void)->some View {
         VStack(alignment:.leading) {Text(label); TextField(label,text:Binding(get:{value},set:change)).textFieldStyle(.roundedBorder).accessibilityIdentifier(id).focused(focus,equals:id)}.id(id)
-    }
-    private func memo(_ label:String,id:String,value:Binding<String>)->some View {
-        VStack(alignment:.leading) {Text(label); TextEditor(text:value).frame(height:80).border(.quaternary).accessibilityIdentifier(id).focused(focus,equals:id)}.id(id)
     }
 }

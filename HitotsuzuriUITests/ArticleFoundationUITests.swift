@@ -15,7 +15,10 @@ final class ArticleFoundationUITests: XCTestCase {
         entry.click()
         XCTAssertTrue(app.textFields["article-title"].waitForExistence(timeout: 5))
     }
-    @MainActor func testStartShowsFourBodyFields() { let app = launch(); open(app); for index in 1...4 { XCTAssertTrue(app.textViews["article-photo-\(index)"].exists) } }
+    @MainActor func testStartShowsFourOrderedPhotos() {
+        let app = launch(); open(app)
+        for index in 1...4 { XCTAssertTrue(app.staticTexts["article-preview-state-\(index)"].exists) }
+    }
     @MainActor func testJapaneseTitleAndManualSave() {
         let app = launch(); open(app)
         let title = app.textFields["article-title"]; title.click(); title.typeKey("a", modifierFlags: .command); title.typeText("日本語の記事")
@@ -32,9 +35,11 @@ final class ArticleFoundationUITests: XCTestCase {
     @MainActor func testTextOpensWithoutPhotoPreview() {
         let app=launch(); open(app)
         XCTAssertTrue(app.staticTexts["article-preview-state-2"].waitForExistence(timeout:5))
-        XCTAssertTrue(app.textViews["article-introduction"].exists)
-        app.textViews["article-introduction"].click(); app.textViews["article-introduction"].typeText("写真なしでも文章を保持")
+        let title=app.textFields["article-title"]
+        XCTAssertTrue(title.exists)
+        title.click(); title.typeText("写真なしでも編集")
         app.buttons["article-save"].click()
+        XCTAssertTrue(app.staticTexts["下書きを保存しました。"].waitForExistence(timeout:5))
     }
     @MainActor func testUnsavedLeaveCanContinueEditing() {
         let app = launch(); open(app); app.textFields["article-title"].click(); app.textFields["article-title"].typeText("変更")

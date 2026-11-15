@@ -44,7 +44,8 @@ import XCTest
             let start=clock.now, rendered=try context.renderArticle(source:source,content:content)
             projections.append(draftSeconds(start.duration(to:clock.now)))
             XCTAssertEqual(rendered.sourceFingerprint,target.fingerprint)
-            XCTAssertTrue(rendered.plainText.contains(text)); XCTAssertEqual(rendered.imagePaths,["images/01.jpg","images/02.jpg","images/03.jpg","images/04.jpg"])
+            XCTAssertFalse(rendered.plainText.contains(text)); XCTAssertTrue(rendered.plainText.contains("【ダミー】導入文です。"))
+            XCTAssertEqual(rendered.imagePaths,["images/01.jpg","images/02.jpg","images/03.jpg","images/04.jpg"])
         }
         for (name,values,limit) in [("save",saves,2.0),("core-reopen-ready",reopen,2.0),("pure-projection",projections,0.1)] {
             print("Draft performance \(name) n=\(values.count) p95=\(draftP95(values)) max=\(values.max() ?? 0) seconds; articles=100 targetInitialOperations=1000 titleCharacters=200 bodyCharacters=10000x6")
@@ -56,7 +57,7 @@ import XCTest
         let source=try DraftFixtures.source(); var content=ArticleContent(source:source); content.title="e\u{301}"
         let article=try SavedArticle(projectID:UUID(),source:source,content:content)
         let rendered=try ArticleProjectionContext(projectID:article.id).renderArticle(source:source,content:content)
-        let rewritten=RenderedArticle(projectID:rendered.projectID,sourceFingerprint:rendered.sourceFingerprint,plainText:rendered.plainText.precomposedStringWithCanonicalMapping,markdown:rendered.markdown,imagePaths:rendered.imagePaths)
+        let rewritten=RenderedArticle(projectID:rendered.projectID,sourceFingerprint:rendered.sourceFingerprint,plainText:rendered.plainText.precomposedStringWithCanonicalMapping,markdown:rendered.markdown,imagePaths:rendered.imagePaths,content:rendered.content)
         XCTAssertThrowsError(try PreparedArticleExport(savedInput:SavedExportInput(article:article),rendered:rewritten))
     }
     private func make(root: URL, selections: DraftSelections) -> (ArticlePersistence, ArticlePresentation) {
@@ -66,13 +67,26 @@ import XCTest
     func testRealFileSaveRestartAndRawMetadataRestore() async throws {
         let root=DraftFixtures.root(), selections=DraftSelections(), (store,p)=make(root:root,selections:selections)
         await p.beginCurrentSelection(); let session=try XCTUnwrap(p.session)
-        session.content.introduction="私的な本文\n👩‍👧"; session.metadataInput.change(year:"9999",month:"12",day:"31")
+        session.content.introduction="私的な本文\n👩‍👧"; session.content.location="旧撮影場所"
+        session.metadataInput.change(year:"9999",month:"12",day:"31")
         let saved=await session.save(); XCTAssertTrue(saved)
         let (_,restarted)=make(root:root,selections:selections); await restarted.beginCurrentSelection()
         XCTAssertEqual(restarted.session?.projectID,session.projectID)
         XCTAssertEqual(restarted.session?.content.introduction,"私的な本文\n👩‍👧")
+        XCTAssertEqual(restarted.session?.content.location,"旧撮影場所")
         XCTAssertEqual(restarted.session?.metadataInput.year,"9999")
         let disk=try await store.open(session.projectID); XCTAssertEqual(disk.content.shootingDate?.year,9999)
+        let reopened = try XCTUnwrap(restarted.session)
+        reopened.content.title = "再開後のタイトル"
+        let prepared = try await restarted.prepareSavedExport(.save)
+        let article = try XCTUnwrap(prepared).article
+        XCTAssertEqual(article.content.introduction, "私的な本文\n👩‍👧")
+        XCTAssertEqual(article.content.location, "旧撮影場所")
+        let rendered = try ArticleProjectionContext(projectID: article.id).renderArticle(source: article.source, content: article.content)
+        XCTAssertTrue(rendered.plainText.contains("再開後のタイトル"))
+        XCTAssertTrue(rendered.plainText.contains("【ダミー】導入文です。"))
+        XCTAssertFalse(rendered.plainText.contains("私的な本文"))
+        XCTAssertFalse(rendered.markdown.contains("旧撮影場所"))
     }
     func testReconfirmedSelectionAssociatesWithoutChangingContentAndRestartsExact() async throws {
         let root=DraftFixtures.root(), selections=DraftSelections(), (_,p)=make(root:root,selections:selections)
