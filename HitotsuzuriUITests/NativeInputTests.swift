@@ -309,14 +309,14 @@ final class NativeInputTests:XCTestCase {
         let draw=app.buttons["album-random-draw"]
         XCTAssertTrue(draw.waitForExistence(timeout:3))
         draw.click()
-        let cancel=app.buttons["抽選を取り消す"]
+        let cancel=window.buttons["album-random-cancel"]
         XCTAssertTrue(cancel.waitForExistence(timeout:3))
         cancel.click()
         expectSelectionCount(1,stage:"random-album-cancelled",app)
         XCTAssertTrue(inputDiagnostic(app).contains("albumRow=1;"))
 
         draw.click()
-        let confirm=app.buttons["切り替える"]
+        let confirm=window.buttons["album-random-confirm"]
         XCTAssertTrue(confirm.waitForExistence(timeout:3))
         confirm.click()
         expectSelectionCount(0,stage:"random-album-applied",app)

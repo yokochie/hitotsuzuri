@@ -2,11 +2,16 @@
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parent.parent
+
+def is_pinned_action_reference(reference, action):
+    """依存更新を許可しつつ、正しいAction名と完全なcommit固定を検査する。"""
+    return re.fullmatch(re.escape(action) + r"@[0-9a-f]{40}", reference) is not None
 
 class RunnerContractTests(unittest.TestCase):
     def setUp(self):
@@ -72,6 +77,20 @@ elif name=="xcrun":
         self.assertEqual(len([c for c in self.calls() if c[0]=="xcodebuild"]),2)
     def test_zero_executed_is_rejected(self):
         self.assertNotEqual(self.run_script("--smoke",CONTRACT_ZERO="1").returncode,0)
+    def test_ui_shards_run_disjoint_classes_without_repeating_smoke(self):
+        for shard in ("article-edit-export", "navigation-photo-storage"):
+            result = self.run_script("--ui-shard-"+shard, script="verify-native.sh")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [call for call in self.calls() if call[0] == "xcodebuild"]
+        self.assertEqual(len(calls), 2)
+        selections = [{arg for arg in call if arg.startswith("-only-testing:")} for call in calls]
+        self.assertTrue(selections[0].isdisjoint(selections[1]))
+        self.assertEqual(len(selections[0] | selections[1]), 7)
+        self.assertTrue(all(arg.startswith("-only-testing:HitotsuzuriUITests/") for arg in selections[0] | selections[1]))
+        self.assertFalse(any("FixtureSmokeUITests" in arg or "Performance" in arg for arg in selections[0] | selections[1]))
+    def test_ui_shard_rejects_missing_execution(self):
+        result = self.run_script("--ui-shard-article-edit-export", script="verify-native.sh", CONTRACT_ZERO="1")
+        self.assertNotEqual(result.returncode, 0)
     def test_unknown_argument_is_rejected_before_execution(self):
         self.assertNotEqual(self.run_script("--unknown").returncode,0)
         self.assertEqual(self.calls(),[])
@@ -214,6 +233,40 @@ elif name=="xcrun":
         self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testFourImageExportThirtyTrialsPerformance",call)
         self.assertIn("-skip-testing:HitotsuzuriU3Tests/ArticleExportIntegrationTests/testExportMemoryAndCancellationThirtyTrials",call)
 
+class PinnedActionReferenceTests(unittest.TestCase):
+    def test_accepts_previous_and_updated_commit_pins(self):
+        references = {
+            "actions/checkout": [
+                "d23441a48e516b6c34aea4fa41551a30e30af803",
+                "3d3c42e5aac5ba805825da76410c181273ba90b1",
+            ],
+            "actions/upload-artifact": [
+                "ea165f8d65b6e75b540449e92b4886f43607fa02",
+                "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            ],
+        }
+        for action, commits in references.items():
+            for commit in commits:
+                with self.subTest(action=action, commit=commit):
+                    self.assertTrue(is_pinned_action_reference(f"{action}@{commit}", action))
+
+    def test_rejects_tags_branches_and_short_or_invalid_commits(self):
+        action = "actions/upload-artifact"
+        for reference in ["v7", "main", "cf430e0", "g" * 40, "A" * 40]:
+            with self.subTest(reference=reference):
+                self.assertFalse(is_pinned_action_reference(f"{action}@{reference}", action))
+
+    def test_rejects_another_action_with_a_valid_commit(self):
+        reference = "actions/checkout@" + "a" * 40
+        self.assertFalse(is_pinned_action_reference(reference, "actions/upload-artifact"))
+
+    def test_rejects_extra_characters_around_the_reference(self):
+        valid = "actions/upload-artifact@" + "a" * 40
+        for reference in [valid + "0", valid + "\n", valid + "/extra", " " + valid]:
+            with self.subTest(reference=reference):
+                self.assertFalse(is_pinned_action_reference(reference, "actions/upload-artifact"))
+
+
 class ExportDiagnosticWorkflowTests(unittest.TestCase):
     def workflow(self):
         path = ROOT / ".github/workflows/diagnose-article-export.yml"
@@ -250,10 +303,32 @@ class ExportDiagnosticWorkflowTests(unittest.TestCase):
         self.assertNotIn("--functional", command)
         upload = steps[-1]
         self.assertEqual(upload["if"], "always()")
-        self.assertEqual(upload["uses"], "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02")
+        self.assertTrue(is_pinned_action_reference(upload["uses"], "actions/upload-artifact"))
         self.assertEqual(upload["with"]["path"], ".build/ArticleExport-copy-diagnostic.xcresult")
         self.assertEqual(upload["with"]["retention-days"], 1)
         self.assertTrue(upload["with"].get("include-hidden-files", False), "所有bundle内の隠しデータも欠落させない")
-        self.assertEqual(steps[0]["uses"], "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803")
+        self.assertTrue(is_pinned_action_reference(steps[0]["uses"], "actions/checkout"))
+
+class NativeWorkflowGateTests(unittest.TestCase):
+    def test_native_gate_requires_core_and_both_shards_to_succeed(self):
+        path = ROOT / ".github/workflows/verify.yml"
+        workflow = json.loads(subprocess.check_output(
+            ["ruby", "-ryaml", "-rjson", "-e", "puts JSON.generate(YAML.load_file(ARGV[0]))", str(path)],
+            text=True))
+        jobs = workflow["jobs"]
+        self.assertEqual(jobs["native-ui"]["needs"], "native-core")
+        self.assertEqual(jobs["native-ui"]["strategy"]["matrix"]["shard"],
+                         ["article-edit-export", "navigation-photo-storage"])
+        gate = jobs["native"]
+        self.assertEqual(gate["if"], "always()")
+        self.assertEqual(set(gate["needs"]), {"native-core", "native-ui"})
+        command = gate["steps"][0]["run"]
+        for core in ("success", "failure", "cancelled", "skipped"):
+            for ui in ("success", "failure", "cancelled", "skipped"):
+                with self.subTest(core=core, ui=ui):
+                    result = subprocess.run(
+                        ["bash", "-c", command],
+                        env=dict(os.environ, CORE_RESULT=core, UI_RESULT=ui))
+                    self.assertEqual(result.returncode == 0, core == ui == "success")
 
 if __name__ == "__main__": unittest.main()
