@@ -1,40 +1,15 @@
-# 品質・変更影響
+# コード品質と検証
 
-## 検証基盤
+## 現在の検証構成
 
-4つのXCTest/XCUITest target。runnerはclass/methodを実ファイルから発見し、xcresultで選択試験のPassed/実行を確認、smoke2経路を必須とする。全機能bundleのApp/Core全手書きSwiftを加重集計して80%以上を検査する。実時間/実メモリ性能はCI全機能と別区分。今回試験/build/programは一切実行せず、新しい合否/件数/coverageは取得していない。
+- `.github/workflows/verify.yml` はCore試験後、起動スモーク、機能回帰と製品行カバレッジ80%以上を確認する。`native-test-runner.py` は期待される試験が実行されたことも検査する。
+- 代表的な関係試験は、`ArticleDraftUITests` の入力とキーボード経路、`ArticleMetadataInputTests` の日付境界、`ArticleProjectionTests` の本文・撮影メモ・変換、`ArticleExportContractTests` と `ArticleExportWriterTests` の出力契約、`ArticleExportUITests` の固定本文コピー。
+- 出力試験は、未完了・競合・パスの差替え・既存ファイルの保全を扱う。CoreとUIの検証に加え、性能計測と実写真・実際の保存ダイアログなどの本人Macでの確認がある。この調査では実行結果は測定していない。
 
-## 維持すべき強み
+## 実装上の所見
 
-- expected保存版/operation UUID/正確なUTF8 fingerprintにより競合・結果不明・再試行を区別する。
-- nofollow/fd相対I/O、directory identity、digest、非置換確定、所有確認cleanupで原本/既存成果物を保護。
-- 出力は保存snapshot、4枚順序、2560px/sRGB/向き/GPS非継承を検証する。
-- 取消と実処理終端、表示/出力資源、古いsession/request/jobの排除を分離し、前修正は後照会までCoordinatorの所有を維持。
-- 合成fixture/専用root/試験pasteboardにより通常写真/データを自動試験で触らない。
-
-## アルバム選択の変更影響
-
-- `PickerContent.swift`の一覧と`SelectionWorkflow.swift`の選択が主な確認箇所。既存の一覧を候補にすると、フォルダの子孫・重複排除を画面と共通にできる。
-- 別アルバムへの切替は未確定写真選択を解除する。同一IDでの再操作は既存処理で何も変わらない。連続操作やフォルダ変更と競合した場合は既存の世代番号チェックを保つ。
-- `NativeInputTests`で空一覧、写真グリッド追随、親子フォルダ選択、狭幅とキーボード入力を確認できる。ランダム操作では候補外に出ないことを確認し、特定の乱数結果を前提にしない。実写真ライブラリでの動作は別途確認する。
-
-## 2026-11-06のiCloud出力調査で記録したギャップ
-
-| 場所 | 観測事実と影響 |
-|---|---|
-| ArticleImageAccess.swift | callerもreader optionsもnetwork=false。readerのnetworkAllowed引数は実optionsへ反映されない。事前取得不要という今回の要求を満たさない |
-| ArticleImageReading / ArticleExportImageProviding | completionとcancelだけでdownload progressが渡らない |
-| ExportProgress / ExportSession / ExportView | fractionは型にあるが値生成なし。枚数＋indeterminateのみで長い取得の状態を説明できない |
-| 取得/Delivery期限 | 30秒/枚、書込込み40秒、全体180秒。downloadに適した時間と変換/書込の既存制限を分けて検討する必要 |
-| reader info/error | nil入力/urlやasset不在を同じassetUnavailableへ畳み、「写真アプリで事前取得」へ誘導。取得失敗を全て未ローカルと断定できない |
-| 取消/実終端 | readerPendingがcallbackまで残る。通信追加後のPhotoKit cancel/progress stop/遅いcallbackと次要求の関係を契約化すべき |
-| 既存tests | network=falseを明示assertする。出力policy変更に応じて更新が必要だが、Picker表示の通信禁止や予算を一律弱めない |
-| README/画面説明 | 通信しないという現説明、事前取得手順、前表示修正を修正中とする記載。新実装成立後に現実と揃える候補 |
-
-## 2026-11-06のiCloud出力調査で挙げた変更範囲と検証候補
-
-主に出力reader/access→Delivery→Session→ExportView、ports/progress/failure、合成reader/testsが中程度の影響。Coordinatorの保存確認/後照会/表示復帰、現在編集結果の変換、Writer/Journalは契約を維持する。iCloud開始/進捗/成功、通信失敗・取消・期限、取消後の旧進捗/旧completion、次の出力・表示復帰、固定本文/順序、所有cleanupをテスト対象にする。
-
-本人は出力時ダウンロードを明示許可した。旧memory/READMEの通信禁止と現在ソースのfalseは歴史的現状であり、本人の今回の指示より優先しない。実iCloud/Sandboxの確認は自動fake成功とは別に最後に本人Macで行う。全面改修、全library事前取得、Photos編集、権限resetの根拠はない。
-
-追加指示330bdddaでは画像サイズによって遅くなってもよいと本人が回答。既存30/40/180秒を新通信へ機械的に適用するのでなく、取得完遂・取消・進捗・停止の扱いを要件化する。具体的な期限値と無期限待機はまだ決定されていない。
+- 選択や記事保存と出力の境界がプロトコルで明示され、状態や失敗を試験ダブルで再現できる。ファイルの失敗には結果不明と再照合の経路がある。
+- 画面に入力欄を記述する箇所とTab順が独立している。従来の入力欄を操作するUI試験は、入力欄の削除後も日付、保存とプレビューのキーボード操作を検証できる形に見直す必要がある。
+- 記事の見た目と出力前のテキスト変換は現在別の本文構築経路を持つ。既存下書きのフィンガープリントと既存出力の照合にも留意が要る。
+- READMEにはランダム選択が未実装、画像取得で通信を要求しないとの記述がある。現行コードでは `PickerContent` にランダム選択、`ArticleExportDelivery` にネットワークを許可する完成出力がある。
+- 独立したlintジョブの設定は確認できなかった。

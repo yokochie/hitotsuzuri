@@ -39,7 +39,7 @@ final class ArticleProjectionTests: XCTestCase {
     }
     @MainActor func testPreviewUsesCurrentInputWithoutSaving() async throws {
         let h=DraftHarness.make(), session=try await h.savedSession(), saved=session.saved
-        session.content.introduction="現在入力"
+        session.content.title="現在入力"
         await h.presentation.showPreview()
         XCTAssertEqual(h.presentation.mode,.preview)
         XCTAssertTrue(h.presentation.rendered?.plainText.contains("現在入力") == true)
@@ -66,30 +66,48 @@ final class ArticleProjectionTests: XCTestCase {
     func testFixedFourReferencesAndNumberOrder() throws {
         let result = try render { $0.photoTexts = $0.photoTexts.enumerated().map { ArticlePhotoText(assetID: $0.element.assetID, text: "本文\($0.offset+1)") } }
         XCTAssertEqual(result.imagePaths, ["images/01.jpg","images/02.jpg","images/03.jpg","images/04.jpg"])
-        for index in 1...4 { XCTAssertTrue(result.plainText.contains("写真\(index)\n本文\(index)")) }
+        for index in 1...4 {
+            XCTAssertTrue(result.plainText.contains("写真\(index)\n【ダミー】写真\(index)の文章です。"))
+        }
         XCTAssertFalse(result.plainText.contains("images/"))
     }
-    func testStructureOrderPreservesAllNonemptyFields() throws {
-        let result = try render { $0.title="題"; $0.introduction="導入"; $0.closing="結び"; $0.people="人物" }
-        let expected = "題\n\n導入\n\n写真1\n\n写真2\n\n写真3\n\n写真4\n\n結び\n\n撮影メモ\n人物名：人物"
-        XCTAssertEqual(result.plainText, expected)
+    func testLegacyAndEmptyDraftsProduceIdenticalPlaceholderText() throws {
+        let fresh = try render { $0.title = "題" }
+        let legacy = try render {
+            $0.title = "題"
+            $0.introduction = "旧導入"
+            $0.closing = "旧締め"
+            for index in $0.photoTexts.indices { $0.photoTexts[index].text = "旧写真文\(index)" }
+            $0.location = "旧場所"; $0.equipment = "旧機材"; $0.film = "旧フィルム"; $0.people = "旧人物"
+        }
+        XCTAssertEqual(legacy.plainText, fresh.plainText)
+        XCTAssertEqual(legacy.markdown, fresh.markdown)
+        let expected = ["題", "【ダミー】導入文です。"] +
+            (1...4).map { "写真\($0)\n【ダミー】写真\($0)の文章です。" } +
+            ["【ダミー】締めの文章です。"]
+        XCTAssertEqual(fresh.plainText, expected.joined(separator: "\n\n"))
+        let expectedMarkdown = ["# 題", "【ダミー】導入文です。"] +
+            (1...4).map { "![写真\($0)](images/0\($0).jpg)\n\n【ダミー】写真\($0)の文章です。" } +
+            ["【ダミー】締めの文章です。"]
+        XCTAssertEqual(fresh.markdown, expectedMarkdown.joined(separator: "\n\n"))
     }
-    func testUnicodeWhitespaceMemoIsOmittedWhileBodyIsNotTrimmed() throws {
+    func testEmptyTitleAndDateDoNotAddMemoOrFallbackTitle() throws {
         let result = try render { $0.title=""; $0.introduction=" \n"; $0.location="\u{3000}\n\t"; $0.equipment="" }
-        XCTAssertTrue(result.plainText.hasPrefix(" \n\n\n写真1"))
-        XCTAssertFalse(result.plainText.contains("撮影メモ"))
+        XCTAssertTrue(result.plainText.hasPrefix("【ダミー】導入文です。"))
+        XCTAssertFalse(result.plainText.contains("撮影情報"))
         XCTAssertFalse(result.plainText.contains("無題の記事"))
     }
     func testCandidateDateIsNeverPromoted() throws {
         let result = try render { $0.shootingDate=ArticleCalendarDay(year: 1,month: 2,day: 3); $0.dateCandidateState = .candidate }
         XCTAssertTrue(result.plainText.contains("撮影日（未確認）：0001-02-03"))
     }
-    func testConfirmedDateAndMetadataValueOrder() throws {
+    func testConfirmedDateAppearsWithoutLegacyMetadata() throws {
         let result = try render { $0.shootingDate=ArticleCalendarDay(year: 2024,month: 2,day: 29); $0.dateCandidateState = .confirmed; $0.location=" 場所\n"; $0.equipment="機材"; $0.film="フィルム"; $0.people="人物" }
-        XCTAssertTrue(result.plainText.hasSuffix("撮影メモ\n撮影日：2024-02-29\n場所： 場所\n\n機材：機材\nフィルム：フィルム\n人物名：人物"))
+        XCTAssertTrue(result.plainText.hasSuffix("撮影情報\n撮影日：2024-02-29"))
+        XCTAssertFalse(result.markdown.contains("人物名"))
     }
     func testMarkdownHTMLAndImageInjectionAreData() throws {
-        let result = try render { $0.title="<script>&![偽](file:///private)"; $0.introduction="*強調*\n# 見出し\\e\u{301}👩‍👧" }
+        let result = try render { $0.title="<script>&![偽](file:///private) *強調*\n# 見出し\\e\u{301}👩‍👧" }
         XCTAssertFalse(result.markdown.contains("<script>")); XCTAssertFalse(result.markdown.contains("![偽]"))
         XCTAssertTrue(result.markdown.contains("&lt;script&gt;&amp;"))
         XCTAssertTrue(result.markdown.contains("\\*強調\\*  \n\\# 見出し\\\\e\u{301}👩‍👧"))

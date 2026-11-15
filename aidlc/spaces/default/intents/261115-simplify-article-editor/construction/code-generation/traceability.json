@@ -1,0 +1,37 @@
+{
+  "stage": "code-generation",
+  "upstream_ids": [
+    "FR1",
+    "FR2",
+    "FR3",
+    "FR4",
+    "NFR1"
+  ],
+  "coverage": [
+    {
+      "id": "FR1",
+      "status": "OK",
+      "target": "Hitotsuzuri/ArticleView.swift"
+    },
+    {
+      "id": "FR2",
+      "status": "OK",
+      "target": "Hitotsuzuri/ArticleMetadataFields.swift"
+    },
+    {
+      "id": "FR3",
+      "status": "OK",
+      "target": "HitotsuzuriCore/ArticleProjection.swift"
+    },
+    {
+      "id": "FR4",
+      "status": "OK",
+      "target": "HitotsuzuriU3Tests/ArticleExportIntegrationTests.swift"
+    },
+    {
+      "id": "NFR1",
+      "status": "OK",
+      "target": "scripts/check-coverage.swift"
+    }
+  ]
+}

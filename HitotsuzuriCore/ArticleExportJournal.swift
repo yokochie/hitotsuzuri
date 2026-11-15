@@ -74,7 +74,7 @@ public actor ArticleExportJournal {
         return try encoder.encode(record)
     }
     private nonisolated func sameInput(_ lhs: ArticleExportRecoveryRecord, _ rhs: ArticleExportRecoveryRecord) -> Bool {
-        lhs.jobID == rhs.jobID && lhs.article == rhs.article && lhs.markdown.utf8.elementsEqual(rhs.markdown.utf8)
+        lhs.schemaVersion == rhs.schemaVersion && lhs.jobID == rhs.jobID && lhs.article == rhs.article && lhs.markdown.utf8.elementsEqual(rhs.markdown.utf8)
             && lhs.fixedPlainText.utf8.elementsEqual(rhs.fixedPlainText.utf8) && lhs.parentIdentity == rhs.parentIdentity
     }
 }

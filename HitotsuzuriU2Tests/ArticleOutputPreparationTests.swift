@@ -26,9 +26,12 @@ import XCTest
     }
     func testCopyUsesCurrentUnsavedInputAndDoesNotSave() async throws {
         let output=DraftOutput(), h=DraftHarness.make(output:output), session=try await h.savedSession(), saved=session.saved
-        session.content.introduction="未保存コピー"
+        session.content.title="未保存コピー"
+        session.content.introduction="旧コピー文"
         let result=await h.presentation.copyCurrent(); XCTAssertTrue(result)
         XCTAssertTrue(output.copied.first?.0.contains("未保存コピー") == true)
+        XCTAssertTrue(output.copied.first?.0.contains("【ダミー】導入文です。") == true)
+        XCTAssertFalse(output.copied.first?.0.contains("旧コピー文") == true)
         XCTAssertEqual(session.saved,saved); XCTAssertTrue(session.isDirty)
     }
     func testInvalidRawStopsCopyAndExportPreparation() async throws {

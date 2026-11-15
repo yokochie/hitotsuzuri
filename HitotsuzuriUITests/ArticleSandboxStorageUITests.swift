@@ -9,9 +9,8 @@ import XCTest
         XCTAssertTrue(storageMarker.draftExists(timeout: 10), "通常APIで解決した隔離Application Supportを選ぶ")
         openArticle(app)
         let title = "Application Support saved article"
-        let body = "Article body saved inside Application Support.\nReopen the same draft after relaunch."
         replace(field("article-title", app), title)
-        replace(field("article-introduction", app), body)
+        replace(field("article-day", app), "14")
         app.typeKey("s", modifierFlags: .command)
         XCTAssertTrue(state(app, contains: "保存しました").draftExists(timeout: 5))
         let savedIdentity = draftIdentity(app)
@@ -22,9 +21,9 @@ import XCTest
         XCTAssertTrue(storageMarker.draftExists(timeout: 10))
         openArticle(app)
         XCTAssertEqual(field("article-title", app).value as? String, title)
-        XCTAssertEqual(field("article-introduction", app).value as? String, body)
-        for number in 1...4 { XCTAssertTrue(app.textViews["article-photo-\(number)"].exists) }
-        XCTAssertEqual(draftIdentity(app), savedIdentity, "本文だけでなく候補のproject識別子も同じ記事として再開する")
+        XCTAssertEqual(field("article-day", app).value as? String, "14")
+        for number in 1...4 { XCTAssertTrue(app.staticTexts["article-preview-state-\(number)"].exists) }
+        XCTAssertEqual(draftIdentity(app), savedIdentity, "タイトルと日付に加えて、同じ候補のproject識別子で再開する")
         // FixtureLaunchのteardownが同じstorage selector/UUIDでapp内cleanupを実行し、成功表示を確認する。
     }
 
@@ -40,10 +39,11 @@ import XCTest
     private func draftIdentity(_ app: XCUIApplication) -> String {
         app.menuBars.menuBarItems["記事"].click()
         app.menuItems["保存した下書きを開く"].click()
-        let cancel = app.buttons["draft-cancel"]
+        let picker = draftPicker(app)
+        let cancel = picker.buttons["draft-cancel"]
         XCTAssertTrue(cancel.draftExists(timeout: 5))
-        XCTAssertEqual(app.radioButtons.count, 1, "同じ確定選択から記事を重複作成しない")
-        let identity = app.radioButtons.firstMatch.label
+        XCTAssertEqual(picker.radioButtons.count, 1, "同じ確定選択から記事を重複作成しない")
+        let identity = picker.radioButtons.firstMatch.label
         XCTAssertFalse(identity.isEmpty)
         cancel.click()
         XCTAssertTrue(cancel.draftAbsent(timeout: 5))

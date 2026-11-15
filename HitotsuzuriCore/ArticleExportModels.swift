@@ -13,7 +13,7 @@ public struct ArticleExportDirectoryIdentity: Codable, Equatable, Sendable {
 }
 
 public struct ArticleExportRecoveryRecord: Codable, Equatable, Sendable {
-    public var schemaVersion = 1
+    public var schemaVersion = ArticleProjectionFormat.placeholder.rawValue
     public let jobID: UUID
     public let article: SavedArticle
     public let fixedPlainText: String
@@ -33,11 +33,8 @@ public struct ArticleExportRecoveryRecord: Codable, Equatable, Sendable {
         self.parentIdentity = parentIdentity; self.ownershipToken = ownershipToken
     }
     public func validate() throws {
-        guard schemaVersion == 1 else { throw ArticleFailure.unsupportedVersion }
-        try article.validate()
-        let rendered = try ArticleProjectionContext(projectID: article.projectID).renderArticle(source: article.source, content: article.content)
-        guard fixedPlainText.utf8.elementsEqual(rendered.plainText.utf8), markdown.utf8.elementsEqual(rendered.markdown.utf8),
-              parentIdentity.inode > 0 else { throw ArticleFailure.corruptData }
+        _ = try prepareOutput()
+        guard parentIdentity.inode > 0 else { throw ArticleFailure.corruptData }
         let allowed = ArticleExportLayout.artifactPaths
         guard Set(expectedDigests.keys).isSubset(of: allowed), expectedDigests.values.allSatisfy({ $0.count == 64 && $0.allSatisfy(\.isHexDigit) }) else {
             throw ArticleFailure.corruptData
@@ -45,5 +42,13 @@ public struct ArticleExportRecoveryRecord: Codable, Equatable, Sendable {
         if phase == .publishing || phase == .succeeded {
             guard stagingIdentity != nil, Set(expectedDigests.keys) == allowed else { throw ArticleFailure.corruptData }
         }
+    }
+    func prepareOutput() throws -> PreparedArticleExport {
+        // 記録作成時の形式で再計算し、旧ジョブの本文とファイルを同じ内容で照合する。
+        guard let format = ArticleProjectionFormat(rawValue: schemaVersion) else { throw ArticleFailure.unsupportedVersion }
+        let prepared = try PreparedArticleExport(savedInput: SavedExportInput(article: article), format: format)
+        guard fixedPlainText.utf8.elementsEqual(prepared.rendered.plainText.utf8),
+              markdown.utf8.elementsEqual(prepared.rendered.markdown.utf8) else { throw ArticleFailure.corruptData }
+        return prepared
     }
 }

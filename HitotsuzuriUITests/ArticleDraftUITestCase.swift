@@ -14,8 +14,7 @@ import XCTest
         return app
     }
     func field(_ id:String,_ app:XCUIApplication)->XCUIElement {
-        let multiline=["article-introduction","article-closing","article-location","article-equipment","article-film","article-people"]+(1...4).map {"article-photo-\($0)"}
-        let element=multiline.contains(id) ? app.textViews[id] : app.textFields[id]
+        let element=app.textFields[id]
         XCTAssertTrue(element.draftExists(timeout:5),app.debugDescription)
         func visible()->Bool {
             let frame=element.frame, viewport=app.scrollViews.firstMatch.frame
@@ -33,7 +32,7 @@ import XCTest
         return element
     }
     func scrollForm(_ app:XCUIApplication,delta:CGFloat) {
-        // TextEditor内部ではなく、外側フォームの16pt余白にホイールを送る。
+        // 外側フォームの16pt余白にホイールを送る。
         app.scrollViews.firstMatch.coordinate(withNormalizedOffset:CGVector(dx:0.01,dy:0.5)).scroll(byDeltaX:0,deltaY:delta)
     }
     func replace(_ element:XCUIElement,_ value:String) {
@@ -52,6 +51,20 @@ import XCTest
         let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: eitherExists, object: nil)], timeout: 6)
         XCTAssertEqual(result, .completed, "保存確認がシートまたはダイアログとして表示される")
         return sheet.exists ? sheet : dialog
+    }
+    func draftPicker(_ app: XCUIApplication) -> XCUIElement {
+        let sheet = app.sheets.containing(.button, identifier: "draft-open").firstMatch
+        XCTAssertTrue(sheet.draftExists(timeout:5), "下書き候補のシート")
+        return sheet
+    }
+    func openDraft(_ index: Int, in picker: XCUIElement) {
+        let row = picker.radioButtons.element(boundBy:index)
+        XCTAssertTrue(row.draftExists(timeout:5), "下書き候補 \(index + 1)")
+        row.click()
+        let open = picker.buttons["draft-open"]
+        let ready = NSPredicate { _,_ in MainActor.assumeIsolated { open.exists && open.isEnabled } }
+        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:ready,object:nil)],timeout:5),.completed)
+        open.click()
     }
     func state(_ app:XCUIApplication,contains text:String)->XCUIElement {
         app.staticTexts.matching(NSPredicate(format:"identifier == %@ AND (label CONTAINS %@ OR value CONTAINS %@)","article-save-state",text,text)).firstMatch
