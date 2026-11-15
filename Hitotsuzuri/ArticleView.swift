@@ -16,8 +16,8 @@ struct ArticleView: View {
                 Divider()
                 ScrollViewReader { scroll in
                     ScrollView {
-                        if presentation.mode == .preview, let rendered=presentation.rendered, let content=try? session.validatedContent() {
-                            ArticlePreviewView(content:content,rendered:rendered,previews:coordinator.previews,suspensionMessage:coordinator.photoSuspensionMessage)
+                        if presentation.mode == .preview, let rendered=presentation.rendered {
+                            ArticlePreviewView(content:rendered.content,previews:coordinator.previews,suspensionMessage:coordinator.photoSuspensionMessage)
                                 .frame(maxWidth:720).frame(maxWidth:.infinity).padding(16).id("article-preview-top")
                         } else {
                             let wide=geometry.size.width >= 960
@@ -165,45 +165,43 @@ struct ArticleView: View {
                 })).textFieldStyle(.roundedBorder)
                     .accessibilityIdentifier("article-title").focused($focusedField,equals:"article-title")
             }.id("article-title")
-            field("導入文",text:$session.content.introduction,id:"article-introduction")
-            ForEach(0..<session.content.photoTexts.count,id:\.self) {index in
-                field("写真 \(index+1) の文章",text:$session.content.photoTexts[index].text,id:"article-photo-\(index+1)")
-            }
-            field("締めの文章",text:$session.content.closing,id:"article-closing")
             ArticleMetadataFields(session:session,focus:$focusedField)
                 .onKeyPress(keys:[.tab,KeyEquivalent("\u{19}")]) {press in moveFocus(backward:press.modifiers.contains(.shift) || press.key == KeyEquivalent("\u{19}"))}
         }.disabled(coordinator.working || presentation.isLoading)
     }
-    private func field(_ label:String,text:Binding<String>,id:String)->some View {
-        VStack(alignment:.leading) {
-            Text(label).font(.headline)
-            TextEditor(text:text).frame(height:140).border(.quaternary).accessibilityIdentifier(id)
-                .focused($focusedField,equals:id)
-                .onKeyPress(keys:[.tab,KeyEquivalent("\u{19}")]) {press in moveFocus(backward:press.modifiers.contains(.shift) || press.key == KeyEquivalent("\u{19}"))}
-        }.id(id)
-    }
     private func photos(wide:Bool)->some View {
-        LazyVGrid(columns:Array(repeating:GridItem(.flexible(),alignment:.top),count:wide ? 1 : 2),alignment:.leading,spacing:16) {
-            ForEach(0..<session.source.orderedAssetIDs.count,id:\.self) {index in
-                let id=session.source.orderedAssetIDs[index]
-                let state=coordinator.previews?.states[id] ?? .waiting
-                VStack(alignment:.leading,spacing:6) {
-                    Text("写真 \(index+1)").font(.headline)
-                    if case .ready(let buffer)=state, let image=buffer.displayImage {
-                        Image(nsImage:image).resizable().scaledToFit().frame(maxHeight:160).accessibilityIdentifier("article-preview-\(index+1)")
+        let count = session.source.orderedAssetIDs.count
+        let columns = wide ? 1 : 2
+        // 4枚のセルを保持し、出力後に画像の高さが戻ってもスクロール中のセルを失わない。
+        return Grid(alignment:.topLeading,horizontalSpacing:8,verticalSpacing:16) {
+            ForEach(Array(stride(from:0,to:count,by:columns)),id:\.self) {start in
+                GridRow(alignment:.top) {
+                    ForEach(start..<min(start + columns,count),id:\.self) {index in
+                        photo(index)
                     }
-                    Text(coordinator.photoSuspensionMessage ?? state.message).font(.callout).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("article-preview-state-\(index+1)")
-                    Button("写真 \(index+1) を再試行") {retryPhoto(index)}
-                        .disabled(!coordinator.canRetryPhotos)
-                        .focusable().focused($focusedField,equals:"article-retry-\(index+1)")
-                        .accessibilityIdentifier("article-retry-\(index+1)").id("article-retry-\(index+1)")
-                }.frame(maxWidth:.infinity,alignment:.leading)
+                }
             }
         }
     }
+    private func photo(_ index:Int)->some View {
+        let number = index + 1
+        let id = session.source.orderedAssetIDs[index]
+        let state = coordinator.previews?.states[id] ?? .waiting
+        return VStack(alignment:.leading,spacing:6) {
+            Text("写真 \(number)").font(.headline)
+            if case .ready(let buffer)=state, let image=buffer.displayImage {
+                Image(nsImage:image).resizable().scaledToFit().frame(maxHeight:160).accessibilityIdentifier("article-preview-\(number)")
+            }
+            Text(coordinator.photoSuspensionMessage ?? state.message).font(.callout).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("article-preview-state-\(number)")
+            Button("写真 \(number) を再試行") {retryPhoto(index)}
+                .disabled(!coordinator.canRetryPhotos)
+                .focusable().focused($focusedField,equals:"article-retry-\(number)")
+                .accessibilityIdentifier("article-retry-\(number)").id("article-retry-\(number)")
+        }.frame(maxWidth:.infinity,alignment:.leading)
+    }
     private var actions:some View {
         VStack(alignment:.leading,spacing:12) {
-            Text("写真を取得できない場合も文章を保存・再開できます。").foregroundStyle(.secondary)
+            Text("写真を取得できない場合も下書きを保存・再開できます。").foregroundStyle(.secondary)
             VStack(alignment:.leading,spacing:8) {outputActions}
             if let message=presentation.message {Text(message).textSelection(.enabled).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("article-action-message")}
             Text(coordinator.message).textSelection(.enabled).fixedSize(horizontal:false,vertical:true)
@@ -218,7 +216,7 @@ struct ArticleView: View {
         if coordinator.isProbeRunning {ProgressView().controlSize(.small); Button("検証出力を取り消す") {coordinator.cancelProbe()}}
     }
     private var inputOrder:[String] {
-        ["article-title","article-introduction","article-photo-1","article-photo-2","article-photo-3","article-photo-4","article-closing","article-year","article-month","article-day","article-date-confirm","article-date-remove","article-location","article-equipment","article-film","article-people"]
+        ["article-title","article-year","article-month","article-day","article-date-confirm","article-date-remove"]
     }
     private var photoRetryOrder:[String] {
         session.source.orderedAssetIDs.indices.map {"article-retry-\($0+1)"}

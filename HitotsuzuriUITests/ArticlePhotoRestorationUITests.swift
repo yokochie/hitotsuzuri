@@ -63,20 +63,26 @@ import XCTest
         scrollForm(app,delta:10000)
         for number in 1...4 {
             let image=app.images["article-preview-\(number)"]
-            for _ in 0..<12 {
-                // LazyVGridのscroll後にAXへ実Imageが載るまで待つ。
-                // 即existsだけで次へscrollすると、対象を通過してしまう。
-                if image.draftExists(timeout:0.5) {break}
-                scrollForm(app,delta:-220)
+            let scrollView=app.scrollViews.firstMatch
+            func visible() -> Bool {
+                guard image.exists else {return false}
+                let frame=image.frame, viewport=scrollView.frame
+                return !frame.isEmpty && viewport.contains(frame)
             }
-            let appeared=image.draftExists(timeout:3)
+            for _ in 0..<12 {
+                if visible() {break}
+                // 実座標から上下方向を決め、表示領域を飛び越えないように移動する。
+                let delta=image.exists ? scrollView.frame.midY-image.frame.midY : -120
+                scrollForm(app,delta:max(-180,min(180,delta)))
+            }
+            let appeared=visible()
             if !appeared {
                 let details="写真\(number)の実Image未反映; \(diagnostic(app)); \(app.windows.firstMatch.debugDescription)"
                 print(details)
                 let attachment=XCTAttachment(string:details)
                 attachment.name="photo-restoration-image-missing"; attachment.lifetime = .keepAlways; add(attachment)
             }
-            XCTAssertTrue(appeared,"写真\(number)の実Image要素")
+            XCTAssertTrue(appeared,"写真\(number)の実Image要素が表示領域に収まる")
             let state=app.staticTexts["article-preview-state-\(number)"]
             XCTAssertTrue([state.label,(state.value as? String) ?? ""].contains("画像を取得しました"),"写真\(number)の実状態。label=\(state.label), value=\(String(describing:state.value))")
         }
@@ -100,13 +106,13 @@ import XCTest
         let app=launch("restore-normal")
         ready(app,requested:[1,1,1,1])
         replace(field("article-title",app),"Saved photo order")
-        replace(field("article-introduction",app),"Saved introduction.")
+        replace(field("article-day",app),"14")
         app.buttons["article-save"].click()
         XCTAssertTrue(state(app,contains:"保存しました").draftExists(timeout:5))
         app.terminate(); app.launch(); app.buttons["article-open"].click()
         ready(app,requested:[1,1,1,1])
         XCTAssertEqual(field("article-title",app).value as? String,"Saved photo order")
-        XCTAssertEqual(field("article-introduction",app).value as? String,"Saved introduction.")
+        XCTAssertEqual(field("article-day",app).value as? String,"14")
     }
     // T2: 成功後、編集と記事プレビューの両方で実画像を確認。
     func testSuccessfulExportRestoresEditorAndRenderedImages() {

@@ -9,13 +9,19 @@ public struct PreparedArticleExport: Sendable {
     public let savedInput: SavedExportInput
     public let rendered: RenderedArticle
     public init(savedInput: SavedExportInput, rendered: RenderedArticle) throws {
-        let article=savedInput.article
-        try article.validate()
-        let expected=try ArticleProjectionContext(projectID:article.projectID).renderArticle(source:article.source,content:article.content)
+        let prepared = try Self(savedInput: savedInput, format: .placeholder)
+        let expected = prepared.rendered
         guard rendered.projectID == expected.projectID, rendered.sourceFingerprint == expected.sourceFingerprint,
               rendered.plainText.utf8.elementsEqual(expected.plainText.utf8), rendered.markdown.utf8.elementsEqual(expected.markdown.utf8),
               rendered.imagePaths == expected.imagePaths else { throw ArticleFailure.invalidInput }
-        self.savedInput=savedInput; self.rendered=rendered
+        self = prepared
+    }
+    init(savedInput: SavedExportInput, format: ArticleProjectionFormat) throws {
+        let article=savedInput.article
+        try article.validate()
+        self.savedInput = savedInput
+        self.rendered = try ArticleProjectionContext(projectID: article.projectID)
+            .renderArticle(source: article.source, content: article.content, format: format)
     }
 }
 public struct ArticleOutputCapabilities: Sendable {

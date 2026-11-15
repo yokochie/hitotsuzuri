@@ -41,7 +41,7 @@ import XCTest
         XCTAssertEqual(try Data(contentsOf: root.appendingPathComponent("active")), bytes)
     }
     func testUnknownVersionIsProtected() async throws {
-        var value = try record(); value.schemaVersion = 2
+        var value = try record(); value.schemaVersion = 999
         try JSONEncoder().encode(value).write(to: root.appendingPathComponent("active"))
         do { _ = try await ArticleExportJournal(directory: root).pending(); XCTFail("未知版を読んだ") } catch { XCTAssertEqual(error as? ArticleFailure, .unsupportedVersion) }
     }

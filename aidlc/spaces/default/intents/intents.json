@@ -54,5 +54,13 @@
     "scope": "express",
     "status": "complete",
     "request": "821daf18"
+  },
+  {
+    "uuid": "01a1dd36-3e32-734e-9d12-a2accc53cc69",
+    "slug": "simplify-article-editor",
+    "dirName": "261115-simplify-article-editor",
+    "scope": "express",
+    "status": "complete",
+    "request": "4ec25b01"
   }
 ]

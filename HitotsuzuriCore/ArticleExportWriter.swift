@@ -46,7 +46,7 @@ public actor ArticleExportWriter {
         guard record.phase == .generating, let folder, let images,
               record.expectedDigests.count == 4 else { throw ArticleFailure.invalidInput }
         try checkpoint(.beforeSeal)
-        let prepared = try preparation()
+        let prepared = try record.prepareOutput()
         let manifest = ArticleExportManifest(jobID: record.jobID, prepared: prepared)
         try manifest.validate(prepared: prepared)
         for (name, bytes) in [("article.md", Data(record.markdown.utf8)), ("manifest.json", try manifest.encoded())] {
@@ -134,10 +134,6 @@ public actor ArticleExportWriter {
     private func checkIdentity(_ folder: ArticleDirectory) throws {
         guard let identity = record.stagingIdentity, try ArticleExportFileSystem.identity(folder) == identity else { throw ArticleFailure.invalidReference }
     }
-    private func preparation() throws -> PreparedArticleExport {
-        let rendered = try ArticleProjectionContext(projectID: record.article.projectID).renderArticle(source: record.article.source, content: record.article.content)
-        return try PreparedArticleExport(savedInput: SavedExportInput(article: record.article), rendered: rendered)
-    }
     private func verify(_ folder: ArticleDirectory, includeReceipt: Bool) throws {
         try checkIdentity(folder)
         let names = Set(["images", "article.md", "manifest.json"] + (includeReceipt ? ["owner.json"] : []))
@@ -152,7 +148,7 @@ public actor ArticleExportWriter {
         }
         let manifest = try ArticleExportManifest.decode(folder.read("manifest.json"))
         guard manifest.jobID == record.jobID else { throw ArticleFailure.corruptData }
-        try manifest.validate(prepared: preparation())
+        try manifest.validate(prepared: record.prepareOutput())
         guard try folder.read("article.md") == Data(record.markdown.utf8) else { throw ArticleFailure.corruptData }
     }
     private func validateJPEG(_ image: ArticleJPEG) throws {

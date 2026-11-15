@@ -2,37 +2,38 @@
 
 ## Run Record
 
-- Date: 2026-11-07
-- Commit: c3e6fb36662d4a99de8a901b3268c31841b7a0c9
-- アルバム一覧・フォルダ絞り込み・選択と関連するUI試験に絞って調査した。アプリと試験の実行は行っていない。
+- Date: 2026-11-15
+- Commit: 6980a34ce8360aa1291ea1395fb247ed94641ec3
+- 本番の対象範囲、試験構成、検証設定をリポジトリ全体から確認した。アプリおよび試験は起動していない。
 
 ## Scope of Analysis
 
 ```yaml
 scope_version: 1
-kind: partial
-intent: random-album-picker
-fingerprint: f173f4520d9eb9dbdac45c235c9253e8cf0216ed
+kind: full
+intent: simplify-article-editor
+fingerprint: 7e710704fa66218b68f0c4c2000ba7dbb4f50942
 analyzed:
   paths:
-    - Hitotsuzuri/HitotsuzuriApp.swift
-    - Hitotsuzuri/PickerView.swift
-    - HitotsuzuriCore/Models.swift
-    - HitotsuzuriCore/PickerContent.swift
-    - HitotsuzuriCore/PickerPresentationState.swift
-    - HitotsuzuriCore/Ports.swift
-    - HitotsuzuriCore/PhotoLibraryAccess.swift
-    - HitotsuzuriCore/SelectionWorkflow.swift
-    - HitotsuzuriUITests/NativeInputTests.swift
+    - ./
   components:
     - App Composition
     - Picker Workflow
     - Picker UI
+    - Display Images
+    - Article Domain
+    - Article Persistence
+    - Article Editing
+    - Article UI Coordinator
+    - Export Image Acquisition
+    - Export Orchestration
+    - Export Storage
+    - Probe Output
+    - Diagnostics and Measurement
+    - Test Fixtures
+    - Verification Tooling
 shallow:
   paths:
-    - ./
-    - Hitotsuzuri/DebugFixture.swift
-    - HitotsuzuriCore/ArticleImageAccess.swift
-    - .github/workflows/verify.yml
     - README.md
+    - docs/
 ```

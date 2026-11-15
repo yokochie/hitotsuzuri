@@ -87,15 +87,16 @@ import XCTest
         XCTAssertEqual(outcome, .completed, "実コピー成功後の固定本文; \(displayedText(diagnostic)); copy.exists=\(copy.exists), enabled=\(copy.isEnabled), hittable=\(copy.isHittable), frame=\(copy.frame), value=\(String(describing: copy.value)); OS=\(displayedText(app.staticTexts["article-export-os-message"]))")
         let copied = (copy.value as? String) ?? ""
         XCTAssertTrue(copied.contains("Fixed output text")); XCTAssertFalse(copied.contains("Later unsaved text"))
+        XCTAssertTrue(copied.contains("【ダミー】導入文です。"))
         XCTAssertTrue(displayedText(diagnostic).contains("pasteboard-succeeded;captured"))
         XCTAssertTrue(displayedText(diagnostic).contains("capturedMatches=true"))
         XCTAssertTrue(displayedText(diagnostic).contains("button=1;task=1;"), "一回のマウス操作が実callbackとTaskを一回ずつ開始する")
         field("article-title", app).click()
-        for _ in 0..<22 { app.typeKey(.tab, modifierFlags: []) }
+        for _ in 0..<12 { app.typeKey(.tab, modifierFlags: []) }
         let fixedFocus = NSPredicate { _, _ in MainActor.assumeIsolated { self.displayedText(diagnostic).contains("focus=article-export-copy-fixed;keyboardCopyTarget=true") } }
         let focusOutcome = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: fixedFocus, object: nil)], timeout: 5)
         attachCopyDiagnostic(app, phase: "after-keyboard-focus")
-        XCTAssertEqual(focusOutcome, .completed, "22回の実Tabが固定コピーへ焦点を移す: \(displayedText(diagnostic))")
+        XCTAssertEqual(focusOutcome, .completed, "実Tabが固定コピーへ焦点を移す: \(displayedText(diagnostic))")
         app.typeKey(.space, modifierFlags: [])
         let keyboardCopied = NSPredicate { _, _ in MainActor.assumeIsolated { self.displayedText(diagnostic).contains("button=1;task=2;") } }
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: keyboardCopied, object: nil)], timeout: 5), .completed, "設定変更なしのTab/Spaceでも固定コピーへ到達: \(displayedText(diagnostic))")
@@ -122,7 +123,7 @@ import XCTest
         let title = field("article-title", app)
         XCTAssertEqual((title.value as? String)?.count, 200)
         title.click()
-        for _ in 0..<21 { app.typeKey(.tab, modifierFlags: []) }
+        for _ in 0..<11 { app.typeKey(.tab, modifierFlags: []) }
         app.typeKey(.space, modifierFlags: [])
         _ = completed(app)
         XCTAssertTrue(app.buttons["article-export"].isEnabled)
