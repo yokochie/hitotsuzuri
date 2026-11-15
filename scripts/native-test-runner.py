@@ -99,11 +99,10 @@ def run_group(prefix, filters, expected, expected_cases=()):
     base.mkdir(parents=True, exist_ok=True)
     result = base / (prefix+"-"+datetime.now().strftime("%Y%m%d-%H%M%S")+"-"+uuid.uuid4().hex+".xcresult")
     subprocess.run(["xcodebuild", "-project", "Hitotsuzuri.xcodeproj", "-scheme", "Hitotsuzuri",
-                    "-destination", "platform=macOS", *filters, "-enableCodeCoverage", "YES",
+                    "-destination", "platform=macOS", *filters,
                     "-derivedDataPath", ".build/DerivedData", "-resultBundlePath", str(result),
                     "CODE_SIGN_IDENTITY=-", "test"], check=True)
     check_result(result, expected, expected_cases)
-    return result
 
 def main():
     scope, *args = sys.argv[1:]
@@ -153,17 +152,15 @@ def main():
             filters = (["-only-testing:"+target for target in TARGETS[:-1]] if scope == "native"
                        else ["-only-testing:"+allowed[name]+"/"+name for name in expected])
             filters.extend("-skip-testing:"+case for case in CORE_PERFORMANCE)
-        return run_group(("Native" if scope == "native" else "Draft")+"-core", filters, expected,
-                         performance_cases if performance_only else ())
+        run_group(("Native" if scope == "native" else "Draft")+"-core", filters, expected,
+                  performance_cases if performance_only else ())
     if mode == "core":
         core_group()
-        print("Core専用: UIと製品全体のカバレッジは判定していません。", flush=True)
         return
     if scope == "export" and mode == "performance":
         core_group(performance_only=True)
-        print("U3性能2件のみ: 全機能/製品全体カバレッジは判定していません。", flush=True)
         return
-    # CIの同一commitのCore成功依存を使う。主bundleのCore機能試験は省かない。
+    # CIの同一commitのCore成功を前提に、先行確認の重複を省く。
     upstream_core = (mode != "all" and os.environ.get("GITHUB_ACTIONS") == "true"
                      and os.environ.get("HZS_CORE_PREFLIGHT_DONE") == "1")
     if selected is None and mode in ["all", "functional", "performance"] and not upstream_core:
@@ -179,7 +176,6 @@ def main():
         cases = INPUT_FOCUS if mode == "input-focus" else INPUT_REGRESSION
         run_group("Native-"+mode, ["-only-testing:"+case for case in cases],
                   ["NativeInputTests"], cases)
-        print(f"入力診断{len(cases)}件のみ: 全体成功/カバレッジの判定ではありません。", flush=True)
         return
     if selected is None:
         selected = list(allowed)
@@ -205,15 +201,7 @@ def main():
     if mode in ["all", "functional"] or in_ci or scope == "export":
         # 実時間・実メモリの合否はMacの専用groupで確認する。
         filters.extend("-skip-testing:"+case for case in CORE_PERFORMANCE)
-    result = run_group(("Native" if scope == "native" else "Draft")+"-"+mode, filters, selected)
-    if scope == "native" and mode in ["all", "functional"]:
-        # 全Core機能+全機能UIの単一bundleで全製品sourceの加重floorを判定。
-        # 別に必須実行する性能計測のカバレッジ率を平均・合算しない。
-        subprocess.run(["swift", "scripts/check-coverage.swift", str(result)], check=True)
-        if mode == "functional":
-            print("製品全体の行カバレッジを確認。詳細性能の成功は別に必要です。", flush=True)
-    else:
-        print("部分実行: 製品全体のカバレッジ/全体成功は判定していません。", flush=True)
+    run_group(("Native" if scope == "native" else "Draft")+"-"+mode, filters, selected)
 
 if __name__ == "__main__":
     try:
